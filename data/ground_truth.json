@@ -1,0 +1,745 @@
+{
+  "seed": 42,
+  "policy_version": "1.0",
+  "policy_numbers": {
+    "policy_version": "1.0",
+    "effective_date": "2026-04-01",
+    "quantity_tolerance_pct": {
+      "cartons": 0.0,
+      "bagged_material": 2.0,
+      "steel_coils": 0.0
+    },
+    "price_tolerance_pct": 2.0,
+    "invoice_over_po_tolerance_pct": 0.0,
+    "duplicate_hold_pct": 100.0,
+    "damage_debit_pct": 100.0,
+    "damaged_units_payable": 0,
+    "payment_terms_days": 30,
+    "hold_notice_working_days": 3,
+    "debit_note_working_days": 7,
+    "qa_disposition_working_days": 5,
+    "evidence_retention_years": 7,
+    "min_track_confidence": 0.8,
+    "approval_limits_paise": {
+      "stores_manager_up_to_paise": 10000000,
+      "purchase_manager_up_to_paise": 50000000
+    }
+  },
+  "gst_pct_on_invoices": 18,
+  "manifest": "samples/scenarios/manifest.json",
+  "amount_basis": "amount_at_risk is ex-GST, computed in Python (backend/app/seed/expected.py)",
+  "verdict_vocabulary": [
+    "approve",
+    "partial_pay",
+    "hold_payment"
+  ],
+  "scenarios_and_discrepancies": [
+    {
+      "po_number": "FM/PO/26-27/001",
+      "scenario_id": "scn1_clean",
+      "source": "video",
+      "video_path": "samples/scenarios/scn1_clean.mp4",
+      "vendor": "Shree Ganesh Packaging Industries",
+      "documents": {
+        "po": [
+          {
+            "qty": 12,
+            "unit": "box",
+            "category": "cartons"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 12,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-001/26-27/001",
+          "lines": [
+            {
+              "qty": 12,
+              "unit_price_inr": 550.0
+            }
+          ],
+          "total_paise": 778800
+        }
+      },
+      "truth": [
+        {
+          "qty": 12,
+          "damaged": 0,
+          "unit": "box"
+        }
+      ],
+      "discrepancy_types": [],
+      "seeded_type": null,
+      "is_discrepancy": false,
+      "correct_verdict": "approve",
+      "policy_clauses": [],
+      "variance": [
+        {
+          "qty": 0,
+          "pct": 0.0
+        }
+      ],
+      "amount_at_risk_paise": 0,
+      "amount_at_risk_inr": "\u20b90",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/002",
+      "scenario_id": "scn2_short",
+      "source": "video",
+      "video_path": "samples/scenarios/scn2_short.mp4",
+      "vendor": "Shree Ganesh Packaging Industries",
+      "documents": {
+        "po": [
+          {
+            "qty": 14,
+            "unit": "box",
+            "category": "cartons"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 14,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-001/26-27/002",
+          "lines": [
+            {
+              "qty": 14,
+              "unit_price_inr": 550.0
+            }
+          ],
+          "total_paise": 908600
+        }
+      },
+      "truth": [
+        {
+          "qty": 12,
+          "damaged": 0,
+          "unit": "box"
+        }
+      ],
+      "discrepancy_types": [
+        "grn_contradicted_by_video",
+        "short_shipment_beyond_tolerance"
+      ],
+      "seeded_type": null,
+      "is_discrepancy": true,
+      "correct_verdict": "partial_pay",
+      "policy_clauses": [
+        "4.2",
+        "8.4"
+      ],
+      "variance": [
+        {
+          "qty": 2,
+          "pct": 14.29
+        }
+      ],
+      "amount_at_risk_paise": 110000,
+      "amount_at_risk_inr": "\u20b91,100",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/003",
+      "scenario_id": "scn3_damage",
+      "source": "video",
+      "video_path": "samples/scenarios/scn3_damage.mp4",
+      "vendor": "Shree Ganesh Packaging Industries",
+      "documents": {
+        "po": [
+          {
+            "qty": 12,
+            "unit": "box",
+            "category": "cartons"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 12,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-001/26-27/003",
+          "lines": [
+            {
+              "qty": 12,
+              "unit_price_inr": 550.0
+            }
+          ],
+          "total_paise": 778800
+        }
+      },
+      "truth": [
+        {
+          "qty": 12,
+          "damaged": 1,
+          "unit": "box"
+        }
+      ],
+      "discrepancy_types": [
+        "damaged_units_invoiced"
+      ],
+      "seeded_type": null,
+      "is_discrepancy": true,
+      "correct_verdict": "partial_pay",
+      "policy_clauses": [
+        "6.1"
+      ],
+      "variance": [
+        {
+          "qty": 0,
+          "pct": 0.0
+        }
+      ],
+      "amount_at_risk_paise": 55000,
+      "amount_at_risk_inr": "\u20b9550",
+      "requires_debit_note": true,
+      "debit_qty": 1,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/004",
+      "scenario_id": "scn4_mixed",
+      "source": "video",
+      "video_path": "samples/scenarios/scn4_mixed.mp4",
+      "vendor": "Kaveri Agro Commodities Pvt. Ltd.",
+      "documents": {
+        "po": [
+          {
+            "qty": 4,
+            "unit": "box",
+            "category": "cartons"
+          },
+          {
+            "qty": 6,
+            "unit": "bag",
+            "category": "bagged_material"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 4,
+            "damaged": 0
+          },
+          {
+            "qty": 6,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-004/26-27/001",
+          "lines": [
+            {
+              "qty": 4,
+              "unit_price_inr": 550.0
+            },
+            {
+              "qty": 6,
+              "unit_price_inr": 950.0
+            }
+          ],
+          "total_paise": 932200
+        }
+      },
+      "truth": [
+        {
+          "qty": 4,
+          "damaged": 0,
+          "unit": "box"
+        },
+        {
+          "qty": 4,
+          "damaged": 0,
+          "unit": "bag"
+        }
+      ],
+      "discrepancy_types": [
+        "grn_contradicted_by_video",
+        "short_shipment_beyond_tolerance"
+      ],
+      "seeded_type": null,
+      "is_discrepancy": true,
+      "correct_verdict": "partial_pay",
+      "policy_clauses": [
+        "4.2",
+        "8.4"
+      ],
+      "variance": [
+        {
+          "qty": 0,
+          "pct": 0.0
+        },
+        {
+          "qty": 2,
+          "pct": 33.33
+        }
+      ],
+      "amount_at_risk_paise": 190000,
+      "amount_at_risk_inr": "\u20b91,900",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/005",
+      "scenario_id": null,
+      "source": "documents_only",
+      "video_path": null,
+      "vendor": "Bharat Steel Rolling Mills Ltd.",
+      "documents": {
+        "po": [
+          {
+            "qty": 6,
+            "unit": "coil",
+            "category": "steel_coils"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 6,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-003/26-27/001",
+          "lines": [
+            {
+              "qty": 6,
+              "unit_price_inr": 691200.0
+            }
+          ],
+          "total_paise": 489369600
+        }
+      },
+      "truth": null,
+      "discrepancy_types": [
+        "invoice_price_above_po"
+      ],
+      "seeded_type": "invoice_price_above_po",
+      "is_discrepancy": true,
+      "correct_verdict": "hold_payment",
+      "policy_clauses": [
+        "5.1"
+      ],
+      "variance": [
+        {
+          "qty": 0,
+          "pct": 0.0
+        }
+      ],
+      "amount_at_risk_paise": 30720000,
+      "amount_at_risk_inr": "\u20b93,07,200",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/006",
+      "scenario_id": null,
+      "source": "documents_only",
+      "video_path": null,
+      "vendor": "Shree Ganesh Packaging Industries",
+      "documents": {
+        "po": [
+          {
+            "qty": 100,
+            "unit": "box",
+            "category": "cartons"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 100,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-001/26-27/004",
+          "lines": [
+            {
+              "qty": 112,
+              "unit_price_inr": 520.0
+            }
+          ],
+          "total_paise": 6872320
+        }
+      },
+      "truth": null,
+      "discrepancy_types": [
+        "invoice_qty_exceeds_po"
+      ],
+      "seeded_type": "invoice_qty_exceeds_po",
+      "is_discrepancy": true,
+      "correct_verdict": "partial_pay",
+      "policy_clauses": [
+        "5.2"
+      ],
+      "variance": [
+        {
+          "qty": 0,
+          "pct": 0.0
+        }
+      ],
+      "amount_at_risk_paise": 624000,
+      "amount_at_risk_inr": "\u20b96,240",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/007",
+      "scenario_id": null,
+      "source": "documents_only",
+      "video_path": null,
+      "vendor": "Shree Ganesh Packaging Industries",
+      "documents": {
+        "po": [
+          {
+            "qty": 80,
+            "unit": "bag",
+            "category": "bagged_material"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 80,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-001/26-27/001",
+          "lines": [
+            {
+              "qty": 80,
+              "unit_price_inr": 980.0
+            }
+          ],
+          "total_paise": 9251200
+        }
+      },
+      "truth": null,
+      "discrepancy_types": [
+        "duplicate_invoice_number"
+      ],
+      "seeded_type": "duplicate_invoice_number",
+      "is_discrepancy": true,
+      "correct_verdict": "hold_payment",
+      "policy_clauses": [
+        "5.3"
+      ],
+      "variance": [
+        {
+          "qty": 0,
+          "pct": 0.0
+        }
+      ],
+      "amount_at_risk_paise": 7840000,
+      "amount_at_risk_inr": "\u20b978,400",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/008",
+      "scenario_id": null,
+      "source": "documents_only",
+      "video_path": null,
+      "vendor": "Deccan Polymers & Bagging Co.",
+      "documents": {
+        "po": [
+          {
+            "qty": 100,
+            "unit": "bag",
+            "category": "bagged_material"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 94,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-002/26-27/001",
+          "lines": [
+            {
+              "qty": 100,
+              "unit_price_inr": 1050.0
+            }
+          ],
+          "total_paise": 12390000
+        }
+      },
+      "truth": null,
+      "discrepancy_types": [
+        "short_shipment_beyond_tolerance"
+      ],
+      "seeded_type": "grn_short_beyond_tolerance",
+      "is_discrepancy": true,
+      "correct_verdict": "partial_pay",
+      "policy_clauses": [
+        "4.2"
+      ],
+      "variance": [
+        {
+          "qty": 6,
+          "pct": 6.0
+        }
+      ],
+      "amount_at_risk_paise": 630000,
+      "amount_at_risk_inr": "\u20b96,300",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/009",
+      "scenario_id": null,
+      "source": "documents_only",
+      "video_path": null,
+      "vendor": "Bharat Steel Rolling Mills Ltd.",
+      "documents": {
+        "po": [
+          {
+            "qty": 8,
+            "unit": "coil",
+            "category": "steel_coils"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 8,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-003/26-27/002",
+          "lines": [
+            {
+              "qty": 8,
+              "unit_price_inr": 807300.0
+            }
+          ],
+          "total_paise": 762091200
+        }
+      },
+      "truth": null,
+      "discrepancy_types": [
+        "invoice_price_above_po"
+      ],
+      "seeded_type": "invoice_price_above_po",
+      "is_discrepancy": true,
+      "correct_verdict": "hold_payment",
+      "policy_clauses": [
+        "5.1"
+      ],
+      "variance": [
+        {
+          "qty": 0,
+          "pct": 0.0
+        }
+      ],
+      "amount_at_risk_paise": 21840000,
+      "amount_at_risk_inr": "\u20b92,18,400",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/010",
+      "scenario_id": null,
+      "source": "documents_only",
+      "video_path": null,
+      "vendor": "Bharat Steel Rolling Mills Ltd.",
+      "documents": {
+        "po": [
+          {
+            "qty": 20,
+            "unit": "coil",
+            "category": "steel_coils"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 18,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-003/26-27/003",
+          "lines": [
+            {
+              "qty": 20,
+              "unit_price_inr": 610000.0
+            }
+          ],
+          "total_paise": 1439600000
+        }
+      },
+      "truth": null,
+      "discrepancy_types": [
+        "short_shipment_beyond_tolerance"
+      ],
+      "seeded_type": "invoice_qty_exceeds_grn",
+      "is_discrepancy": true,
+      "correct_verdict": "partial_pay",
+      "policy_clauses": [
+        "4.2"
+      ],
+      "variance": [
+        {
+          "qty": 2,
+          "pct": 10.0
+        }
+      ],
+      "amount_at_risk_paise": 122000000,
+      "amount_at_risk_inr": "\u20b912,20,000",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/011",
+      "scenario_id": null,
+      "source": "documents_only",
+      "video_path": null,
+      "vendor": "Shree Ganesh Packaging Industries",
+      "documents": {
+        "po": [
+          {
+            "qty": 60,
+            "unit": "box",
+            "category": "cartons"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 60,
+            "damaged": 2
+          }
+        ],
+        "invoice": {
+          "number": "VND-001/26-27/006",
+          "lines": [
+            {
+              "qty": 60,
+              "unit_price_inr": 240.0
+            }
+          ],
+          "total_paise": 1699200
+        }
+      },
+      "truth": null,
+      "discrepancy_types": [
+        "damaged_units_invoiced"
+      ],
+      "seeded_type": "damaged_invoiced_in_full",
+      "is_discrepancy": true,
+      "correct_verdict": "partial_pay",
+      "policy_clauses": [
+        "6.1"
+      ],
+      "variance": [
+        {
+          "qty": 0,
+          "pct": 0.0
+        }
+      ],
+      "amount_at_risk_paise": 48000,
+      "amount_at_risk_inr": "\u20b9480",
+      "requires_debit_note": true,
+      "debit_qty": 2,
+      "note": null
+    },
+    {
+      "po_number": "FM/PO/26-27/012",
+      "scenario_id": null,
+      "source": "documents_only",
+      "video_path": null,
+      "vendor": "Shree Ganesh Packaging Industries",
+      "documents": {
+        "po": [
+          {
+            "qty": 50,
+            "unit": "box",
+            "category": "cartons"
+          }
+        ],
+        "grn": [
+          {
+            "qty": 55,
+            "damaged": 0
+          }
+        ],
+        "invoice": {
+          "number": "VND-001/26-27/007",
+          "lines": [
+            {
+              "qty": 55,
+              "unit_price_inr": 360.0
+            }
+          ],
+          "total_paise": 2336400
+        }
+      },
+      "truth": null,
+      "discrepancy_types": [
+        "invoice_qty_exceeds_po"
+      ],
+      "seeded_type": "invoice_qty_exceeds_po",
+      "is_discrepancy": true,
+      "correct_verdict": "partial_pay",
+      "policy_clauses": [
+        "5.2"
+      ],
+      "variance": [
+        {
+          "qty": -5,
+          "pct": -10.0
+        }
+      ],
+      "amount_at_risk_paise": 180000,
+      "amount_at_risk_inr": "\u20b91,800",
+      "requires_debit_note": false,
+      "debit_qty": 0,
+      "note": null
+    }
+  ],
+  "clean_po_numbers": [
+    "FM/PO/26-27/013",
+    "FM/PO/26-27/014",
+    "FM/PO/26-27/015",
+    "FM/PO/26-27/016",
+    "FM/PO/26-27/017",
+    "FM/PO/26-27/018",
+    "FM/PO/26-27/019",
+    "FM/PO/26-27/020",
+    "FM/PO/26-27/021",
+    "FM/PO/26-27/022",
+    "FM/PO/26-27/023",
+    "FM/PO/26-27/024",
+    "FM/PO/26-27/025",
+    "FM/PO/26-27/026",
+    "FM/PO/26-27/027",
+    "FM/PO/26-27/028",
+    "FM/PO/26-27/029",
+    "FM/PO/26-27/030"
+  ],
+  "notes": [
+    "Scenario counts come only from samples/scenarios/manifest.json; live counts must come only from SAM tracks.",
+    "Verdicts are computed standalone in backend/app/seed/expected.py from policy_template tolerances (no runtime decision-path code).",
+    "Decisions, tracks and evidence packs are intentionally unseeded \u2014 the agent creates them."
+  ]
+}

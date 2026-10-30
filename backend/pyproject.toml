@@ -1,0 +1,31 @@
+[project]
+name = "fourthmatch-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+src = ["."]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+# B008 is the FastAPI Depends() idiom; E501 handled by formatter line-length.
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# Pre-Step-2 seed code: preserve behaviour verbatim; style debt tracked, not churned here.
+"**/app/seed/**" = ["E741", "E702"]
+"**/tests/test_seed.py" = ["E741", "B905"]
+
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "."
+ignore_missing_imports = true
+warn_unused_ignores = true
+check_untyped_defs = true
+exclude = ["\\.venv/", "tests/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

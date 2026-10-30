@@ -1,0 +1,68 @@
+{
+  "scenarios": [
+    {
+      "id": "scn1_clean",
+      "video": "scn1_clean.mp4",
+      "lines": [
+        {
+          "category": "cartons",
+          "po": 12,
+          "grn": 12,
+          "invoice": 12,
+          "true_count": 12,
+          "true_damaged": 0
+        }
+      ]
+    },
+    {
+      "id": "scn2_short",
+      "video": "scn2_short.mp4",
+      "lines": [
+        {
+          "category": "cartons",
+          "po": 14,
+          "grn": 14,
+          "invoice": 14,
+          "true_count": 12,
+          "true_damaged": 0
+        }
+      ]
+    },
+    {
+      "id": "scn3_damage",
+      "video": "scn3_damage.mp4",
+      "lines": [
+        {
+          "category": "cartons",
+          "po": 12,
+          "grn": 12,
+          "invoice": 12,
+          "true_count": 12,
+          "true_damaged": 1
+        }
+      ]
+    },
+    {
+      "id": "scn4_mixed",
+      "video": "scn4_mixed.mp4",
+      "lines": [
+        {
+          "category": "cartons",
+          "po": 4,
+          "grn": 4,
+          "invoice": 4,
+          "true_count": 4,
+          "true_damaged": 0
+        },
+        {
+          "category": "bagged material",
+          "po": 6,
+          "grn": 6,
+          "invoice": 6,
+          "true_count": 4,
+          "true_damaged": 0
+        }
+      ]
+    }
+  ]
+}
