@@ -1,0 +1,1 @@
+{"frames": [["obj-1", "obj-2"], ["obj-1", "obj-2", "obj-3"], ["obj-1"]], "expected_track_count": 3, "expected_max_visible": 3}

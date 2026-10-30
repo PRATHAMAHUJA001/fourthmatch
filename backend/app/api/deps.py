@@ -1,0 +1,29 @@
+"""FastAPI dependencies: session, settings, repositories, services."""
+from __future__ import annotations
+
+from collections.abc import Iterator
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from app.core.config import Settings, get_settings
+from app.infra.db.repositories.purchase_orders import SqlPurchaseOrderRepository
+from app.infra.db.session import make_engine, make_session_factory
+from app.services.purchase_orders import PurchaseOrderService
+
+
+def get_db_session() -> Iterator[Session]:
+    factory = make_session_factory(make_engine())
+    session = factory()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
+def get_app_settings() -> Settings:
+    return get_settings()
+
+
+def get_po_service(session: Session = Depends(get_db_session)) -> PurchaseOrderService:
+    return PurchaseOrderService(SqlPurchaseOrderRepository(session))
