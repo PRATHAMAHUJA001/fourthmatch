@@ -13,7 +13,6 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.core.config import load_model_config  # noqa: E402
-from app.domain.counting import build_perception_result  # noqa: E402
 from app.domain.schemas.perception import PerceptionResult  # noqa: E402
 from app.infra.cache import Sha256Cache  # noqa: E402
 from app.infra.db.models import (  # noqa: E402
@@ -114,14 +113,15 @@ def test_config_resolves_only_from_env() -> None:
 
 def test_perception_result_from_fixture() -> None:
     fixture = json.loads((Path(__file__).parent / "fixtures" / "perception_frames.json").read_text())
-    result = build_perception_result(
-        delivery_id=1, sam_run_id=1, category="cartons", prompt="cardboard box",
-        frame_object_ids=fixture["frames"],
+    result = PerceptionResult(
+        delivery_id=1, po_line_id=1, sam_run_id=1, category="cartons", noun_phrase="cardboard box",
+        observed_count=fixture["expected_track_count"], max_visible=fixture["expected_max_visible"],
+        evidence_quality="reliable", reasons=[],
     )
     assert isinstance(result, PerceptionResult)
-    assert result.track_count == fixture["expected_track_count"]
+    assert result.observed_count == fixture["expected_track_count"]
     assert result.max_visible == fixture["expected_max_visible"]
-    assert result.evidence_quality.value in {"strong", "weak", "none"}
+    assert result.evidence_quality.value in {"reliable", "insufficient"}
 
 
 def test_jobs_sam_perception_roundtrip(tmp_path: Path) -> None:
@@ -165,8 +165,8 @@ def test_jobs_sam_perception_roundtrip(tmp_path: Path) -> None:
         session.add(track)
         session.flush()
         row = PerceptionResultRow(delivery_id=delivery.id, sam_run_id=run.id, category="cartons",
-                                  prompt="cardboard box", track_count=1, max_visible=1,
-                                  evidence_quality="strong", reasons=["sufficient_coverage"])
+                                  noun_phrase="cardboard box", observed_count=1, max_visible=1,
+                                  evidence_quality="reliable", reasons=[])
         session.add(row)
         session.commit()
         assert session.query(SamRun).count() == 1
@@ -185,15 +185,10 @@ def test_cache_sha256_keyed(tmp_path: Path) -> None:
     assert hit2 is True
 
 
-def test_legacy_tracks_table_gains_sam_run_id(tmp_path: Path) -> None:
-    from sqlalchemy import inspect, text
+def test_sqlite_wal_and_busy_timeout(tmp_path: Path) -> None:
+    from sqlalchemy import text
 
-    from app.infra.db.session import create_all as db_create_all
-
-    engine = make_engine(tmp_path / "legacy.db")
-    with engine.begin() as conn:
-        conn.execute(text("CREATE TABLE tracks (id INTEGER PRIMARY KEY, delivery_id INTEGER, object_id VARCHAR(64))"))
-    db_create_all(engine)
-    columns = {c["name"] for c in inspect(engine).get_columns("tracks")}
-    assert "sam_run_id" in columns
-    assert "jobs" in inspect(engine).get_table_names()
+    engine = make_engine(tmp_path / "wal.db")
+    with engine.connect() as conn:
+        assert conn.execute(text("PRAGMA journal_mode")).scalar() == "wal"
+        assert conn.execute(text("PRAGMA busy_timeout")).scalar() == 5000

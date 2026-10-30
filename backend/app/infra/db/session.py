@@ -5,7 +5,7 @@ import os
 from collections.abc import Iterator
 from pathlib import Path
 
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -26,8 +26,21 @@ def database_url(db_path: Path | None = None) -> str:
 
 def make_engine(db_path: Path | None = None) -> Engine:
     url = database_url(db_path)
-    connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-    return create_engine(url, connect_args=connect_args, future=True)
+    is_sqlite = url.startswith("sqlite")
+    connect_args = {"check_same_thread": False, "timeout": 30} if is_sqlite else {}
+    engine = create_engine(url, connect_args=connect_args, future=True)
+    if is_sqlite:
+        from sqlalchemy import event
+
+        @event.listens_for(engine, "connect")
+        def _sqlite_pragmas(dbapi_conn, _record):  # noqa: ANN001, ANN202
+            cur = dbapi_conn.cursor()
+            cur.execute("PRAGMA journal_mode=WAL")
+            cur.execute("PRAGMA busy_timeout=5000")
+            cur.execute("PRAGMA synchronous=NORMAL")
+            cur.close()
+
+    return engine
 
 
 def make_session_factory(engine: Engine) -> sessionmaker[Session]:
@@ -36,40 +49,11 @@ def make_session_factory(engine: Engine) -> sessionmaker[Session]:
 
 def create_all(engine: Engine) -> None:
     # Import models so every table is registered on Base.metadata.
+    # One schema mechanism only: create_all. Schema changes = drop + recreate
+    # + reseed (python -m app.seed --reset); no ad-hoc additive migrations.
     from app.infra.db import models as _models  # noqa: F401
 
     Base.metadata.create_all(engine)
-    _migrate_tracks_sam_run_id(engine)
-    _migrate_model_calls_cache_hit(engine)
-
-
-def _migrate_tracks_sam_run_id(engine: Engine) -> None:
-    """Additive SQLite migration: legacy tracks tables predate sam_runs.
-
-    Tracks are never seeded (SAM-only), so the legacy table is empty and a
-    nullable ADD COLUMN is safe. Fresh DBs already have the column (no-op).
-    """
-    inspector = inspect(engine)
-    if "tracks" not in inspector.get_table_names():
-        return
-    columns = {col["name"] for col in inspector.get_columns("tracks")}
-    if "sam_run_id" in columns:
-        return
-    with engine.begin() as conn:
-        conn.execute(text("ALTER TABLE tracks ADD COLUMN sam_run_id INTEGER REFERENCES sam_runs(id)"))
-        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_tracks_sam_run_id ON tracks (sam_run_id)"))
-
-
-def _migrate_model_calls_cache_hit(engine: Engine) -> None:
-    """Additive SQLite migration: legacy model_calls tables predate cache_hit."""
-    inspector = inspect(engine)
-    if "model_calls" not in inspector.get_table_names():
-        return
-    columns = {col["name"] for col in inspector.get_columns("model_calls")}
-    if "cache_hit" in columns:
-        return
-    with engine.begin() as conn:
-        conn.execute(text("ALTER TABLE model_calls ADD COLUMN cache_hit BOOLEAN NOT NULL DEFAULT 0"))
 
 
 def get_session() -> Iterator[Session]:

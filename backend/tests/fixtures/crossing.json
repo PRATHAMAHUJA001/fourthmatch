@@ -1,0 +1,250 @@
+{
+ "name": "crossing",
+ "total_frames": 10,
+ "config": {},
+ "tracks": [
+  {
+   "track_id": "1",
+   "phrase": "cardboard box",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 100,
+      "y1": 100,
+      "x2": 200,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 140,
+      "y1": 100,
+      "x2": 240,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 180,
+      "y1": 100,
+      "x2": 280,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 220,
+      "y1": 100,
+      "x2": 320,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 260,
+      "y1": 100,
+      "x2": 360,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 5,
+     "bbox": {
+      "x1": 300,
+      "y1": 100,
+      "x2": 400,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 6,
+     "bbox": {
+      "x1": 340,
+      "y1": 100,
+      "x2": 440,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 7,
+     "bbox": {
+      "x1": 380,
+      "y1": 100,
+      "x2": 480,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 420,
+      "y1": 100,
+      "x2": 520,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 460,
+      "y1": 100,
+      "x2": 560,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  },
+  {
+   "track_id": "2",
+   "phrase": "cardboard box",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 500,
+      "y1": 100,
+      "x2": 600,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 460,
+      "y1": 100,
+      "x2": 560,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 420,
+      "y1": 100,
+      "x2": 520,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 380,
+      "y1": 100,
+      "x2": 480,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 340,
+      "y1": 100,
+      "x2": 440,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 5,
+     "bbox": {
+      "x1": 300,
+      "y1": 100,
+      "x2": 400,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 6,
+     "bbox": {
+      "x1": 260,
+      "y1": 100,
+      "x2": 360,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 7,
+     "bbox": {
+      "x1": 220,
+      "y1": 100,
+      "x2": 320,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 180,
+      "y1": 100,
+      "x2": 280,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 140,
+      "y1": 100,
+      "x2": 240,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  }
+ ],
+ "expected": {
+  "observed_count": 2,
+  "max_visible": 2,
+  "merge_count": 0,
+  "kept_track_ids": [
+   "1",
+   "2"
+  ],
+  "evidence_quality": "reliable",
+  "reasons": []
+ }
+}

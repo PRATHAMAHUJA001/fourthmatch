@@ -1,0 +1,1373 @@
+{
+ "name": "phrase_coverage_sacks",
+ "total_frames": 20,
+ "config": {},
+ "phrase_tracks": [
+  {
+   "track_id": "0",
+   "phrase": "white sack",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 5,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 6,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 7,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 10,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 11,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 12,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 13,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 14,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 15,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 16,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 17,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 18,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 19,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  },
+  {
+   "track_id": "1",
+   "phrase": "white sack",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 5,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 6,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 7,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 10,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 11,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 12,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 13,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 14,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 15,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 16,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 17,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 18,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 19,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  }
+ ],
+ "generic_tracks": [
+  {
+   "track_id": "0",
+   "phrase": "sack",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 5,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 6,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 7,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 10,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 11,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 12,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 13,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 14,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 15,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 16,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 17,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 18,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 19,
+     "bbox": {
+      "x1": 836,
+      "y1": 269,
+      "x2": 1036,
+      "y2": 519
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  },
+  {
+   "track_id": "1",
+   "phrase": "sack",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 5,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 6,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 7,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 10,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 11,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 12,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 13,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 14,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 15,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 16,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 17,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 18,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 19,
+     "bbox": {
+      "x1": 1072,
+      "y1": 177,
+      "x2": 1272,
+      "y2": 427
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  },
+  {
+   "track_id": "2",
+   "phrase": "sack",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 5,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 6,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 7,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 10,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 11,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 12,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 13,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 14,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 15,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 16,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 17,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 18,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 19,
+     "bbox": {
+      "x1": 650,
+      "y1": 430,
+      "x2": 850,
+      "y2": 680
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  },
+  {
+   "track_id": "3",
+   "phrase": "sack",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 5,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 6,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 7,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 10,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 11,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 12,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 13,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 14,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 15,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 16,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 17,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 18,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 19,
+     "bbox": {
+      "x1": 880,
+      "y1": 330,
+      "x2": 1080,
+      "y2": 580
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  }
+ ],
+ "expected": {
+  "observed_count": 4,
+  "max_visible": 4,
+  "evidence_quality": "reliable",
+  "reasons": [
+   "phrase_too_narrow"
+  ]
+ }
+}

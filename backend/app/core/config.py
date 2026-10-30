@@ -42,6 +42,30 @@ class Settings(BaseSettings):
     voice_model: str = Field(default="", validation_alias=AliasChoices("VOICE_MODEL", "voice_model"))
 
     database_url: str | None = Field(default=None, validation_alias=AliasChoices("DATABASE_URL", "database_url"))
+    # Perception/counting thresholds. Durations in SECONDS, converted with
+    # sam_proxy_fps in domain/counting.py so an fps change never silently
+    # changes behaviour. Starting values only -- the eval decides.
+    sam_score_min: float = Field(default=0.5, validation_alias=AliasChoices("SAM_SCORE_MIN", "sam_score_min"))
+    min_track_seconds: float = Field(default=1.0, validation_alias=AliasChoices("MIN_TRACK_SECONDS", "min_track_seconds"))
+    merge_max_gap_seconds: float = Field(
+        default=3.0, validation_alias=AliasChoices("MERGE_MAX_GAP_SECONDS", "merge_max_gap_seconds")
+    )
+    merge_min_iou: float = Field(default=0.3, validation_alias=AliasChoices("MERGE_MIN_IOU", "merge_min_iou"))
+    max_short_track_ratio: float = Field(
+        default=0.34, validation_alias=AliasChoices("MAX_SHORT_TRACK_RATIO", "max_short_track_ratio")
+    )
+    max_merge_ratio: float = Field(default=0.34, validation_alias=AliasChoices("MAX_MERGE_RATIO", "max_merge_ratio"))
+    sam_proxy_fps: float = Field(default=2.0, validation_alias=AliasChoices("SAM_PROXY_FPS", "sam_proxy_fps"))
+    # Stage C phrase-coverage check: category -> generic noun run alongside
+    # the model's phrase. Keys are matched normalised (case/underscore/space).
+    category_generic_nouns: dict[str, str] = Field(
+        default={
+            "cartons": "box",
+            "bagged material": "sack",
+            "steel coils": "steel coil",
+        },
+        validation_alias=AliasChoices("CATEGORY_GENERIC_NOUNS", "category_generic_nouns"),
+    )
     storage_root: Path = Field(
         default=REPO_ROOT / "storage",
         validation_alias=AliasChoices("STORAGE_ROOT", "storage_root"),

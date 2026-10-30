@@ -1,0 +1,203 @@
+[
+  {
+    "scenario": "scn1_clean",
+    "category": "cartons",
+    "po_line_id": 1,
+    "noun_phrase": "cardboard box",
+    "generic_noun": "box",
+    "phrase_observed_count": 12,
+    "generic_observed_count": 12,
+    "true_count": 12,
+    "observed_count": 12,
+    "max_visible": 12,
+    "evidence_quality": "reliable",
+    "reasons": [],
+    "true_damaged": 0,
+    "flagged_damaged": 0,
+    "damaged_track_ids": [],
+    "footage_needed": null,
+    "result": "PASS",
+    "cache": {
+      "upload": "hit",
+      "understanding": "miss",
+      "sam": {
+        "cardboard box": "hit",
+        "box": "miss"
+      },
+      "damage": {
+        "cardboard box:0": "hit",
+        "cardboard box:1": "hit",
+        "cardboard box:10": "hit",
+        "cardboard box:2": "hit",
+        "cardboard box:3": "hit",
+        "cardboard box:4": "hit",
+        "cardboard box:5": "hit",
+        "cardboard box:6": "hit",
+        "cardboard box:7": "hit",
+        "cardboard box:8": "hit",
+        "cardboard box:9": "hit",
+        "cardboard box:11": "hit"
+      }
+    }
+  },
+  {
+    "scenario": "scn2_short",
+    "category": "cartons",
+    "po_line_id": 2,
+    "noun_phrase": "cardboard box",
+    "generic_noun": "box",
+    "phrase_observed_count": 12,
+    "generic_observed_count": 12,
+    "true_count": 12,
+    "observed_count": 12,
+    "max_visible": 12,
+    "evidence_quality": "reliable",
+    "reasons": [],
+    "true_damaged": 0,
+    "flagged_damaged": 0,
+    "damaged_track_ids": [],
+    "footage_needed": null,
+    "result": "PASS",
+    "cache": {
+      "upload": "hit",
+      "understanding": "miss",
+      "sam": {
+        "cardboard box": "hit",
+        "box": "miss"
+      },
+      "damage": {
+        "cardboard box:0": "hit",
+        "cardboard box:1": "hit",
+        "cardboard box:10": "hit",
+        "cardboard box:2": "hit",
+        "cardboard box:3": "hit",
+        "cardboard box:4": "hit",
+        "cardboard box:5": "hit",
+        "cardboard box:6": "hit",
+        "cardboard box:7": "hit",
+        "cardboard box:8": "hit",
+        "cardboard box:9": "hit",
+        "cardboard box:11": "hit"
+      }
+    }
+  },
+  {
+    "scenario": "scn3_damage",
+    "category": "cartons",
+    "po_line_id": 3,
+    "noun_phrase": "cardboard box",
+    "generic_noun": "box",
+    "phrase_observed_count": 12,
+    "generic_observed_count": 12,
+    "true_count": 12,
+    "observed_count": 12,
+    "max_visible": 12,
+    "evidence_quality": "reliable",
+    "reasons": [],
+    "true_damaged": 1,
+    "flagged_damaged": 1,
+    "damaged_track_ids": [
+      "9"
+    ],
+    "footage_needed": null,
+    "result": "PASS",
+    "cache": {
+      "upload": "hit",
+      "understanding": "miss",
+      "sam": {
+        "cardboard box": "hit",
+        "box": "miss"
+      },
+      "damage": {
+        "cardboard box:0": "hit",
+        "cardboard box:1": "hit",
+        "cardboard box:10": "hit",
+        "cardboard box:2": "hit",
+        "cardboard box:3": "hit",
+        "cardboard box:4": "hit",
+        "cardboard box:5": "hit",
+        "cardboard box:6": "hit",
+        "cardboard box:7": "hit",
+        "cardboard box:8": "hit",
+        "cardboard box:9": "hit",
+        "cardboard box:11": "hit"
+      }
+    }
+  },
+  {
+    "scenario": "scn4_mixed",
+    "category": "cartons",
+    "po_line_id": 4,
+    "noun_phrase": "cardboard box",
+    "generic_noun": "box",
+    "phrase_observed_count": 4,
+    "generic_observed_count": 4,
+    "true_count": 4,
+    "observed_count": 4,
+    "max_visible": 4,
+    "evidence_quality": "reliable",
+    "reasons": [],
+    "true_damaged": 0,
+    "flagged_damaged": 0,
+    "damaged_track_ids": [],
+    "footage_needed": null,
+    "result": "PASS",
+    "cache": {
+      "upload": "hit",
+      "understanding": "miss",
+      "sam": {
+        "cardboard box": "hit",
+        "box": "miss",
+        "sack": "miss"
+      },
+      "damage": {
+        "cardboard box:0": "hit",
+        "cardboard box:1": "hit",
+        "cardboard box:2": "hit",
+        "cardboard box:3": "hit",
+        "sack:0": "miss",
+        "sack:1": "miss",
+        "sack:2": "miss",
+        "sack:3": "miss"
+      }
+    }
+  },
+  {
+    "scenario": "scn4_mixed",
+    "category": "bagged material",
+    "po_line_id": 5,
+    "noun_phrase": "sack",
+    "generic_noun": "sack",
+    "phrase_observed_count": 4,
+    "generic_observed_count": null,
+    "true_count": 4,
+    "observed_count": 4,
+    "max_visible": 4,
+    "evidence_quality": "reliable",
+    "reasons": [],
+    "true_damaged": 0,
+    "flagged_damaged": 0,
+    "damaged_track_ids": [],
+    "footage_needed": null,
+    "result": "PASS",
+    "cache": {
+      "upload": "hit",
+      "understanding": "miss",
+      "sam": {
+        "cardboard box": "hit",
+        "box": "miss",
+        "sack": "miss"
+      },
+      "damage": {
+        "cardboard box:0": "hit",
+        "cardboard box:1": "hit",
+        "cardboard box:2": "hit",
+        "cardboard box:3": "hit",
+        "sack:0": "miss",
+        "sack:1": "miss",
+        "sack:2": "miss",
+        "sack:3": "miss"
+      }
+    }
+  }
+]

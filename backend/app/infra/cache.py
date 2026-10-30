@@ -13,6 +13,11 @@ def sha256_hex(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def cache_key_for(*parts: str) -> str:
+    """Stable hex cache key from string parts (video hash, phrase, model...)."""
+    return hashlib.sha256("\x1f".join(parts).encode()).hexdigest()
+
+
 class Sha256Cache:
     def __init__(self, root: Path) -> None:
         self.root = root

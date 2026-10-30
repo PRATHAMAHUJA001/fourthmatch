@@ -28,6 +28,30 @@ class ModelClient(Protocol):
         reasoning_effort: str | None = None,
     ) -> T: ...
 
+    async def call_video_model(
+        self,
+        *,
+        purpose: str,
+        model: str,
+        instructions: str,
+        user_text: str,
+        file_id: str,
+        output_schema: type[T],
+        reasoning_effort: str | None = None,
+    ) -> T: ...
+
+    async def call_image_model(
+        self,
+        *,
+        purpose: str,
+        model: str,
+        instructions: str,
+        user_text: str,
+        image_data_urls: list[str],
+        output_schema: type[T],
+        reasoning_effort: str | None = None,
+    ) -> T: ...
+
 
 @runtime_checkable
 class FileStore(Protocol):

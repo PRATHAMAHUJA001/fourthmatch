@@ -84,19 +84,23 @@ class DamageFlag(Base):
 
 
 class PerceptionResult(Base):
-    """Persisted PerceptionResult. Numeric fields are Python-computed from SAM."""
+    """Persisted PerceptionResult, one row per PO line. Numbers are Python-computed."""
 
     __tablename__ = "perception_results"
-    __table_args__ = (UniqueConstraint("sam_run_id", "category", name="uq_perception_run_category"),)
+    __table_args__ = (UniqueConstraint("sam_run_id", "po_line_id", name="uq_perception_run_line"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     delivery_id: Mapped[int] = mapped_column(ForeignKey("deliveries.id"), index=True)
+    po_line_id: Mapped[int | None] = mapped_column(ForeignKey("po_lines.id"), nullable=True, index=True)
     sam_run_id: Mapped[int] = mapped_column(ForeignKey("sam_runs.id"), index=True)
     category: Mapped[str] = mapped_column(String(32))
-    prompt: Mapped[str] = mapped_column(String(80))
-    track_count: Mapped[int] = mapped_column(Integer)
+    noun_phrase: Mapped[str] = mapped_column(String(80))
+    observed_count: Mapped[int] = mapped_column(Integer)
     max_visible: Mapped[int] = mapped_column(Integer)
-    evidence_quality: Mapped[str] = mapped_column(String(16))  # strong|weak|none
+    per_frame_counts: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    damaged_track_ids: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    evidence_quality: Mapped[str] = mapped_column(String(16))  # reliable|insufficient
     reasons: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    footage_needed: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 

@@ -29,9 +29,8 @@ class SamRunStatus(StrEnum):
 
 
 class EvidenceQuality(StrEnum):
-    STRONG = "strong"
-    WEAK = "weak"
-    NONE = "none"
+    RELIABLE = "reliable"
+    INSUFFICIENT = "insufficient"
 
 
 class Verdict(StrEnum):

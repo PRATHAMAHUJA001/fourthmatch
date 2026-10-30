@@ -1,7 +1,18 @@
 """Domain schemas: Pydantic contracts crossing layers. No ORM, no I/O."""
-from app.domain.schemas.config import ModelConfig
+from app.domain.schemas.config import CountingConfig, ModelConfig
+from app.domain.schemas.damage import DamageVerdict
 from app.domain.schemas.jobs import JobCreate, JobEventCreate, JobEventRead, JobRead
-from app.domain.schemas.perception import DamageFlagCreate, DamageFlagRead, PerceptionResult, PerceptionResultRead
+from app.domain.schemas.perception import (
+    BBox,
+    CountResult,
+    DamageFlagCreate,
+    DamageFlagRead,
+    MergeRecord,
+    PerceptionResult,
+    PerceptionResultRead,
+    Track,
+    TrackFrame,
+)
 from app.domain.schemas.purchase_orders import HealthRead, PoLineRead, PurchaseOrderDetail, PurchaseOrderRead
 from app.domain.schemas.sam import SamRunCreate, SamRunRead, SamTrackRead
 from app.domain.schemas.seed import (
@@ -20,16 +31,22 @@ from app.domain.schemas.seed import (
     SeedResult,
     VendorSpec,
 )
+from app.domain.schemas.understanding import FootageNeeded, SceneFacts, Understanding, UnderstandingLine
 
 __all__ = [
+    "BBox",
     "CatalogItem",
     "ClauseRewrite",
+    "CountResult",
+    "CountingConfig",
     "DamageFlagCreate",
     "DamageFlagRead",
+    "DamageVerdict",
     "DocumentCase",
     "EvalLine",
     "ExpectedLineResult",
     "ExpectedResult",
+    "FootageNeeded",
     "GroundTruthCase",
     "HealthRead",
     "JobCreate",
@@ -39,6 +56,7 @@ __all__ = [
     "ManifestFile",
     "ManifestLine",
     "ManifestScenario",
+    "MergeRecord",
     "ModelConfig",
     "PerceptionResult",
     "PerceptionResultRead",
@@ -50,6 +68,11 @@ __all__ = [
     "SamRunCreate",
     "SamRunRead",
     "SamTrackRead",
+    "SceneFacts",
     "SeedResult",
+    "Track",
+    "TrackFrame",
+    "Understanding",
+    "UnderstandingLine",
     "VendorSpec",
 ]
