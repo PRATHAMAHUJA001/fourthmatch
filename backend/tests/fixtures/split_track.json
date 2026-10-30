@@ -1,0 +1,141 @@
+{
+ "name": "split_track",
+ "total_frames": 13,
+ "config": {},
+ "tracks": [
+  {
+   "track_id": "1",
+   "phrase": "cardboard box",
+   "frames": [
+    {
+     "frame_index": 0,
+     "bbox": {
+      "x1": 100,
+      "y1": 100,
+      "x2": 200,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 1,
+     "bbox": {
+      "x1": 100,
+      "y1": 100,
+      "x2": 200,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 2,
+     "bbox": {
+      "x1": 100,
+      "y1": 100,
+      "x2": 200,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 3,
+     "bbox": {
+      "x1": 100,
+      "y1": 100,
+      "x2": 200,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 4,
+     "bbox": {
+      "x1": 100,
+      "y1": 100,
+      "x2": 200,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  },
+  {
+   "track_id": "2",
+   "phrase": "cardboard box",
+   "frames": [
+    {
+     "frame_index": 8,
+     "bbox": {
+      "x1": 110,
+      "y1": 100,
+      "x2": 210,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 9,
+     "bbox": {
+      "x1": 110,
+      "y1": 100,
+      "x2": 210,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 10,
+     "bbox": {
+      "x1": 110,
+      "y1": 100,
+      "x2": 210,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 11,
+     "bbox": {
+      "x1": 110,
+      "y1": 100,
+      "x2": 210,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    },
+    {
+     "frame_index": 12,
+     "bbox": {
+      "x1": 110,
+      "y1": 100,
+      "x2": 210,
+      "y2": 200
+     },
+     "mask_ref": null,
+     "score": 0.9
+    }
+   ]
+  }
+ ],
+ "expected": {
+  "observed_count": 1,
+  "max_visible": 1,
+  "merge_count": 1,
+  "kept_track_ids": [
+   "1"
+  ],
+  "evidence_quality": "insufficient",
+  "reasons": [
+   "merge_ratio_high"
+  ]
+ }
+}

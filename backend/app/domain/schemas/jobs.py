@@ -33,6 +33,11 @@ class JobRead(BaseModel):
     finished_at: datetime | None = None
 
 
+class DeliveryCreated(BaseModel):
+    delivery_id: int
+    job_id: str
+
+
 class JobEventCreate(BaseModel):
     event_type: str
     message: str

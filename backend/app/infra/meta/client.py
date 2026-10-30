@@ -1,8 +1,12 @@
 """One shared Meta client wrapper.
 
-Request shapes copied ONLY from docs/MODEL_NOTES.md §2/§3 (Responses API,
-strict json_schema in text.format, reasoning, never chat.completions).
+Request shapes copied ONLY from docs/MODEL_NOTES.md: §2/§3 text + strict
+json_schema in text.format, §8 video (input_video file_id) and image crops
+(input_image data URLs). Responses API only, never chat.completions.
 Every model ID arrives via ModelConfig (core/config.py) — none hardcoded here.
+Every call: retry with jitter (no retry on 4xx, except a file-related
+400/404 on a cached file_id which raises code=model_file_expired so the
+caller can re-upload once), strict JSON, Pydantic validation, model_calls row.
 """
 from __future__ import annotations
 
@@ -39,11 +43,22 @@ def get_shared_client(config: ModelConfig) -> AsyncOpenAI:
 
 def _strict_json_schema(schema: type[BaseModel]) -> dict[str, Any]:
     raw = schema.model_json_schema()
-    raw.setdefault("type", "object")
-    raw["additionalProperties"] = False
-    if raw.get("type") == "object" and "properties" in raw:
-        raw["required"] = list(raw["properties"].keys())
+    _strictify(raw)
     return raw
+
+
+def _strictify(node: Any) -> None:
+    """Strict structured output: every object needs additionalProperties=false
+    and every property required (verified live: nested objects are checked)."""
+    if isinstance(node, dict):
+        if node.get("type") == "object" and "properties" in node:
+            node["additionalProperties"] = False
+            node["required"] = list(node["properties"].keys())
+        for value in node.values():
+            _strictify(value)
+    elif isinstance(node, list):
+        for value in node:
+            _strictify(value)
 
 
 class MetaModelClient:
@@ -106,12 +121,13 @@ class MetaModelClient:
         )
         session.commit()
 
-    async def call_model(
+    async def _execute(
         self,
         *,
         purpose: str,
         model: str,
-        prompt: str,
+        input_payload: Any,
+        instructions: str | None,
         output_schema: type[T],
         session: Session | None = None,
         reasoning_effort: str | None = None,
@@ -143,7 +159,7 @@ class MetaModelClient:
             try:
                 kwargs: dict[str, Any] = {
                     "model": model,
-                    "input": prompt,
+                    "input": input_payload,
                     "text": {
                         "format": {
                             "type": "json_schema",
@@ -153,6 +169,8 @@ class MetaModelClient:
                         }
                     },
                 }
+                if instructions:
+                    kwargs["instructions"] = instructions
                 if reasoning_effort:
                     kwargs["reasoning"] = {"effort": reasoning_effort}
                 resp = await self._client.responses.create(**kwargs)
@@ -181,6 +199,14 @@ class MetaModelClient:
             except APIStatusError as exc:
                 last_error = exc
                 if 400 <= exc.status_code < 500:
+                    # Expired/invalid cached file_id (400/404, MODEL_NOTES §8):
+                    # caller re-uploads once. Every other 4xx: no retry.
+                    if exc.status_code in (400, 404) and "file" in str(exc).lower():
+                        self._write_call(session, purpose=purpose, model=model, latency_ms=last_latency_ms,
+                                         usage=None, status="error", cache_hit=False, error=str(exc))
+                        raise UpstreamModelError(
+                            f"cached file_id rejected ({purpose}): {exc}", code="model_file_expired"
+                        ) from exc
                     break  # never retry 4xx
                 if attempt < self._max_attempts:
                     await asyncio.sleep((2 ** (attempt - 1)) * 0.5 * (0.5 + random.random()))
@@ -192,6 +218,70 @@ class MetaModelClient:
         self._write_call(session, purpose=purpose, model=model, latency_ms=last_latency_ms, usage=None,
                          status="error", cache_hit=False, error=str(last_error))
         raise UpstreamModelError(f"model call failed ({purpose}): {last_error}", code="model_upstream")
+
+    async def call_model(
+        self,
+        *,
+        purpose: str,
+        model: str,
+        prompt: str,
+        output_schema: type[T],
+        session: Session | None = None,
+        reasoning_effort: str | None = None,
+        cache_key: str | None = None,
+    ) -> T:
+        return await self._execute(
+            purpose=purpose, model=model, input_payload=prompt, instructions=None,
+            output_schema=output_schema, session=session,
+            reasoning_effort=reasoning_effort, cache_key=cache_key,
+        )
+
+    async def call_video_model(
+        self,
+        *,
+        purpose: str,
+        model: str,
+        instructions: str,
+        user_text: str,
+        file_id: str,
+        output_schema: type[T],
+        session: Session | None = None,
+        reasoning_effort: str | None = None,
+        cache_key: str | None = None,
+    ) -> T:
+        """Stage B shape (MODEL_NOTES §8): input_video by Files API file_id."""
+        input_payload = [{"type": "message", "role": "user", "content": [
+            {"type": "input_text", "text": user_text},
+            {"type": "input_video", "file_id": file_id},
+        ]}]
+        return await self._execute(
+            purpose=purpose, model=model, input_payload=input_payload, instructions=instructions,
+            output_schema=output_schema, session=session,
+            reasoning_effort=reasoning_effort, cache_key=cache_key,
+        )
+
+    async def call_image_model(
+        self,
+        *,
+        purpose: str,
+        model: str,
+        instructions: str,
+        user_text: str,
+        image_data_urls: list[str],
+        output_schema: type[T],
+        session: Session | None = None,
+        reasoning_effort: str | None = None,
+        cache_key: str | None = None,
+    ) -> T:
+        """Stage D shape (MODEL_NOTES §8): labelled input_image crops, one call."""
+        content: list[dict[str, Any]] = [{"type": "input_text", "text": user_text}]
+        content += [{"type": "input_image", "image_url": url} for url in image_data_urls]
+        input_payload = [{"type": "message", "role": "user", "content": content}]
+        return await self._execute(
+            purpose=purpose, model=model, input_payload=input_payload, instructions=instructions,
+            output_schema=output_schema, session=session,
+            reasoning_effort=reasoning_effort, cache_key=cache_key,
+        )
 
 
 async def call_model(

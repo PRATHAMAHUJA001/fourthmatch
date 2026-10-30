@@ -236,3 +236,48 @@ item = resp.data[0]   # .b64_json (default response_format) or .url if response_
 key decodes to **WEBP bytes** (1920×1280) regardless of your target filename — sniff/transcode
 with Pillow before saving as `.png` (the smoke script does). Verified output
 `samples/out/gen.png` (after transcode: genuine PNG, 1920×1280, CCTV-style dock with steel coils).
+
+## 8. muse-spark-1.3 — video understanding + image crops (verified by scripts/spike_perception_video.py)
+
+Stage B (video): reuse the Files API upload (same shape as SAM §5:
+`client.files.create(file=(name, bytes, "video/mp4"), purpose="user_data")` ->
+`file-<numeric>`). The Stage A upload is reusable for Spark; do not re-upload.
+
+```python
+resp = await client.responses.create(
+    model=os.environ["PERCEPTION_MODEL"],          # muse-spark-1.3
+    instructions=STAGE_B_SYSTEM_PROMPT,
+    input=[{"type": "message", "role": "user", "content": [
+        {"type": "input_text", "text": 'PO lines: [{"po_line_id": "7", ...}]. Return JSON.'},
+        {"type": "input_video", "file_id": file_id},
+    ]}],
+    text={"format": {"type": "json_schema", "name": "understanding",
+                     "schema": UNDERSTANDING_SCHEMA, "strict": True}},
+)
+data = json.loads(resp.output_text)
+```
+
+Verified on a 2 fps proxy of `samples/scenarios/scn1_clean.mp4` (586 KB):
+`{"lines": [{"po_line_id": "7", "noun_phrase": "cardboard cartons",
+"distinguishing_feature": null}], "scene": {"camera_motion": "pan",
+"occlusion": "none", "lighting": "good", "unlisted_objects": [...]}}`,
+7.3 s, usage input 2878 / output 574 (reasoning 498).
+
+Expired/bogus file_id: a non-existent id returns **400** (not 404):
+``input_file file_id must be a numeric ID at input[0].content[1]``.
+Pipeline rule: a file-related 400/404 on a cached file_id invalidates the
+file cache and re-uploads **once**; all other 4xx keep the no-retry rule.
+
+Stage D (crops): multiple crops in one message, labelled in the text part;
+shape mirrors SAM §4 `input_image` with base64 data URLs:
+
+```python
+content = [{"type": "input_text", "text": "track_id=T1. Crop labels in order: [...]"}]
+content += [{"type": "input_image", "image_url": "data:image/png;base64,..."} for crop in crops]
+resp = await client.responses.create(model=..., instructions=STAGE_D_SYSTEM_PROMPT,
+    input=[{"type": "message", "role": "user", "content": content}],
+    text={"format": {"type": "json_schema", "name": "damage_verdict", ...strict...}})
+```
+
+Verified: returns `{"track_id": "T1", "damaged": false, "frame_index": null,
+"note": "..."}` citing only supplied labels, 5.8 s for 2 crops.
