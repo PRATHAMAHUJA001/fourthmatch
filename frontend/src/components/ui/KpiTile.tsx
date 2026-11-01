@@ -19,23 +19,23 @@ interface KpiTileProps {
   className?: string;
 }
 
-/** Instrument readout: condensed label, big mono figure, one line of context. No card chrome. */
+/** Readout: small label, large tabular figure, one line of context. Sits inside a KpiStrip. */
 export function KpiTile({ label, value, unit, delta, tone = "neutral", hint, spark, className }: KpiTileProps) {
   return (
-    <div className={cn("relative flex min-w-0 flex-col justify-between gap-2 px-4 py-3", className)}>
+    <div className={cn("relative flex min-w-0 flex-col justify-between gap-3 px-6 py-5", className)}>
       <div className="flex items-center gap-1.5">
-        {tone !== "neutral" && <SignalGlyph signal={TONE_SIGNAL[tone]} size={9} className={TONE_TEXT[tone]} />}
+        {tone !== "neutral" && <SignalGlyph signal={TONE_SIGNAL[tone]} size={11} className={TONE_TEXT[tone]} />}
         <span className="fm-label truncate">{label}</span>
       </div>
       <div className="flex items-end justify-between gap-3">
-        <div className={cn("min-w-0 font-mono text-[28px] font-medium leading-none tracking-[-0.03em] tabular-nums max-sm:text-[24px]", tone !== "neutral" && TONE_TEXT[tone])}>
+        <div className={cn("fm-figure min-w-0 text-[34px] leading-none max-sm:text-[28px]", tone !== "neutral" && TONE_TEXT[tone])}>
           {value}
-          {unit && <span className="ml-1 text-[13px] font-normal tracking-normal text-fm-faint">{unit}</span>}
+          {unit && <span className="ml-1 font-sans text-[15px] font-normal tracking-normal text-fm-faint">{unit}</span>}
         </div>
         {spark && spark.length > 1 && <Spark values={spark} className={cn("max-md:hidden", tone === "neutral" ? "text-fm-muted" : TONE_TEXT[tone])} />}
       </div>
       {(delta || hint) && (
-        <div className="flex items-center gap-2 text-[11.5px] text-fm-muted">
+        <div className="flex items-center gap-2 text-[12.5px] text-fm-muted">
           {delta && <span className="font-mono tabular-nums">{delta}</span>}
           {hint && <span className="truncate text-fm-faint">{hint}</span>}
         </div>
@@ -44,10 +44,10 @@ export function KpiTile({ label, value, unit, delta, tone = "neutral", hint, spa
   );
 }
 
-/** A strip of readouts separated by hairlines (the KPI rail). */
+/** A white card of readouts divided by hairlines. */
 export function KpiStrip({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("grid divide-fm-border rounded-fm border border-fm-border bg-fm-panel max-md:divide-y md:divide-x", className)}>
+    <div className={cn("grid divide-fm-border overflow-hidden rounded-fm bg-fm-panel max-md:divide-y md:divide-x", className)}>
       {children}
     </div>
   );
@@ -60,7 +60,7 @@ export function Spark({ values, className, width = 72, height = 24 }: { values: 
   const pts = values.map((v, i) => `${(i * step).toFixed(1)},${(height - ((v - min) / (max - min || 1)) * (height - 2) - 1).toFixed(1)}`);
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className={cn("shrink-0", className)} aria-hidden>
-      <polyline points={pts.join(" ")} fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={pts.join(" ")} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
       <circle cx={width} cy={pts[pts.length - 1].split(",")[1]} r="2" fill="currentColor" />
     </svg>
   );

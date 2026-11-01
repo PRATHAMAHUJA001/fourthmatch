@@ -37,8 +37,8 @@ export function Stepper({ stages = PIPELINE_STAGES, states, timing, orientation 
           const st = states[s.key] ?? "pending";
           return (
             <li key={s.key} className="flex min-w-0 flex-1 flex-col gap-1.5" aria-current={st === "active" ? "step" : undefined}>
-              <span className={cn("h-[3px] rounded-full", st === "done" && "bg-fm-verified", st === "active" && "fm-live-dot bg-fm-hold", st === "failed" && "bg-fm-fraud", st === "pending" && "bg-fm-border")} />
-              <span className={cn("truncate font-cond text-[10.5px] font-semibold uppercase tracking-[0.06em]", st === "pending" ? "text-fm-faint" : st === "active" ? "text-fm-hold" : "text-fm-muted")}>
+              <span className={cn("h-1 rounded-full", st === "done" && "bg-fm-verified-fill", st === "active" && "fm-live-dot bg-fm-accent", st === "failed" && "bg-fm-fraud-fill", st === "pending" && "bg-fm-hover")} />
+              <span className={cn("truncate text-[12px] font-medium tracking-[-0.005em]", st === "pending" ? "text-fm-faint" : st === "active" ? "text-fm-accent-text" : "text-fm-muted")}>
                 <span className="mr-1 font-mono text-fm-faint">{i + 1}</span>{s.label}
               </span>
             </li>
@@ -53,18 +53,18 @@ export function Stepper({ stages = PIPELINE_STAGES, states, timing, orientation 
         const st = states[s.key] ?? "pending";
         const last = i === stages.length - 1;
         return (
-          <li key={s.key} className="relative flex gap-3 pb-3 last:pb-0" aria-current={st === "active" ? "step" : undefined}>
+          <li key={s.key} className="relative flex gap-3 pb-4 last:pb-0" aria-current={st === "active" ? "step" : undefined}>
             {!last && <span className={cn("absolute left-[7px] top-[18px] bottom-0 w-px", st === "done" ? "bg-fm-verified-line" : "bg-fm-border")} aria-hidden />}
             <span className={cn("relative z-10 mt-[2px] flex h-[15px] w-[15px] items-center justify-center",
-              st === "done" && "text-fm-verified", st === "active" && "text-fm-hold", st === "failed" && "text-fm-fraud", st === "pending" && "text-fm-border-strong")}>
+              st === "done" && "text-fm-verified", st === "active" && "text-fm-accent", st === "failed" && "text-fm-fraud", st === "pending" && "text-fm-faint")}>
               {st === "done" ? <SignalGlyph signal="verified" size={13} /> : st === "active" ? <SignalGlyph signal="live" size={15} /> : st === "failed" ? <SignalGlyph signal="fraud" size={13} /> : <SignalGlyph signal="neutral" size={13} />}
             </span>
             <div className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
               <div className="min-w-0">
-                <div className={cn("text-[12.5px] font-medium", st === "pending" && "text-fm-faint", st === "active" && "text-fm-hold")}>{s.label}</div>
-                {s.detail && <div className="truncate font-mono text-[10.5px] text-fm-faint">{s.detail}</div>}
+                <div className={cn("text-[14px] font-medium tracking-[-0.01em]", st === "pending" && "text-fm-faint", st === "active" && "text-fm-accent-text")}>{s.label}</div>
+                {s.detail && <div className="truncate font-mono text-[11.5px] text-fm-faint">{s.detail}</div>}
               </div>
-              <span className="shrink-0 font-mono text-[11px] tabular-nums text-fm-muted">
+              <span className="shrink-0 font-mono text-[12px] tabular-nums text-fm-muted">
                 {timing?.[s.key] != null ? `${(timing[s.key] / 1000).toFixed(1)}s` : st === "active" ? "…" : ""}
               </span>
             </div>

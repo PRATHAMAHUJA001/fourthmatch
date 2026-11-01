@@ -4,24 +4,28 @@ import { forwardRef, type ButtonHTMLAttributes } from "react";
 import { cn } from "../../lib/cn";
 
 const buttonVariants = cva(
-  "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-fm-sm border font-medium transition-[background-color,border-color,color,opacity] duration-[var(--fm-motion)] disabled:pointer-events-none disabled:opacity-40 active:translate-y-px",
+  "inline-flex select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-full font-medium tracking-[-0.01em] transition-[background-color,color,opacity,transform] duration-200 ease-[var(--fm-ease)] disabled:pointer-events-none disabled:opacity-40 active:scale-[0.98] motion-reduce:active:scale-100",
   {
     variants: {
       variant: {
-        primary: "border-fm-text bg-fm-text text-fm-bg hover:opacity-90",
-        accent: "border-fm-hold bg-fm-hold text-fm-ink hover:brightness-110 font-semibold",
-        secondary: "border-fm-border-strong bg-fm-raised text-fm-text hover:bg-fm-hover",
-        ghost: "border-transparent bg-transparent text-fm-muted hover:bg-fm-raised hover:text-fm-text",
-        hold: "border-fm-hold-line bg-fm-hold-bg text-fm-hold hover:border-fm-hold",
-        verified: "border-fm-verified-line bg-fm-verified-bg text-fm-verified hover:border-fm-verified",
-        danger: "border-fm-fraud-line bg-fm-fraud-bg text-fm-fraud hover:border-fm-fraud",
+        /** Blue pill: the one call to action on a surface. */
+        accent: "bg-fm-accent text-white hover:bg-fm-accent-hover",
+        /** Ink pill: strong, but not the accent. */
+        primary: "bg-fm-text text-fm-canvas hover:opacity-85",
+        secondary: "bg-fm-raised text-fm-text hover:bg-fm-hover",
+        ghost: "bg-transparent text-fm-muted hover:bg-fm-raised hover:text-fm-text",
+        link: "h-auto bg-transparent !px-0 text-fm-accent-text hover:underline underline-offset-4",
+        hold: "bg-fm-hold-bg text-fm-hold hover:brightness-[0.97]",
+        verified: "bg-fm-verified-bg text-fm-verified hover:brightness-[0.97]",
+        danger: "bg-fm-fraud-bg text-fm-fraud hover:brightness-[0.97]",
       },
       size: {
-        xs: "h-6 px-2 text-[11px]",
-        sm: "h-7 px-2.5 text-[12px]",
-        md: "h-8 px-3 text-[12.5px]",
-        lg: "h-10 px-4 text-[13.5px]",
-        icon: "h-8 w-8 p-0",
+        xs: "h-7 px-3 text-[12px]",
+        sm: "h-8 px-3.5 text-[13px]",
+        md: "h-9 px-4 text-[14px]",
+        lg: "h-11 px-5 text-[15px]",
+        xl: "h-12 px-6 text-[17px]",
+        icon: "h-9 w-9 p-0",
       },
     },
     defaultVariants: { variant: "secondary", size: "md" },

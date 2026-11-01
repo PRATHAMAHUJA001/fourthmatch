@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Self-hosted fonts (SIL OFL): Inter variable + IBM Plex Mono. No third-party requests at runtime. */
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/IBMPlexMono-400-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/IBMPlexMono-400-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/IBMPlexMono-500-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("/fonts/IBMPlexMono-500-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400 800; font-display: swap; src: url("/fonts/Inter-400-800-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Inter"; font-style: normal; font-weight: 400 800; font-display: swap; src: url("/fonts/Inter-400-800-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
 @theme inline {
   --color-fm-bg: var(--fm-bg);
   --color-fm-sunken: var(--fm-sunken);
@@ -17,6 +25,17 @@
   --color-fm-fraud: var(--fm-fraud);
   --color-fm-review: var(--fm-review);
   --color-fm-info: var(--fm-info);
+  --color-fm-canvas: var(--fm-canvas);
+  --color-fm-section: var(--fm-section);
+  --color-fm-tile: var(--fm-tile);
+  --color-fm-accent: var(--fm-accent);
+  --color-fm-accent-hover: var(--fm-accent-hover);
+  --color-fm-accent-text: var(--fm-accent-text);
+  --color-fm-hold-fill: var(--fm-hold-fill);
+  --color-fm-verified-fill: var(--fm-verified-fill);
+  --color-fm-fraud-fill: var(--fm-fraud-fill);
+  --color-fm-review-fill: var(--fm-review-fill);
+  --color-fm-glass: var(--fm-glass);
   --color-fm-hold-bg: var(--fm-hold-bg);
   --color-fm-verified-bg: var(--fm-verified-bg);
   --color-fm-fraud-bg: var(--fm-fraud-bg);
@@ -31,134 +50,201 @@
   --font-mono: var(--fm-font-mono);
   --radius-fm: var(--fm-radius);
   --radius-fm-sm: var(--fm-radius-sm);
+  --radius-fm-xl: var(--fm-radius-xl);
+  --shadow-fm-float: var(--fm-shadow-float);
 }
 
 /* ————————————————————————————————————————————————————————————————
-   FourthMatch / Dock Control tokens
-   Dark: graphite instrument panel. Light: "print room" — warm paper + ink.
-   Elevation is hairlines + steps of surface, never shadows or gradients.
-   Signal colour is always paired with an icon shape + a text label.
+   FourthMatch tokens. Light is the default; dark is the toggle.
+   One surface rule: elevation by FILL, never by line + shadow together.
+   White cards on #F5F5F7, #F5F5F7 tiles on white. Hairlines only divide
+   content inside a surface. Shadows only on floating layers (nav, menus).
+   Signal colour is always paired with a glyph shape and a text label.
    ———————————————————————————————————————————————————————————————— */
 :root,
-:root[data-theme="dark"] {
-  --fm-bg: #0b0c0e;
-  --fm-sunken: #08090a;
-  --fm-panel: #111316;
-  --fm-raised: #171a1e;
-  --fm-hover: #1d2025;
-  --fm-border: #22262c;
-  --fm-border-strong: #30353d;
-  --fm-text: #ecedee;
-  --fm-muted: #8b9098;
-  --fm-faint: #5d636c;
-  --fm-ink: #0b0c0e;
-
-  --fm-hold: #ffb224;
-  --fm-verified: #3dd68c;
-  --fm-fraud: #ff6369;
-  --fm-review: #8fa1bb;
-  --fm-info: #6cb4ff;
-  --fm-hold-bg: color-mix(in srgb, #ffb224 11%, transparent);
-  --fm-verified-bg: color-mix(in srgb, #3dd68c 10%, transparent);
-  --fm-fraud-bg: color-mix(in srgb, #ff6369 11%, transparent);
-  --fm-review-bg: color-mix(in srgb, #8fa1bb 12%, transparent);
-  --fm-info-bg: color-mix(in srgb, #6cb4ff 10%, transparent);
-  --fm-hold-line: color-mix(in srgb, #ffb224 38%, transparent);
-  --fm-verified-line: color-mix(in srgb, #3dd68c 34%, transparent);
-  --fm-fraud-line: color-mix(in srgb, #ff6369 38%, transparent);
-  --fm-review-line: color-mix(in srgb, #8fa1bb 34%, transparent);
-
-  --fm-grid-dot: color-mix(in srgb, #ecedee 7%, transparent);
-  color-scheme: dark;
-}
-
 :root[data-theme="light"] {
-  --fm-bg: #f3f1ec;
-  --fm-sunken: #ebe8e1;
-  --fm-panel: #fbfaf7;
-  --fm-raised: #f6f4ef;
-  --fm-hover: #eeebe4;
-  --fm-border: #dcd8cf;
-  --fm-border-strong: #c3beb2;
-  --fm-text: #16171a;
-  --fm-muted: #5b5f66;
-  --fm-faint: #8a8d92;
-  --fm-ink: #fbfaf7;
+  --fm-canvas: #ffffff;        /* landing sections, page canvas */
+  --fm-section: #f5f5f7;       /* alternate landing section */
+  --fm-tile: #f5f5f7;          /* tile / card sitting on the canvas */
+  --fm-bg: #f5f5f7;            /* app page background, alternate sections */
+  --fm-sunken: #ededf0;        /* wells: video letterbox, inputs */
+  --fm-panel: #ffffff;         /* cards on the grey page */
+  --fm-raised: #f5f5f7;        /* tiles inside a white card */
+  --fm-hover: #ebebef;
+  --fm-border: rgba(0, 0, 0, 0.08);
+  --fm-border-strong: rgba(0, 0, 0, 0.16);
+  --fm-text: #1d1d1f;
+  --fm-muted: #6e6e73;
+  --fm-faint: #86868b;
+  --fm-ink: #ffffff;           /* drawn on top of a filled signal */
 
-  --fm-hold: #a65a00;
-  --fm-verified: #12784a;
-  --fm-fraud: #c4252b;
-  --fm-review: #4a5a72;
-  --fm-info: #1d64c4;
-  --fm-hold-bg: #fbecd2;
-  --fm-verified-bg: #ddf1e5;
-  --fm-fraud-bg: #f9dfdf;
-  --fm-review-bg: #e3e7ee;
-  --fm-info-bg: #e0ebf9;
-  --fm-hold-line: #e7b46a;
-  --fm-verified-line: #8fcfac;
-  --fm-fraud-line: #e79b9e;
-  --fm-review-line: #a9b4c6;
+  --fm-accent: #0071e3;
+  --fm-accent-hover: #0077ed;
+  --fm-accent-text: #0066cc;
 
-  --fm-grid-dot: color-mix(in srgb, #16171a 9%, transparent);
+  /* Text-safe signal tones on white, plus the bright fills used for tiles and dots. */
+  --fm-hold: #b25e00;
+  --fm-hold-fill: #ff9f0a;
+  --fm-verified: #248a3d;
+  --fm-verified-fill: #30d158;
+  --fm-fraud: #d70015;
+  --fm-fraud-fill: #ff453a;
+  --fm-review: #6e6e73;
+  --fm-review-fill: #8e8e93;
+  --fm-info: #0071e3;
+  --fm-hold-bg: #fff4e0;
+  --fm-verified-bg: #e8f6ec;
+  --fm-fraud-bg: #ffeceb;
+  --fm-review-bg: #f0f0f2;
+  --fm-info-bg: #e8f1fc;
+  --fm-hold-line: rgba(255, 159, 10, 0.45);
+  --fm-verified-line: rgba(36, 138, 61, 0.3);
+  --fm-fraud-line: rgba(215, 0, 21, 0.3);
+  --fm-review-line: rgba(0, 0, 0, 0.14);
+
+  --fm-glass: rgba(255, 255, 255, 0.72);
+  --fm-glass-line: rgba(0, 0, 0, 0.06);
+  --fm-shadow-float: 0 1px 1px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(0, 0, 0, 0.08), 0 24px 64px rgba(0, 0, 0, 0.06);
+  --fm-grid-dot: rgba(0, 0, 0, 0.07);
   color-scheme: light;
 }
 
+:root[data-theme="dark"] {
+  --fm-canvas: #000000;
+  --fm-section: #161617;
+  --fm-tile: #1c1c1e;
+  --fm-bg: #000000;
+  --fm-sunken: #0a0a0b;
+  --fm-panel: #1c1c1e;
+  --fm-raised: #2c2c2e;
+  --fm-hover: #3a3a3c;
+  --fm-border: rgba(255, 255, 255, 0.1);
+  --fm-border-strong: rgba(255, 255, 255, 0.18);
+  --fm-text: #f5f5f7;
+  --fm-muted: #a1a1a6;
+  --fm-faint: #6e6e73;
+  --fm-ink: #000000;
+
+  --fm-accent: #2997ff;
+  --fm-accent-hover: #47a6ff;
+  --fm-accent-text: #2997ff;
+
+  --fm-hold: #ff9f0a;
+  --fm-hold-fill: #ff9f0a;
+  --fm-verified: #30d158;
+  --fm-verified-fill: #30d158;
+  --fm-fraud: #ff453a;
+  --fm-fraud-fill: #ff453a;
+  --fm-review: #98989d;
+  --fm-review-fill: #8e8e93;
+  --fm-info: #2997ff;
+  --fm-hold-bg: rgba(255, 159, 10, 0.14);
+  --fm-verified-bg: rgba(48, 209, 88, 0.13);
+  --fm-fraud-bg: rgba(255, 69, 58, 0.14);
+  --fm-review-bg: rgba(142, 142, 147, 0.16);
+  --fm-info-bg: rgba(41, 151, 255, 0.14);
+  --fm-hold-line: rgba(255, 159, 10, 0.42);
+  --fm-verified-line: rgba(48, 209, 88, 0.36);
+  --fm-fraud-line: rgba(255, 69, 58, 0.4);
+  --fm-review-line: rgba(255, 255, 255, 0.18);
+
+  --fm-glass: rgba(22, 22, 23, 0.72);
+  --fm-glass-line: rgba(255, 255, 255, 0.08);
+  --fm-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5), 0 24px 64px rgba(0, 0, 0, 0.4);
+  --fm-grid-dot: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
+}
+
 :root {
-  --fm-font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --fm-font-cond: "IBM Plex Sans Condensed", "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --fm-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", ui-sans-serif, system-ui, sans-serif;
+  --fm-font-cond: var(--fm-font-sans);
   --fm-font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
-  --fm-radius: 6px;
-  --fm-radius-sm: 3px;
-  --fm-motion: 150ms;
-  --fm-ease: cubic-bezier(0.2, 0, 0, 1);
-  --fm-row-h: 34px;
+  --fm-radius-xl: 28px;   /* story cards, hero media */
+  --fm-radius: 18px;      /* cards, panels */
+  --fm-radius-sm: 10px;   /* tiles, inputs, video wells */
+  --fm-motion: 200ms;
+  --fm-ease: cubic-bezier(0.22, 1, 0.36, 1);   /* ease-out-quint: Apple-ish settle */
+  --fm-row-h: 44px;
+  --fm-nav-h: 52px;
   /* Fixed in both themes: the amber signal block and the ink drawn on it. */
-  --fm-amber-fixed: #ffb224;
-  --fm-ink-fixed: #16171a;
+  --fm-amber-fixed: #ff9f0a;
+  --fm-ink-fixed: #1d1d1f;
 }
 .fm-amber-block { background: var(--fm-amber-fixed); color: var(--fm-ink-fixed); }
 
 * { border-color: var(--fm-border); }
-html, body, #root { height: 100%; }
+html { -webkit-text-size-adjust: 100%; }
+html, body { min-height: 100%; }
 body {
   margin: 0;
   background: var(--fm-bg);
   color: var(--fm-text);
   font-family: var(--fm-font-sans);
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 14px;
+  line-height: 1.47;
+  letter-spacing: -0.006em;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "ss01", "ss02";
+  font-feature-settings: "cv11", "ss01";
+  font-optical-sizing: auto;
 }
-::selection { background: var(--fm-hold); color: var(--fm-ink); }
+::selection { background: color-mix(in srgb, var(--fm-accent) 24%, transparent); }
 
 :focus-visible {
-  outline: 2px solid var(--fm-hold);
-  outline-offset: 2px;
-  border-radius: 2px;
+  outline: 2px solid var(--fm-accent);
+  outline-offset: 3px;
+  border-radius: 6px;
 }
 
-.font-mono, .tnum { font-variant-numeric: tabular-nums slashed-zero; }
+h1, h2, h3, .fm-balance { text-wrap: balance; }
+p { text-wrap: pretty; }
 
-/* Condensed instrument label: the house style for every small heading. */
+.font-mono, .tnum { font-variant-numeric: tabular-nums slashed-zero; font-feature-settings: "tnum", "zero"; letter-spacing: -0.01em; }
+
+/* Display-size figures (40px+): Inter with tabular numerals, SF-style. Plex Mono stays for IDs,
+   hashes and inline / table figures, where its fixed width earns its keep. */
+.fm-figure { font-family: var(--fm-font-sans); font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; font-weight: 600; letter-spacing: -0.045em; }
+
+/* Small label: sentence case, semibold, muted. Replaces the old uppercase condensed label. */
 .fm-label {
-  font-family: var(--fm-font-cond);
-  font-size: 11px;
+  font-family: var(--fm-font-sans);
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: -0.003em;
   color: var(--fm-muted);
 }
 
-/* Dot grid used behind video, hero and empty states. */
+/* ——— type scale (display) ——— */
+.fm-hero { font-size: clamp(48px, 7.4vw, 104px); line-height: 1.02; font-weight: 700; letter-spacing: -0.038em; }
+.fm-display { font-size: clamp(40px, 5.6vw, 80px); line-height: 1.04; font-weight: 700; letter-spacing: -0.034em; }
+.fm-title { font-size: clamp(32px, 4vw, 56px); line-height: 1.07; font-weight: 700; letter-spacing: -0.028em; }
+.fm-headline { font-size: clamp(24px, 2.4vw, 32px); line-height: 1.14; font-weight: 600; letter-spacing: -0.022em; }
+.fm-lede { font-size: clamp(19px, 1.6vw, 24px); line-height: 1.38; font-weight: 500; letter-spacing: -0.014em; }
+.fm-body { font-size: 17px; line-height: 1.53; letter-spacing: -0.012em; }
+.fm-caption { font-size: 12px; line-height: 1.4; letter-spacing: -0.002em; }
+.fm-eyebrow { font-size: 17px; line-height: 1.3; font-weight: 600; letter-spacing: -0.012em; }
+
+/* Frosted layer for the nav and floating elements. */
+.fm-glass {
+  background: var(--fm-glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+.fm-glass-dark {
+  background: rgba(22, 22, 23, 0.74);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Dot grid used behind empty states. */
 .fm-dotgrid {
   background-image: radial-gradient(var(--fm-grid-dot) 1px, transparent 1px);
   background-size: 16px 16px;
 }
 
-/* Viewfinder corner ticks: four L-shaped marks drawn with backgrounds. */
+/* Viewfinder corner ticks (camera frames only). */
 .fm-ticks { position: relative; }
 .fm-ticks::before {
   content: "";
@@ -178,6 +264,10 @@ body {
   background-repeat: no-repeat;
 }
 
+/* Scroll reveal: elements start 24px low and transparent, settle when .is-in is set. */
+.fm-reveal { opacity: 0; transform: translate3d(0, 24px, 0); transition: opacity 600ms var(--fm-ease), transform 600ms var(--fm-ease); transition-delay: var(--fm-delay, 0ms); }
+.fm-reveal.is-in, .is-in .fm-reveal { opacity: 1; transform: none; }
+
 /* ——— motion ——— */
 @keyframes fm-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 .fm-live-dot { animation: fm-pulse 1.6s ease-in-out infinite; }
@@ -186,8 +276,8 @@ body {
 .fm-skeleton {
   background: linear-gradient(90deg, var(--fm-raised) 25%, var(--fm-hover) 50%, var(--fm-raised) 75%);
   background-size: 200% 100%;
-  animation: fm-shimmer 1.4s linear infinite;
-  border-radius: var(--fm-radius-sm);
+  animation: fm-shimmer 1.6s linear infinite;
+  border-radius: 8px;
 }
 
 @keyframes fm-sweep { from { transform: translateX(-100%); } to { transform: translateX(100vw); } }
@@ -199,14 +289,11 @@ body {
   animation: fm-scan 2.4s linear infinite alternate;
 }
 
-@keyframes fm-glow {
-  0%, 100% { box-shadow: inset 0 0 0 1px var(--fm-hold-line), 0 0 0 0 color-mix(in srgb, var(--fm-hold) 0%, transparent); }
-  50% { box-shadow: inset 0 0 0 1px var(--fm-hold), 0 0 18px 0 color-mix(in srgb, var(--fm-hold) 28%, transparent); }
-}
-.fm-glow-hold { animation: fm-glow 2.2s ease-in-out infinite; }
+/* Mismatch emphasis: a steady amber ring. No glow. */
+.fm-glow-hold { box-shadow: inset 0 0 0 1.5px var(--fm-hold-fill); }
 
-@keyframes fm-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-.fm-rise { animation: fm-rise 220ms var(--fm-ease) both; }
+@keyframes fm-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise 420ms var(--fm-ease) both; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -216,11 +303,12 @@ body {
     scroll-behavior: auto !important;
   }
   .fm-scanline { display: none; }
+  .fm-reveal { opacity: 1; transform: none; transition: none; }
 }
 
 .fm-scroll { scrollbar-width: thin; scrollbar-color: var(--fm-border-strong) transparent; }
 .fm-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
-.fm-scroll::-webkit-scrollbar-thumb { background: var(--fm-border-strong); border-radius: 4px; }
+.fm-scroll::-webkit-scrollbar-thumb { background: var(--fm-border-strong); border-radius: 8px; }
 .fm-scroll::-webkit-scrollbar-track { background: transparent; }
 
 /* LoadDiagram live fill: a slot lands with a short opacity ramp. */

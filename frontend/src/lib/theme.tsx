@@ -3,7 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 export type Theme = "dark" | "light";
 
 const ThemeCtx = createContext<{ theme: Theme; toggle: () => void; setTheme: (t: Theme) => void }>({
-  theme: "dark",
+  theme: "light",
   toggle: () => {},
   setTheme: () => {},
 });
@@ -13,7 +13,7 @@ function initialTheme(): Theme {
     const saved = localStorage.getItem("fm-theme");
     if (saved === "light" || saved === "dark") return saved;
   } catch { /* private mode */ }
-  return "dark";
+  return "light";
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {

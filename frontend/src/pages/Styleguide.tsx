@@ -19,13 +19,13 @@ import type { Verdict } from "../types/api";
 import { ColourTokens } from "./styleguide/Swatches";
 
 const Row = ({ label, children }: { label: string; children: ReactNode }) => (
-  <div className="grid items-center gap-x-4 gap-y-1.5 border-b border-fm-border py-2 last:border-0 sm:grid-cols-[160px_1fr]">
+  <div className="grid items-center gap-x-6 gap-y-2 border-b border-fm-border py-3.5 first:pt-0 last:border-0 last:pb-0 sm:grid-cols-[168px_1fr]">
     <span className="fm-label">{label}</span>
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">{children}</div>
   </div>
 );
 
-const Cap = ({ children }: { children: ReactNode }) => <span className="font-mono text-[10.5px] text-fm-faint">{children}</span>;
+const Cap = ({ children }: { children: ReactNode }) => <span className="font-mono text-[11.5px] text-fm-faint">{children}</span>;
 
 const SIGNALS: { s: Signal; name: string; note: string }[] = [
   { s: "verified", name: "Verified", note: "square + check" },
@@ -75,27 +75,28 @@ export function Styleguide() {
   return (
     <div className="fm-rise">
       <PageHeader
-        eyebrow="Design system · v1"
-        title="Dock Control design system"
-        meta={<span>Graphite instrument panel in dark, warm print room in light. Hairlines instead of shadows, shape plus label instead of colour alone.</span>}
+        eyebrow="Design system · v2"
+        title="FourthMatch design system"
+        meta={<span>Light by default, dark on toggle. Elevation by fill, one blue accent, shape plus label instead of colour alone.</span>}
         actions={<Button variant="secondary" onClick={toggle}>{theme === "dark" ? "Switch to light" : "Switch to dark"}</Button>}
       />
-      <p className="mb-3 flex items-center gap-2 text-[11.5px] text-fm-faint">
+      <p className="mb-6 flex items-center gap-2 text-[13px] text-fm-muted">
         <Tag tone="hold">Example values</Tag> Numbers and names in the samples below are illustrative fixtures, not case data.
       </p>
 
-      <div className="grid gap-3 xl:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-2">
         <Section index="01" title="Colour tokens" className="xl:col-span-2"><ColourTokens /></Section>
 
         <Section index="02" title="Typography">
-          <Row label="Sans · Plex Sans"><span className="text-[22px] font-semibold tracking-[-0.015em]">Hold payment until the dock agrees</span></Row>
-          <Row label="Sans · body"><span className="max-w-md text-[13px]">The vision count is 12 against a GRN of 14. Policy clause 4.2 applies, so the invoice is held.</span></Row>
-          <Row label="Condensed label"><span className="fm-label">Amount held · fm-label</span></Row>
-          <Row label="Mono numbers"><span className="font-mono text-[28px] tabular-nums tracking-[-0.03em]">12,45,000</span><Cap>Plex Mono, tabular, slashed zero: 0 O 1 l</Cap></Row>
+          <Row label="Display · .fm-title"><span className="text-[40px] font-bold leading-[1.05] tracking-[-0.03em]">Paper says 14.</span></Row>
+          <Row label="Headline · .fm-headline"><span className="fm-headline">Hold payment until the dock agrees</span></Row>
+          <Row label="Body · .fm-body"><span className="fm-body max-w-md">The vision count is 12 against a GRN of 14. Policy clause 4.2 applies, so the shortfall is held.</span></Row>
+          <Row label="Label · .fm-label"><span className="fm-label">Amount held</span></Row>
+          <Row label="Mono figures"><span className="font-mono text-[34px] tracking-[-0.04em]">₹12,45,000</span><Cap>IBM Plex Mono, tabular: IDs, quantities, rupees, hashes only</Cap></Row>
           <Row label="Scale">
             <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
-              {[["44", "hero count"], ["28", "kpi"], ["22", "page title"], ["13", "body"], ["12.5", "table"], ["11", "label"], ["10.5", "mono caption"]].map(([px, n]) => (
-                <span key={px} className="flex items-baseline gap-1.5"><span className="font-mono tabular-nums" style={{ fontSize: Number(px) > 30 ? 30 : Number(px) }}>{px}</span><Cap>{n}</Cap></span>
+              {[["104", "hero"], ["80", "display"], ["56", "title"], ["32", "headline"], ["24", "lede"], ["17", "body"], ["14", "ui"], ["12", "caption"]].map(([px, n]) => (
+                <span key={px} className="flex items-baseline gap-1.5"><span className="font-semibold tracking-[-0.02em]" style={{ fontSize: Math.min(Number(px), 34) }}>{px}</span><Cap>{n}</Cap></span>
               ))}
             </div>
           </Row>
@@ -106,10 +107,10 @@ export function Styleguide() {
             <div className="grid w-full grid-cols-2 gap-x-6 gap-y-2.5 sm:grid-cols-3">
               {SIGNALS.map(({ s, name, note }) => (
                 <div key={s} className="flex items-center gap-2.5">
-                  <span className={`flex h-7 w-7 items-center justify-center rounded-fm-sm border ${s === "verified" ? "border-fm-verified-line text-fm-verified" : s === "hold" || s === "partial" ? "border-fm-hold-line text-fm-hold" : s === "fraud" ? "border-fm-fraud-line text-fm-fraud" : s === "review" ? "border-fm-review-line text-fm-review" : s === "live" ? "border-fm-border text-fm-info" : "border-fm-border text-fm-muted"}`}>
+                  <span className={`flex h-9 w-9 items-center justify-center rounded-full ${s === "verified" ? "bg-fm-verified-bg text-fm-verified" : s === "hold" || s === "partial" ? "bg-fm-hold-bg text-fm-hold" : s === "fraud" ? "bg-fm-fraud-bg text-fm-fraud" : s === "review" ? "bg-fm-review-bg text-fm-review" : s === "live" ? "bg-fm-info-bg text-fm-info" : "bg-fm-raised text-fm-muted"}`}>
                     <SignalGlyph signal={s} size={16} />
                   </span>
-                  <span className="leading-tight"><span className="block text-[12px] font-medium">{name}</span><Cap>{note}</Cap></span>
+                  <span className="leading-tight"><span className="block text-[14px] font-medium">{name}</span><Cap>{note}</Cap></span>
                 </div>
               ))}
             </div>
@@ -122,7 +123,7 @@ export function Styleguide() {
               <StatusBadge quality="insufficient" size={size} />
             </Row>
           ))}
-          <p className="mt-2 text-[12px] text-fm-muted">Shape + label, never colour alone. Each state keeps its meaning in greyscale, on a projector and for colour-blind viewers.</p>
+          <p className="mt-4 text-[14px] text-fm-muted">Shape + label, never colour alone. Each state keeps its meaning in greyscale, on a projector and for colour-blind viewers.</p>
         </Section>
 
         <Section index="04" title="Money & quantities">
@@ -139,11 +140,14 @@ export function Styleguide() {
         </Section>
 
         <Section index="05" title="Buttons">
-          {(["xs", "sm", "md", "lg"] as const).map((size) => (
-            <Row key={size} label={`Size · ${size}`}>
-              {(["primary", "accent", "secondary", "ghost", "hold", "verified", "danger"] as const).map((v) => <Button key={v} variant={v} size={size}>{v}</Button>)}
+          {(["sm", "md", "lg", "xl"] as const).map((size) => (
+            <Row key={size} label={`Pill · ${size}`}>
+              {(["accent", "primary", "secondary", "ghost", "link"] as const).map((v) => <Button key={v} variant={v} size={size}>{v}</Button>)}
             </Row>
           ))}
+          <Row label="Signal pills">
+            {(["hold", "verified", "danger"] as const).map((v) => <Button key={v} variant={v} size="md">{v}</Button>)}
+          </Row>
           <Row label="Icon · disabled">
             <Button size="icon" variant="secondary" aria-label="Brand"><BrandMark size={14} /></Button>
             <Button variant="accent" disabled>Disabled</Button>
@@ -160,8 +164,8 @@ export function Styleguide() {
         </Section>
 
         <Section index="07" title="LiveCounter">
-          <Row label="Odometer"><LiveCounter value={count} digits={2} className="text-[44px] text-fm-hold" label="Boxes counted" /><Button variant="hold" onClick={() => setCount((c) => (c >= 99 ? 0 : c + 1))}>Count one more</Button></Row>
-          <p className="mt-2 text-[12px] text-fm-muted">Each digit rolls on its own. Used for the vision cell while tracks accumulate, so a judge can watch the count settle on a number.</p>
+          <Row label="Odometer"><LiveCounter value={count} digits={2} className="text-[56px] tracking-[-0.04em] text-fm-hold" label="Boxes counted" /><Button variant="hold" onClick={() => setCount((c) => (c >= 99 ? 0 : c + 1))}>Count one more</Button></Row>
+          <p className="mt-4 text-[14px] text-fm-muted">Each digit rolls on its own. Used for the vision cell while tracks accumulate, so a judge can watch the count settle on a number.</p>
         </Section>
 
         <Section index="08" title="KPI strip" className="xl:col-span-2">
@@ -176,11 +180,11 @@ export function Styleguide() {
         <Section index="09" title="Four-Match" className="xl:col-span-2">
           <div className="grid gap-5">
             <div>
-              <div className="fm-label mb-2">Mismatch · vision disagrees</div>
+              <div className="fm-label mb-3">Mismatch · vision disagrees</div>
               <FourMatchStrip values={{ po: 14, grn: 14, invoice: 14, vision: 12 }} unit="box" variancePct={-14.3} />
             </div>
             <div>
-              <div className="fm-label mb-2">Match · all four agree</div>
+              <div className="fm-label mb-3">Match · all four agree</div>
               <FourMatchStrip values={{ po: 12, grn: 12, invoice: 12, vision: 12 }} unit="box" />
             </div>
             <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
@@ -197,24 +201,24 @@ export function Styleguide() {
             <div><div className="fm-label mb-2">Vertical · running</div><Stepper states={STEP_STATES} timing={{ uploading: 1200, understanding: 8400 }} /></div>
             <div><div className="fm-label mb-2">Vertical · failed</div><Stepper states={STEP_FAILED} timing={{ uploading: 900 }} /></div>
           </div>
-          <div className="mt-5 border-t border-fm-border pt-3">
+          <div className="mt-6 border-t border-fm-border pt-5">
             <div className="fm-label mb-2">Horizontal</div>
             <Stepper orientation="horizontal" states={STEP_STATES} />
           </div>
         </Section>
 
         <Section index="11" title="DataTable">
-          <p className="mb-2 text-[12px] text-fm-muted">Sortable headers, mono right-aligned numbers, keyboard navigation off here (one table per page may own j / k).</p>
-          <div className="-mx-3 -mb-3 border-t border-fm-border">
+          <p className="mb-3 text-[14px] text-fm-muted">Sortable headers, mono right-aligned numbers, keyboard navigation off here (one table per page may own j / k).</p>
+          <div className="-mx-5 -mb-5 border-t border-fm-border">
             <DataTable<Sample> columns={SAMPLE_COLS} data={SAMPLE} label="Sample table" />
           </div>
         </Section>
 
         <Section index="12" title="Empty, error, skeleton" className="xl:col-span-2">
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-fm border border-fm-border"><EmptyState title="No deliveries yet" description="Upload dock video against a purchase order to start." /></div>
-            <div className="rounded-fm border border-fm-border"><ErrorState message="The decision service did not answer in time." action={<Button size="sm">Retry</Button>} /></div>
-            <div className="flex flex-col gap-3 rounded-fm border border-fm-border p-3">
+            <div className="rounded-fm-sm bg-fm-raised"><EmptyState title="No deliveries yet" description="Upload dock video against a purchase order to start." /></div>
+            <div className="rounded-fm-sm bg-fm-raised"><ErrorState message="The decision service did not answer in time." action={<Button size="sm">Retry</Button>} /></div>
+            <div className="flex flex-col gap-3 rounded-fm-sm bg-fm-raised p-5">
               <Skeleton className="h-5 w-1/2" />
               <SkeletonRows rows={3} />
             </div>

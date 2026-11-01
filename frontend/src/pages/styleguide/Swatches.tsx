@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 import { useTheme } from "../../lib/theme";
 import { cssVar } from "../../tokens/tokens";
 
-const SURFACES = ["--fm-bg", "--fm-sunken", "--fm-panel", "--fm-raised", "--fm-hover", "--fm-border", "--fm-border-strong"];
-const TEXT = ["--fm-text", "--fm-muted", "--fm-faint"];
+const SURFACES = ["--fm-canvas", "--fm-bg", "--fm-panel", "--fm-raised", "--fm-hover", "--fm-border", "--fm-border-strong"];
+const TEXT = ["--fm-text", "--fm-muted", "--fm-faint", "--fm-accent"];
 const SIGNALS = ["--fm-hold", "--fm-verified", "--fm-fraud", "--fm-review", "--fm-info"];
-const TINTS = ["--fm-hold-bg", "--fm-verified-bg", "--fm-fraud-bg", "--fm-review-bg", "--fm-info-bg"];
+const TINTS = ["--fm-hold-fill", "--fm-verified-fill", "--fm-fraud-fill", "--fm-hold-bg", "--fm-verified-bg"];
 
 /** Resolve any CSS colour (including color-mix) to #rrggbb or rgba() via a canvas. */
 function toHex(value: string): string {
@@ -34,7 +34,7 @@ function Swatch({ name }: { name: string }) {
   }, [theme, name]);
   return (
     <div className="flex items-center gap-2.5">
-      <span className="h-8 w-8 shrink-0 rounded-fm-sm border border-fm-border-strong" style={{ background: `var(${name})` }} aria-hidden />
+      <span className="h-9 w-9 shrink-0 rounded-full shadow-[inset_0_0_0_1px_var(--fm-border)]" style={{ background: `var(${name})` }} aria-hidden />
       <div className="min-w-0 leading-tight">
         <div className="truncate font-mono text-[11px] text-fm-text">{name}</div>
         <div ref={ref} className="font-mono text-[10.5px] uppercase text-fm-muted" />
@@ -60,7 +60,7 @@ export function ColourTokens() {
       <Group title="Surfaces" names={SURFACES} />
       <Group title="Text" names={TEXT} />
       <Group title="Signals" names={SIGNALS} />
-      <Group title="Signal tints" names={TINTS} />
+      <Group title="Fills & tints" names={TINTS} />
     </div>
   );
 }
