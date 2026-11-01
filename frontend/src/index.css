@@ -2,76 +2,117 @@
 
 @theme inline {
   --color-fm-bg: var(--fm-bg);
+  --color-fm-sunken: var(--fm-sunken);
   --color-fm-panel: var(--fm-panel);
   --color-fm-raised: var(--fm-raised);
+  --color-fm-hover: var(--fm-hover);
   --color-fm-border: var(--fm-border);
   --color-fm-border-strong: var(--fm-border-strong);
   --color-fm-text: var(--fm-text);
   --color-fm-muted: var(--fm-muted);
   --color-fm-faint: var(--fm-faint);
+  --color-fm-ink: var(--fm-ink);
   --color-fm-hold: var(--fm-hold);
   --color-fm-verified: var(--fm-verified);
   --color-fm-fraud: var(--fm-fraud);
   --color-fm-review: var(--fm-review);
+  --color-fm-info: var(--fm-info);
   --color-fm-hold-bg: var(--fm-hold-bg);
   --color-fm-verified-bg: var(--fm-verified-bg);
   --color-fm-fraud-bg: var(--fm-fraud-bg);
   --color-fm-review-bg: var(--fm-review-bg);
+  --color-fm-info-bg: var(--fm-info-bg);
+  --color-fm-hold-line: var(--fm-hold-line);
+  --color-fm-verified-line: var(--fm-verified-line);
+  --color-fm-fraud-line: var(--fm-fraud-line);
+  --color-fm-review-line: var(--fm-review-line);
   --font-sans: var(--fm-font-sans);
+  --font-cond: var(--fm-font-cond);
   --font-mono: var(--fm-font-mono);
   --radius-fm: var(--fm-radius);
   --radius-fm-sm: var(--fm-radius-sm);
 }
 
-/* ——— FourthMatch tokens ———
-   Dark graphite control room. Light derived by mist logic (#F5F5F7 canvas),
-   not a naive invert. Hairline borders are elevation; no shadows, no gradients.
-   Signal colours never alone: components pair them with icon + label. */
+/* ————————————————————————————————————————————————————————————————
+   FourthMatch / Dock Control tokens
+   Dark: graphite instrument panel. Light: "print room" — warm paper + ink.
+   Elevation is hairlines + steps of surface, never shadows or gradients.
+   Signal colour is always paired with an icon shape + a text label.
+   ———————————————————————————————————————————————————————————————— */
 :root,
 :root[data-theme="dark"] {
-  --fm-bg: #0e1013;
-  --fm-panel: #161a1f;
-  --fm-raised: #1c2128;
-  --fm-border: #252b33;
-  --fm-border-strong: #313a45;
-  --fm-text: #e6e8eb;
-  --fm-muted: #8a93a0;
-  --fm-faint: #5b6572;
-  --fm-hold: #f5a524;
-  --fm-verified: #2bb673;
-  --fm-fraud: #e5484d;
-  --fm-review: #6b7a90;
-  --fm-hold-bg: color-mix(in srgb, #f5a524 12%, transparent);
-  --fm-verified-bg: color-mix(in srgb, #2bb673 12%, transparent);
-  --fm-fraud-bg: color-mix(in srgb, #e5484d 12%, transparent);
-  --fm-review-bg: color-mix(in srgb, #6b7a90 16%, transparent);
-  --fm-font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --fm-font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
-  --fm-radius: 6px;
-  --fm-radius-sm: 4px;
-  --fm-motion: 150ms;
-  --fm-row-h: 32px;
+  --fm-bg: #0b0c0e;
+  --fm-sunken: #08090a;
+  --fm-panel: #111316;
+  --fm-raised: #171a1e;
+  --fm-hover: #1d2025;
+  --fm-border: #22262c;
+  --fm-border-strong: #30353d;
+  --fm-text: #ecedee;
+  --fm-muted: #8b9098;
+  --fm-faint: #5d636c;
+  --fm-ink: #0b0c0e;
+
+  --fm-hold: #ffb224;
+  --fm-verified: #3dd68c;
+  --fm-fraud: #ff6369;
+  --fm-review: #8fa1bb;
+  --fm-info: #6cb4ff;
+  --fm-hold-bg: color-mix(in srgb, #ffb224 11%, transparent);
+  --fm-verified-bg: color-mix(in srgb, #3dd68c 10%, transparent);
+  --fm-fraud-bg: color-mix(in srgb, #ff6369 11%, transparent);
+  --fm-review-bg: color-mix(in srgb, #8fa1bb 12%, transparent);
+  --fm-info-bg: color-mix(in srgb, #6cb4ff 10%, transparent);
+  --fm-hold-line: color-mix(in srgb, #ffb224 38%, transparent);
+  --fm-verified-line: color-mix(in srgb, #3dd68c 34%, transparent);
+  --fm-fraud-line: color-mix(in srgb, #ff6369 38%, transparent);
+  --fm-review-line: color-mix(in srgb, #8fa1bb 34%, transparent);
+
+  --fm-grid-dot: color-mix(in srgb, #ecedee 7%, transparent);
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
-  --fm-bg: #f5f5f7;
-  --fm-panel: #ffffff;
-  --fm-raised: #fafafc;
-  --fm-border: #d6d6d6;
-  --fm-border-strong: #b8bcc2;
-  --fm-text: #1d1d1f;
-  --fm-muted: #5f6368;
-  --fm-faint: #86868b;
-  --fm-hold: #9a6200;
-  --fm-verified: #157347;
-  --fm-fraud: #c81e1e;
-  --fm-review: #475569;
-  --fm-hold-bg: #fef3c7;
-  --fm-verified-bg: #dcfce7;
-  --fm-fraud-bg: #fee2e2;
-  --fm-review-bg: #e2e8f0;
+  --fm-bg: #f3f1ec;
+  --fm-sunken: #ebe8e1;
+  --fm-panel: #fbfaf7;
+  --fm-raised: #f6f4ef;
+  --fm-hover: #eeebe4;
+  --fm-border: #dcd8cf;
+  --fm-border-strong: #c3beb2;
+  --fm-text: #16171a;
+  --fm-muted: #5b5f66;
+  --fm-faint: #8a8d92;
+  --fm-ink: #fbfaf7;
+
+  --fm-hold: #a65a00;
+  --fm-verified: #12784a;
+  --fm-fraud: #c4252b;
+  --fm-review: #4a5a72;
+  --fm-info: #1d64c4;
+  --fm-hold-bg: #fbecd2;
+  --fm-verified-bg: #ddf1e5;
+  --fm-fraud-bg: #f9dfdf;
+  --fm-review-bg: #e3e7ee;
+  --fm-info-bg: #e0ebf9;
+  --fm-hold-line: #e7b46a;
+  --fm-verified-line: #8fcfac;
+  --fm-fraud-line: #e79b9e;
+  --fm-review-line: #a9b4c6;
+
+  --fm-grid-dot: color-mix(in srgb, #16171a 9%, transparent);
   color-scheme: light;
+}
+
+:root {
+  --fm-font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --fm-font-cond: "IBM Plex Sans Condensed", "IBM Plex Sans", ui-sans-serif, sans-serif;
+  --fm-font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --fm-radius: 6px;
+  --fm-radius-sm: 3px;
+  --fm-motion: 150ms;
+  --fm-ease: cubic-bezier(0.2, 0, 0, 1);
+  --fm-row-h: 34px;
 }
 
 * { border-color: var(--fm-border); }
@@ -83,46 +124,97 @@ body {
   font-family: var(--fm-font-sans);
   font-size: 13px;
   line-height: 1.45;
-  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "ss02";
 }
-::selection { background: var(--fm-hold); color: #0e1013; }
+::selection { background: var(--fm-hold); color: var(--fm-ink); }
 
 :focus-visible {
-  outline: 2px solid var(--fm-text);
-  outline-offset: 1px;
+  outline: 2px solid var(--fm-hold);
+  outline-offset: 2px;
   border-radius: 2px;
 }
+
+.font-mono, .tnum { font-variant-numeric: tabular-nums slashed-zero; }
+
+/* Condensed instrument label: the house style for every small heading. */
+.fm-label {
+  font-family: var(--fm-font-cond);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fm-muted);
+}
+
+/* Dot grid used behind video, hero and empty states. */
+.fm-dotgrid {
+  background-image: radial-gradient(var(--fm-grid-dot) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Viewfinder corner ticks: four L-shaped marks drawn with backgrounds. */
+.fm-ticks { position: relative; }
+.fm-ticks::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  --t: var(--fm-tick, var(--fm-border-strong));
+  background:
+    linear-gradient(var(--t), var(--t)) top left / 10px 1px,
+    linear-gradient(var(--t), var(--t)) top left / 1px 10px,
+    linear-gradient(var(--t), var(--t)) top right / 10px 1px,
+    linear-gradient(var(--t), var(--t)) top right / 1px 10px,
+    linear-gradient(var(--t), var(--t)) bottom left / 10px 1px,
+    linear-gradient(var(--t), var(--t)) bottom left / 1px 10px,
+    linear-gradient(var(--t), var(--t)) bottom right / 10px 1px,
+    linear-gradient(var(--t), var(--t)) bottom right / 1px 10px;
+  background-repeat: no-repeat;
+}
+
+/* ——— motion ——— */
+@keyframes fm-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.fm-live-dot { animation: fm-pulse 1.6s ease-in-out infinite; }
+
+@keyframes fm-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.fm-skeleton {
+  background: linear-gradient(90deg, var(--fm-raised) 25%, var(--fm-hover) 50%, var(--fm-raised) 75%);
+  background-size: 200% 100%;
+  animation: fm-shimmer 1.4s linear infinite;
+  border-radius: var(--fm-radius-sm);
+}
+
+@keyframes fm-sweep { from { transform: translateX(-100%); } to { transform: translateX(100vw); } }
+@keyframes fm-scan { 0% { top: 0%; } 100% { top: 100%; } }
+.fm-scanline {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: var(--fm-hold);
+  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--fm-hold) 55%, transparent);
+  animation: fm-scan 2.4s linear infinite alternate;
+}
+
+@keyframes fm-glow {
+  0%, 100% { box-shadow: inset 0 0 0 1px var(--fm-hold-line), 0 0 0 0 color-mix(in srgb, var(--fm-hold) 0%, transparent); }
+  50% { box-shadow: inset 0 0 0 1px var(--fm-hold), 0 0 18px 0 color-mix(in srgb, var(--fm-hold) 28%, transparent); }
+}
+.fm-glow-hold { animation: fm-glow 2.2s ease-in-out infinite; }
+
+@keyframes fm-rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.fm-rise { animation: fm-rise 220ms var(--fm-ease) both; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  .fm-scanline { display: none; }
 }
 
-@keyframes fm-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
-}
-.fm-live-dot { animation: fm-pulse 1.6s ease-in-out infinite; }
-
-@keyframes fm-shimmer {
-  from { background-position: 200% 0; }
-  to { background-position: -200% 0; }
-}
-.fm-skeleton {
-  background: linear-gradient(90deg, var(--fm-raised) 25%, var(--fm-border) 50%, var(--fm-raised) 75%);
-  background-size: 200% 100%;
-  animation: fm-shimmer 1.4s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .fm-skeleton { animation: none; }
-  .fm-live-dot { animation: none; }
-}
-
+.fm-scroll { scrollbar-width: thin; scrollbar-color: var(--fm-border-strong) transparent; }
 .fm-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
 .fm-scroll::-webkit-scrollbar-thumb { background: var(--fm-border-strong); border-radius: 4px; }
 .fm-scroll::-webkit-scrollbar-track { background: transparent; }

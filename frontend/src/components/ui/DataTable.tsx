@@ -2,50 +2,81 @@ import {
   flexRender, getCoreRowModel, getSortedRowModel, useReactTable,
   type ColumnDef, type SortingState,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../../lib/cn";
+
+declare module "@tanstack/react-table" {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData, TValue> { align?: "left" | "right" | "center"; width?: string }
+}
 
 interface DataTableProps<T> {
   columns: ColumnDef<T, unknown>[];
   data: T[];
   emptyMessage?: string;
   onRowClick?: (row: T) => void;
+  /** Enables j/k/↑/↓ + Enter keyboard navigation (one table per page). */
+  keyboard?: boolean;
+  rowClassName?: (row: T) => string | undefined;
+  initialSorting?: SortingState;
   className?: string;
+  label?: string;
 }
 
-export function DataTable<T>({ columns, data, emptyMessage = "No rows", onRowClick, className }: DataTableProps<T>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+/** Dense, sortable, keyboard-navigable table. Mono numbers right-aligned via column meta. */
+export function DataTable<T>({ columns, data, emptyMessage = "No rows", onRowClick, keyboard, rowClassName, initialSorting = [], className, label }: DataTableProps<T>) {
+  const [sorting, setSorting] = useState<SortingState>(initialSorting);
+  const [active, setActive] = useState(-1);
+  const bodyRef = useRef<HTMLTableSectionElement>(null);
   const table = useReactTable({
     data, columns, state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+  const rows = table.getRowModel().rows;
+
+  useEffect(() => {
+    if (!keyboard) return;
+    function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement;
+      if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable || e.metaKey || e.ctrlKey) return;
+      if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(rows.length - 1, a + 1)); }
+      else if (e.key === "k" || e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(0, a - 1)); }
+      else if (e.key === "Enter" && active >= 0 && onRowClick && rows[active]) { onRowClick(rows[active].original); }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [keyboard, rows, active, onRowClick]);
+
+  useEffect(() => {
+    if (active < 0) return;
+    bodyRef.current?.children[active]?.scrollIntoView({ block: "nearest" });
+  }, [active]);
+
+  const alignCls = (a?: string) => (a === "right" ? "text-right" : a === "center" ? "text-center" : "text-left");
 
   return (
-    <div className={cn("fm-scroll overflow-auto rounded-fm border border-fm-border", className)}>
-      <table className="w-full border-collapse text-[12px]">
-        <thead>
+    <div className={cn("fm-scroll overflow-auto", className)}>
+      <table className="w-full border-collapse text-[12.5px]" aria-label={label}>
+        <thead className="sticky top-0 z-10 bg-fm-panel">
           {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id} className="bg-fm-raised">
+            <tr key={hg.id}>
               {hg.headers.map((h) => {
                 const sorted = h.column.getIsSorted();
                 const sortable = h.column.getCanSort();
+                const meta = h.column.columnDef.meta;
                 return (
                   <th
                     key={h.id}
-                    className="h-8 border-b border-fm-border px-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.05em] text-fm-muted"
+                    style={meta?.width ? { width: meta.width } : undefined}
+                    className={cn("h-8 whitespace-nowrap border-b border-fm-border-strong px-3 font-cond text-[10.5px] font-semibold uppercase tracking-[0.08em] text-fm-muted", alignCls(meta?.align))}
                     aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
                   >
-                    {sortable ? (
-                      <button
-                        type="button"
-                        onClick={h.column.getToggleSortingHandler()}
-                        className="inline-flex items-center gap-1 uppercase hover:text-fm-text"
-                      >
+                    {sortable && !h.isPlaceholder ? (
+                      <button type="button" onClick={h.column.getToggleSortingHandler()} className={cn("inline-flex items-center gap-1 uppercase hover:text-fm-text", sorted && "text-fm-text")}>
                         {flexRender(h.column.columnDef.header, h.getContext())}
-                        {sorted === "asc" ? <ArrowUp size={12} /> : sorted === "desc" ? <ArrowDown size={12} /> : <ArrowUpDown size={12} className="opacity-40" />}
+                        <span className="w-2 font-mono text-[9px]">{sorted === "asc" ? "▲" : sorted === "desc" ? "▼" : ""}</span>
                       </button>
                     ) : (
                       flexRender(h.column.columnDef.header, h.getContext())
@@ -56,21 +87,25 @@ export function DataTable<T>({ columns, data, emptyMessage = "No rows", onRowCli
             </tr>
           ))}
         </thead>
-        <tbody>
-          {table.getRowModel().rows.length === 0 ? (
-            <tr><td colSpan={columns.length} className="h-16 px-3 text-center text-fm-muted">{emptyMessage}</td></tr>
+        <tbody ref={bodyRef}>
+          {rows.length === 0 ? (
+            <tr><td colSpan={columns.length} className="h-20 px-3 text-center text-fm-muted">{emptyMessage}</td></tr>
           ) : (
-            table.getRowModel().rows.map((row) => (
+            rows.map((row, i) => (
               <tr
                 key={row.id}
-                onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                onClick={onRowClick ? () => { setActive(i); onRowClick(row.original); } : undefined}
+                onMouseEnter={keyboard ? () => setActive(i) : undefined}
+                data-active={i === active || undefined}
                 className={cn(
-                  "border-b border-fm-border last:border-0 hover:bg-fm-raised/70",
+                  "group border-b border-fm-border transition-colors duration-75 last:border-0 hover:bg-fm-hover data-[active]:bg-fm-hover",
                   onRowClick && "cursor-pointer",
+                  rowClassName?.(row.original),
                 )}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="h-[var(--fm-row-h)] px-2.5 align-middle">
+                {row.getVisibleCells().map((cell, ci) => (
+                  <td key={cell.id} className={cn("relative h-[var(--fm-row-h)] whitespace-nowrap px-3 align-middle", alignCls(cell.column.columnDef.meta?.align))}>
+                    {ci === 0 && <span className="absolute inset-y-0 left-0 w-[2px] bg-fm-hold opacity-0 group-data-[active]:opacity-100" aria-hidden />}
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

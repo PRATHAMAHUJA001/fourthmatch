@@ -1,45 +1,62 @@
-import { Check, X } from "lucide-react";
 import { cn } from "../../lib/cn";
-import type { JobStatus } from "../../types/api";
+import { SignalGlyph } from "./Glyph";
 
-const ORDER: JobStatus[] = ["queued", "uploading", "understanding", "tracking", "damage_check", "done"];
-const LABELS: Record<JobStatus, string> = {
-  queued: "Queued", uploading: "Upload", understanding: "Understand",
-  tracking: "SAM tracking", damage_check: "Damage check", done: "Done", failed: "Failed",
-};
+export interface Stage { key: string; label: string; detail?: string }
 
-export function Stepper({ current, failed }: { current: JobStatus; failed?: boolean }) {
-  const isFailed = failed || current === "failed";
-  const currentIdx = isFailed ? ORDER.length - 2 : Math.max(0, ORDER.indexOf(current));
+export const PIPELINE_STAGES: Stage[] = [
+  { key: "uploading", label: "Upload", detail: "SHA-256 · Files API" },
+  { key: "understanding", label: "Understand video", detail: "muse-spark-1.3" },
+  { key: "tracking", label: "Track objects", detail: "sam-3.1" },
+  { key: "damage_check", label: "Check damage", detail: "muse-spark-1.3" },
+  { key: "reconciling", label: "Reconcile", detail: "Python · 4-way match" },
+  { key: "applying_policy", label: "Apply policy", detail: "Decision agent" },
+  { key: "verdict", label: "Verdict", detail: "Python recompute" },
+];
 
+export type StageState = "pending" | "active" | "done" | "failed";
+
+/** Pipeline stepper. `states` maps stage key to state; `timing` maps key to ms. */
+export function Stepper({ stages = PIPELINE_STAGES, states, timing, orientation = "vertical", className }: {
+  stages?: Stage[]; states: Record<string, StageState>; timing?: Record<string, number>; orientation?: "vertical" | "horizontal"; className?: string;
+}) {
+  if (orientation === "horizontal") {
+    return (
+      <ol className={cn("flex items-center gap-1", className)} aria-label="Pipeline progress">
+        {stages.map((s, i) => {
+          const st = states[s.key] ?? "pending";
+          return (
+            <li key={s.key} className="flex min-w-0 flex-1 flex-col gap-1.5" aria-current={st === "active" ? "step" : undefined}>
+              <span className={cn("h-[3px] rounded-full", st === "done" && "bg-fm-verified", st === "active" && "fm-live-dot bg-fm-hold", st === "failed" && "bg-fm-fraud", st === "pending" && "bg-fm-border")} />
+              <span className={cn("truncate font-cond text-[10.5px] font-semibold uppercase tracking-[0.06em]", st === "pending" ? "text-fm-faint" : st === "active" ? "text-fm-hold" : "text-fm-muted")}>
+                <span className="mr-1 font-mono text-fm-faint">{i + 1}</span>{s.label}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    );
+  }
   return (
-    <ol className="flex items-center gap-0" aria-label="Pipeline progress">
-      {ORDER.map((step, i) => {
-        const done = !isFailed && i < currentIdx;
-        const active = !isFailed && i === currentIdx;
-        const failedStep = isFailed && i === currentIdx;
+    <ol className={cn("flex flex-col", className)} aria-label="Pipeline progress">
+      {stages.map((s, i) => {
+        const st = states[s.key] ?? "pending";
+        const last = i === stages.length - 1;
         return (
-          <li key={step} className="flex items-center">
-            <span className="flex items-center gap-1.5">
-              <span
-                className={cn(
-                  "flex h-5 w-5 items-center justify-center rounded-full border font-mono text-[10px]",
-                  done && "border-fm-verified bg-fm-verified-bg text-fm-verified",
-                  active && "border-fm-hold bg-fm-hold-bg text-fm-hold",
-                  failedStep && "border-fm-fraud bg-fm-fraud-bg text-fm-fraud",
-                  !done && !active && !failedStep && "border-fm-border-strong text-fm-faint",
-                )}
-                aria-current={active ? "step" : undefined}
-              >
-                {done ? <Check size={11} strokeWidth={3} /> : failedStep ? <X size={11} strokeWidth={3} /> : i + 1}
-              </span>
-              <span className={cn("hidden text-[11px] sm:inline", active ? "font-semibold" : "text-fm-muted", failedStep && "font-semibold text-fm-fraud")}>
-                {LABELS[step]}
-              </span>
+          <li key={s.key} className="relative flex gap-3 pb-3 last:pb-0" aria-current={st === "active" ? "step" : undefined}>
+            {!last && <span className={cn("absolute left-[7px] top-[18px] bottom-0 w-px", st === "done" ? "bg-fm-verified-line" : "bg-fm-border")} aria-hidden />}
+            <span className={cn("relative z-10 mt-[2px] flex h-[15px] w-[15px] items-center justify-center",
+              st === "done" && "text-fm-verified", st === "active" && "text-fm-hold", st === "failed" && "text-fm-fraud", st === "pending" && "text-fm-border-strong")}>
+              {st === "done" ? <SignalGlyph signal="verified" size={13} /> : st === "active" ? <SignalGlyph signal="live" size={15} /> : st === "failed" ? <SignalGlyph signal="fraud" size={13} /> : <SignalGlyph signal="neutral" size={13} />}
             </span>
-            {i < ORDER.length - 1 && (
-              <span className={cn("mx-2 h-px w-6 sm:w-10", done ? "bg-fm-verified" : "bg-fm-border-strong")} aria-hidden />
-            )}
+            <div className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
+              <div className="min-w-0">
+                <div className={cn("text-[12.5px] font-medium", st === "pending" && "text-fm-faint", st === "active" && "text-fm-hold")}>{s.label}</div>
+                {s.detail && <div className="truncate font-mono text-[10.5px] text-fm-faint">{s.detail}</div>}
+              </div>
+              <span className="shrink-0 font-mono text-[11px] tabular-nums text-fm-muted">
+                {timing?.[s.key] != null ? `${(timing[s.key] / 1000).toFixed(1)}s` : st === "active" ? "…" : ""}
+              </span>
+            </div>
           </li>
         );
       })}

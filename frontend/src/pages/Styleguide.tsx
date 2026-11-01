@@ -1,188 +1,225 @@
-import type { ColumnDef } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useState, type ReactNode } from "react";
 import { Button } from "../components/ui/Button";
 import { DataTable } from "../components/ui/DataTable";
-import { EmptyState, Skeleton, SkeletonRows } from "../components/ui/EmptyState";
-import { KpiTile } from "../components/ui/KpiTile";
+import { EmptyState, ErrorState, Skeleton, SkeletonRows } from "../components/ui/EmptyState";
+import { FourMatchMini, FourMatchStrip } from "../components/ui/FourMatch";
+import { SignalGlyph, type Signal } from "../components/ui/Glyph";
+import { KpiStrip, KpiTile } from "../components/ui/KpiTile";
+import { LiveCounter } from "../components/ui/LiveCounter";
 import { Money, Qty } from "../components/ui/Money";
-import { Panel } from "../components/ui/Panel";
+import { PageHeader, Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { Stepper } from "../components/ui/Stepper";
-import { formatINR } from "../lib/format";
+import { Stepper, type StageState } from "../components/ui/Stepper";
+import { Kbd, Tag } from "../components/ui/Tag";
+import { formatINRCompact } from "../lib/format";
 import { useTheme } from "../lib/theme";
-import { chartColors } from "../tokens/tokens";
-import type { JobStatus, Verdict } from "../types/api";
+import { BrandMark, Wordmark } from "../components/shell/BrandMark";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { Verdict } from "../types/api";
+import { ColourTokens } from "./styleguide/Swatches";
 
-interface DemoRow {
-  po: string; vendor: string; ordered: number; observed: number; amount: number; verdict: Verdict;
-}
-const DEMO: DemoRow[] = [
-  { po: "FM/PO/26-27/001", vendor: "Shree Ganesh Packaging", ordered: 12, observed: 12, amount: 778800, verdict: "approve" },
-  { po: "FM/PO/26-27/002", vendor: "Shree Ganesh Packaging", ordered: 12, observed: 10, amount: 778800, verdict: "partial_pay" },
-  { po: "FM/PO/26-27/005", vendor: "Bharat Steel Rolling", ordered: 8, observed: 8, amount: 36249600, verdict: "hold" },
-  { po: "FM/PO/26-27/007", vendor: "Shree Ganesh Packaging", ordered: 120, observed: 120, amount: 9251200, verdict: "human_review" },
+const Row = ({ label, children }: { label: string; children: ReactNode }) => (
+  <div className="grid items-center gap-x-4 gap-y-1.5 border-b border-fm-border py-2 last:border-0 sm:grid-cols-[160px_1fr]">
+    <span className="fm-label">{label}</span>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">{children}</div>
+  </div>
+);
+
+const Cap = ({ children }: { children: ReactNode }) => <span className="font-mono text-[10.5px] text-fm-faint">{children}</span>;
+
+const SIGNALS: { s: Signal; name: string; note: string }[] = [
+  { s: "verified", name: "Verified", note: "square + check" },
+  { s: "hold", name: "Hold", note: "diamond + pause" },
+  { s: "partial", name: "Partial", note: "half circle" },
+  { s: "review", name: "Review", note: "dashed ring + dot" },
+  { s: "fraud", name: "Fraud risk", note: "triangle + bang" },
+  { s: "live", name: "Live", note: "pulsing dot" },
+  { s: "neutral", name: "Neutral", note: "open ring" },
 ];
 
-const CHART = [
-  { day: "Mon", holds: 4, verified: 18 },
-  { day: "Tue", holds: 6, verified: 22 },
-  { day: "Wed", holds: 3, verified: 25 },
-  { day: "Thu", holds: 7, verified: 19 },
-  { day: "Fri", holds: 5, verified: 21 },
+const VERDICTS: Verdict[] = ["approve", "partial_pay", "hold", "human_review"];
+
+interface Sample { sku: string; vendor: string; qty: number; paise: number; state: Verdict }
+const SAMPLE: Sample[] = [
+  { sku: "FX-1042", vendor: "Example Vendor A", qty: 14, paise: 124500000, state: "hold" },
+  { sku: "FX-2210", vendor: "Example Vendor B", qty: 120, paise: 8640000, state: "approve" },
+  { sku: "FX-3307", vendor: "Example Vendor C", qty: 48, paise: 2210050, state: "partial_pay" },
+  { sku: "FX-4119", vendor: "Example Vendor D", qty: 9, paise: 0, state: "human_review" },
+];
+const SAMPLE_COLS: ColumnDef<Sample, unknown>[] = [
+  { accessorKey: "sku", header: "SKU", cell: (i) => <span className="font-mono">{i.getValue<string>()}</span> },
+  { accessorKey: "vendor", header: "Vendor" },
+  { accessorKey: "qty", header: "Qty", meta: { align: "right" }, cell: (i) => <Qty value={i.getValue<number>()} unit="pcs" /> },
+  { accessorKey: "paise", header: "Value", meta: { align: "right" }, cell: (i) => <Money paise={i.getValue<number>()} /> },
+  { accessorKey: "state", header: "Verdict", cell: (i) => <StatusBadge verdict={i.getValue<Verdict>()} size="sm" /> },
 ];
 
-function Swatch({ name, varName, textOn = "text-fm-text" }: { name: string; varName: string; textOn?: string }) {
+const STEP_STATES: Record<string, StageState> = {
+  uploading: "done", understanding: "done", tracking: "active", damage_check: "pending",
+  reconciling: "pending", applying_policy: "pending", verdict: "pending",
+};
+const STEP_FAILED: Record<string, StageState> = { ...STEP_STATES, tracking: "failed", understanding: "done" };
+
+function Section({ index, title, children, className }: { index: string; title: string; children: ReactNode; className?: string }) {
   return (
-    <div className="overflow-hidden rounded-fm border border-fm-border">
-      <div className="h-12" style={{ background: `var(${varName})` }} />
-      <div className="bg-fm-panel px-2 py-1.5">
-        <div className={`text-[11px] font-medium ${textOn}`}>{name}</div>
-        <div className="font-mono text-[10px] text-fm-muted">{varName}</div>
-      </div>
-    </div>
+    <Panel index={index} title={title} className={className}>
+      {children}
+    </Panel>
   );
 }
 
 export function Styleguide() {
   const { theme, toggle } = useTheme();
-  const [step, setStep] = useState<JobStatus>("tracking");
-  const [showSkeleton, setShowSkeleton] = useState(false);
-
-  const columns = useMemo<ColumnDef<DemoRow, unknown>[]>(() => [
-    { accessorKey: "po", header: "PO", cell: ({ getValue }) => <span className="font-mono text-[11px]">{String(getValue())}</span> },
-    { accessorKey: "vendor", header: "Vendor" },
-    { accessorKey: "ordered", header: "Ordered", cell: ({ getValue }) => <Qty value={Number(getValue())} /> },
-    { accessorKey: "observed", header: "Observed (SAM)", cell: ({ getValue }) => <Qty value={Number(getValue())} /> },
-    { accessorKey: "amount", header: "Invoice", cell: ({ getValue }) => <Money paise={Number(getValue())} /> },
-    { accessorKey: "verdict", header: "Verdict", cell: ({ getValue }) => <StatusBadge verdict={getValue() as Verdict} /> },
-  ], []);
+  const [count, setCount] = useState(7);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-[20px] font-semibold tracking-tight">Design system</h1>
-          <p className="mt-0.5 max-w-xl text-[12px] text-fm-muted">
-            Industrial control room. Graphite, hairlines, IBM Plex — signal colour always paired with icon + label.
-            Theme: <span className="font-mono">{theme}</span>
-          </p>
-        </div>
-        <Button onClick={toggle} aria-label="Toggle theme">Toggle {theme === "dark" ? "light" : "dark"}</Button>
-      </div>
+    <div className="fm-rise">
+      <PageHeader
+        eyebrow="Design system · v1"
+        title="Dock Control design system"
+        meta={<span>Graphite instrument panel in dark, warm print room in light. Hairlines instead of shadows, shape plus label instead of colour alone.</span>}
+        actions={<Button variant="secondary" onClick={toggle}>{theme === "dark" ? "Switch to light" : "Switch to dark"}</Button>}
+      />
+      <p className="mb-3 flex items-center gap-2 text-[11.5px] text-fm-faint">
+        <Tag tone="hold">Example values</Tag> Numbers and names in the samples below are illustrative fixtures, not case data.
+      </p>
 
-      <Panel title="Colour tokens" subtitle="CSS variables — components never hardcode hex">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-          <Swatch name="Background" varName="--fm-bg" />
-          <Swatch name="Panel" varName="--fm-panel" />
-          <Swatch name="Raised" varName="--fm-raised" />
-          <Swatch name="Border" varName="--fm-border" />
-          <Swatch name="Hold · amber" varName="--fm-hold" />
-          <Swatch name="Verified · green" varName="--fm-verified" />
-          <Swatch name="Fraud · red" varName="--fm-fraud" />
-          <Swatch name="Review · slate" varName="--fm-review" />
-        </div>
-        <p className="mt-3 text-[11px] text-fm-muted">
-          Radius max 6px · borders 1px · no gradients, glass, emoji, or purple. Motion 150ms, respects reduced-motion.
-        </p>
-      </Panel>
+      <div className="grid gap-3 xl:grid-cols-2">
+        <Section index="01" title="Colour tokens" className="xl:col-span-2"><ColourTokens /></Section>
 
-      <Panel title="Typography" subtitle="IBM Plex Sans for UI · IBM Plex Mono for every quantity, ID, amount, timestamp">
-        <div className="flex flex-col gap-2">
-          <p className="text-[20px] font-semibold tracking-tight">Dock decision needs reading fast — 20px semibold</p>
-          <p className="text-[13px]">Body 13px. The GRN says 12 cartons; SAM tracked 10 distinct objects across 214 frames.</p>
-          <p className="font-mono text-[13px] tabular-nums">FM/PO/26-27/002 · {formatINR(124500000)} · 2026-11-01 14:32 · track_0042</p>
-          <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-fm-muted">Uppercase label · 11px · muted</p>
-        </div>
-      </Panel>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="StatusBadge" subtitle="Never colour alone">
-          <div className="flex flex-wrap gap-2">
-            <StatusBadge verdict="approve" />
-            <StatusBadge verdict="partial_pay" />
-            <StatusBadge verdict="hold" />
-            <StatusBadge verdict="hold" pulse />
-            <StatusBadge verdict="human_review" />
-            <StatusBadge fraud />
-            <StatusBadge quality="reliable" />
-            <StatusBadge quality="insufficient" />
-          </div>
-        </Panel>
-        <Panel title="Money + Qty" subtitle="Paise in, Indian grouping out (en-IN)">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-[13px] tabular-nums">
-            <span className="text-fm-muted">₹0</span><Money paise={0} />
-            <span className="text-fm-muted">999 paise</span><Money paise={99900} />
-            <span className="text-fm-muted">Ledger total</span><Money paise={124500000} />
-            <span className="text-fm-muted">At risk</span><span className="text-fm-hold"><Money paise={30720000} /></span>
-            <span className="text-fm-muted">Ordered</span><Qty value={120} unit="box" />
-            <span className="text-fm-muted">Observed</span><Qty value={10} unit="box" />
-          </div>
-        </Panel>
-      </div>
-
-      <Panel title="KpiTile" subtitle="Left signal bar + mono value">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <KpiTile label="Payments held" value={14} delta="+3 today" tone="hold" />
-          <KpiTile label="Verified" value={86} delta="86% of receipts" tone="verified" />
-          <KpiTile label="Amount at risk" value={<Money paise={122000000} />} tone="fraud" hint="ex-GST" />
-          <KpiTile label="Awaiting review" value={7} delta="oldest 2d" tone="review" />
-        </div>
-      </Panel>
-
-      <Panel title="DataTable" subtitle="Dense 32px rows · sortable · mono numerals" padded={false} bodyClassName="p-0">
-        <DataTable columns={columns} data={DEMO} className="border-0" />
-      </Panel>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="Stepper" subtitle="Persisted job states — SSE replays these" actions={
-          <select value={step} onChange={(e) => setStep(e.target.value as JobStatus)} className="h-7 rounded-fm-sm border border-fm-border bg-fm-bg px-1.5 font-mono text-[11px]" aria-label="Preview step">
-            {(["queued","uploading","understanding","tracking","damage_check","done","failed"] as JobStatus[]).map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-        }>
-          <Stepper current={step} />
-          <div className="mt-4"><Stepper current="failed" failed /></div>
-        </Panel>
-        <Panel title="Buttons" subtitle="Radix Slot · 150ms">
-          <div className="flex flex-wrap gap-2">
-            <Button variant="primary">Approve payment</Button>
-            <Button variant="hold">Hold payment</Button>
-            <Button variant="danger">Flag fraud risk</Button>
-            <Button variant="secondary">Export evidence</Button>
-            <Button variant="ghost">Dismiss</Button>
-            <Button disabled>Disabled</Button>
-          </div>
-        </Panel>
-      </div>
-
-      <Panel title="Chart tokens" subtitle="Recharts reads CSS vars — flat fills, hairline grid">
-        <div className="h-44">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={CHART} margin={{ top: 4, right: 4, bottom: 0, left: -18 }} barGap={2}>
-              <CartesianGrid stroke={chartColors.grid()} strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="day" tick={{ fill: chartColors.text(), fontSize: 11, fontFamily: "IBM Plex Mono" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: chartColors.text(), fontSize: 11, fontFamily: "IBM Plex Mono" }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: "var(--fm-raised)", border: "1px solid var(--fm-border)", borderRadius: 4, fontSize: 12 }} />
-              <Bar dataKey="verified" name="Verified" fill={chartColors.verified()} radius={[2, 2, 0, 0]} />
-              <Bar dataKey="holds" name="Holds" fill={chartColors.hold()} radius={[2, 2, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </Panel>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title="EmptyState">
-          <EmptyState title="No cases match this filter" description="Deliveries that contradict the PO, GRN, or invoice will appear here." action={<Button size="sm">Clear filters</Button>} />
-        </Panel>
-        <Panel title="Skeleton" actions={<Button size="sm" onClick={() => setShowSkeleton((s) => !s)}>{showSkeleton ? "Hide" : "Show"}</Button>}>
-          {showSkeleton ? <SkeletonRows rows={4} /> : (
-            <div className="flex flex-col gap-2">
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-8 w-full" />
-              <p className="text-[11px] text-fm-muted">Toggle to preview loading rows.</p>
+        <Section index="02" title="Typography">
+          <Row label="Sans · Plex Sans"><span className="text-[22px] font-semibold tracking-[-0.015em]">Hold payment until the dock agrees</span></Row>
+          <Row label="Sans · body"><span className="max-w-md text-[13px]">The vision count is 12 against a GRN of 14. Policy clause 4.2 applies, so the invoice is held.</span></Row>
+          <Row label="Condensed label"><span className="fm-label">Amount held · fm-label</span></Row>
+          <Row label="Mono numbers"><span className="font-mono text-[28px] tabular-nums tracking-[-0.03em]">12,45,000</span><Cap>Plex Mono, tabular, slashed zero: 0 O 1 l</Cap></Row>
+          <Row label="Scale">
+            <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
+              {[["44", "hero count"], ["28", "kpi"], ["22", "page title"], ["13", "body"], ["12.5", "table"], ["11", "label"], ["10.5", "mono caption"]].map(([px, n]) => (
+                <span key={px} className="flex items-baseline gap-1.5"><span className="font-mono tabular-nums" style={{ fontSize: Number(px) > 30 ? 30 : Number(px) }}>{px}</span><Cap>{n}</Cap></span>
+              ))}
             </div>
-          )}
-        </Panel>
+          </Row>
+        </Section>
+
+        <Section index="03" title="Signals">
+          <Row label="Glyph shapes">
+            <div className="grid w-full grid-cols-2 gap-x-6 gap-y-2.5 sm:grid-cols-3">
+              {SIGNALS.map(({ s, name, note }) => (
+                <div key={s} className="flex items-center gap-2.5">
+                  <span className={`flex h-7 w-7 items-center justify-center rounded-fm-sm border ${s === "verified" ? "border-fm-verified-line text-fm-verified" : s === "hold" || s === "partial" ? "border-fm-hold-line text-fm-hold" : s === "fraud" ? "border-fm-fraud-line text-fm-fraud" : s === "review" ? "border-fm-review-line text-fm-review" : s === "live" ? "border-fm-border text-fm-info" : "border-fm-border text-fm-muted"}`}>
+                    <SignalGlyph signal={s} size={16} />
+                  </span>
+                  <span className="leading-tight"><span className="block text-[12px] font-medium">{name}</span><Cap>{note}</Cap></span>
+                </div>
+              ))}
+            </div>
+          </Row>
+          {(["sm", "md", "lg"] as const).map((size) => (
+            <Row key={size} label={`Badge · ${size}`}>
+              {VERDICTS.map((v) => <StatusBadge key={v} verdict={v} size={size} />)}
+              <StatusBadge fraud size={size} />
+              <StatusBadge quality="reliable" size={size} />
+              <StatusBadge quality="insufficient" size={size} />
+            </Row>
+          ))}
+          <p className="mt-2 text-[12px] text-fm-muted">Shape + label, never colour alone. Each state keeps its meaning in greyscale, on a projector and for colour-blind viewers.</p>
+        </Section>
+
+        <Section index="04" title="Money & quantities">
+          <Row label="Money · zero"><Money paise={0} /><Cap>0 paise, faint</Cap></Row>
+          <Row label="Money · small"><Money paise={99900} /><Cap>99900 paise</Cap></Row>
+          <Row label="Money · lakh grouping"><Money paise={124500000} /><Cap>124500000 paise → ₹12,45,000</Cap></Row>
+          <Row label="Money · negative"><Money paise={-8640000} className="text-fm-fraud" /></Row>
+          <Row label="Money · signed"><Money paise={2210050} sign className="text-fm-verified" /><Money paise={-2210050} sign className="text-fm-fraud" /></Row>
+          <Row label="Qty"><Qty value={14} unit="pcs" /><Qty value={1250} unit="kg" /><Qty value={120000} unit="m" /><Qty value={null} /></Row>
+          <Row label="Axis compact">
+            {[99900, 1250000, 124500000, 4900000000].map((p) => <span key={p} className="font-mono text-[12px] tabular-nums">{formatINRCompact(p)}</span>)}
+            <Cap>chart axes only</Cap>
+          </Row>
+        </Section>
+
+        <Section index="05" title="Buttons">
+          {(["xs", "sm", "md", "lg"] as const).map((size) => (
+            <Row key={size} label={`Size · ${size}`}>
+              {(["primary", "accent", "secondary", "ghost", "hold", "verified", "danger"] as const).map((v) => <Button key={v} variant={v} size={size}>{v}</Button>)}
+            </Row>
+          ))}
+          <Row label="Icon · disabled">
+            <Button size="icon" variant="secondary" aria-label="Brand"><BrandMark size={14} /></Button>
+            <Button variant="accent" disabled>Disabled</Button>
+          </Row>
+        </Section>
+
+        <Section index="06" title="Tags & keys">
+          <Row label="Tag tones">
+            {(["neutral", "hold", "verified", "fraud", "review", "info", "solid"] as const).map((t) => <Tag key={t} tone={t}>{t}</Tag>)}
+          </Row>
+          <Row label="Identifiers"><Tag>muse-spark-1.3</Tag><Tag>sam-3.1</Tag><Tag tone="hold">clause 4.2</Tag><Tag>PO-EX-0142</Tag></Row>
+          <Row label="Kbd"><span className="flex items-center gap-1"><Kbd>j</Kbd><Kbd>k</Kbd></span><span className="flex items-center gap-1"><Kbd>⌘</Kbd><Kbd>K</Kbd></span><Kbd>Enter</Kbd><Kbd>Esc</Kbd></Row>
+          <Row label="Brand"><BrandMark size={22} /><Wordmark /></Row>
+        </Section>
+
+        <Section index="07" title="LiveCounter">
+          <Row label="Odometer"><LiveCounter value={count} digits={2} className="text-[44px] text-fm-hold" label="Boxes counted" /><Button variant="hold" onClick={() => setCount((c) => (c >= 99 ? 0 : c + 1))}>Count one more</Button></Row>
+          <p className="mt-2 text-[12px] text-fm-muted">Each digit rolls on its own. Used for the vision cell while tracks accumulate, so a judge can watch the count settle on a number.</p>
+        </Section>
+
+        <Section index="08" title="KPI strip" className="xl:col-span-2">
+          <KpiStrip className="md:grid-cols-4">
+            <KpiTile label="Held today" tone="hold" value="₹18,60,500" hint="3 deliveries" spark={[2, 4, 3, 6, 5, 9, 8]} />
+            <KpiTile label="Verified" tone="verified" value="9" unit="/ 12" delta="+2 vs yesterday" />
+            <KpiTile label="Discrepancy rate" tone="fraud" value="25.0" unit="%" hint="example fixture" />
+            <KpiTile label="Time to verdict" value="41" unit="s" hint="median" />
+          </KpiStrip>
+        </Section>
+
+        <Section index="09" title="Four-Match" className="xl:col-span-2">
+          <div className="grid gap-5">
+            <div>
+              <div className="fm-label mb-2">Mismatch · vision disagrees</div>
+              <FourMatchStrip values={{ po: 14, grn: 14, invoice: 14, vision: 12 }} unit="box" variancePct={-14.3} />
+            </div>
+            <div>
+              <div className="fm-label mb-2">Match · all four agree</div>
+              <FourMatchStrip values={{ po: 12, grn: 12, invoice: 12, vision: 12 }} unit="box" />
+            </div>
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-2">
+              <span className="fm-label">Mini</span>
+              <span className="flex items-center gap-2"><FourMatchMini values={{ po: 14, grn: 14, invoice: 14, vision: 12 }} /><Cap>mismatch</Cap></span>
+              <span className="flex items-center gap-2"><FourMatchMini values={{ po: 12, grn: 12, invoice: 12, vision: 12 }} /><Cap>match</Cap></span>
+              <span className="flex items-center gap-2"><FourMatchMini values={{ po: 14, grn: 14, invoice: 16, vision: null }} /><Cap>no video</Cap></span>
+            </div>
+          </div>
+        </Section>
+
+        <Section index="10" title="Stepper">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div><div className="fm-label mb-2">Vertical · running</div><Stepper states={STEP_STATES} timing={{ uploading: 1200, understanding: 8400 }} /></div>
+            <div><div className="fm-label mb-2">Vertical · failed</div><Stepper states={STEP_FAILED} timing={{ uploading: 900 }} /></div>
+          </div>
+          <div className="mt-5 border-t border-fm-border pt-3">
+            <div className="fm-label mb-2">Horizontal</div>
+            <Stepper orientation="horizontal" states={STEP_STATES} />
+          </div>
+        </Section>
+
+        <Section index="11" title="DataTable">
+          <p className="mb-2 text-[12px] text-fm-muted">Sortable headers, mono right-aligned numbers, keyboard navigation off here (one table per page may own j / k).</p>
+          <div className="-mx-3 -mb-3 border-t border-fm-border">
+            <DataTable<Sample> columns={SAMPLE_COLS} data={SAMPLE} label="Sample table" />
+          </div>
+        </Section>
+
+        <Section index="12" title="Empty, error, skeleton" className="xl:col-span-2">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-fm border border-fm-border"><EmptyState title="No deliveries yet" description="Upload dock video against a purchase order to start." /></div>
+            <div className="rounded-fm border border-fm-border"><ErrorState message="The decision service did not answer in time." action={<Button size="sm">Retry</Button>} /></div>
+            <div className="flex flex-col gap-3 rounded-fm border border-fm-border p-3">
+              <Skeleton className="h-5 w-1/2" />
+              <SkeletonRows rows={3} />
+            </div>
+          </div>
+        </Section>
       </div>
     </div>
   );
