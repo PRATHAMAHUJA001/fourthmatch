@@ -72,6 +72,20 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("STORAGE_ROOT", "storage_root"),
     )
     log_level: str = Field(default="INFO", validation_alias=AliasChoices("LOG_LEVEL", "log_level"))
+    # Public demo deployment (deploy/, DEPLOY.md). In demo mode, live uploads need
+    # X-Demo-Passcode == demo_passcode (empty passcode = live uploads disabled) and
+    # are capped per rolling hour. Replay of the seeded cases is always open.
+    demo_mode: bool = Field(default=False, validation_alias=AliasChoices("DEMO_MODE", "demo_mode"))
+    demo_passcode: str = Field(default="", validation_alias=AliasChoices("DEMO_PASSCODE", "demo_passcode"))
+    live_upload_limit_per_hour: int = Field(
+        default=10, ge=1,
+        validation_alias=AliasChoices("LIVE_UPLOAD_LIMIT_PER_HOUR", "live_upload_limit_per_hour"),
+    )
+    # Built SPA served by the API process (npm run build). Absent dir = API only.
+    frontend_dist: Path = Field(
+        default=REPO_ROOT / "frontend" / "dist",
+        validation_alias=AliasChoices("FRONTEND_DIST", "frontend_dist"),
+    )
 
     @property
     def resolved_database_url(self) -> str:

@@ -14,6 +14,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, Uplo
 from fastapi.responses import FileResponse, StreamingResponse
 
 from app.api.deps import get_decision_agent, get_delivery_service, get_pipeline_runner
+from app.api.deps_demo import require_demo_passcode, require_live_upload
 from app.domain.enums import JobStatus
 from app.domain.schemas.decision_agent import DecisionRead
 from app.domain.schemas.jobs import DeliveryCreated
@@ -25,7 +26,10 @@ router = APIRouter(tags=["deliveries"])
 PipelineRunner = Callable[[str, int], Awaitable[dict]]
 
 
-@router.post("/deliveries", response_model=DeliveryCreated, status_code=201)
+@router.post(
+    "/deliveries", response_model=DeliveryCreated, status_code=201,
+    dependencies=[Depends(require_live_upload)],
+)
 async def create_delivery(
     background: BackgroundTasks,
     video: UploadFile = File(...),
@@ -83,7 +87,7 @@ def get_video(
     return FileResponse(path, media_type=media_type)
 
 
-@router.post("/deliveries/{delivery_id}/decide", response_model=DecisionRead)
+@router.post("/deliveries/{delivery_id}/decide", response_model=DecisionRead, dependencies=[Depends(require_demo_passcode)])
 async def decide_delivery(
     delivery_id: int,
     agent: DecisionAgent = Depends(get_decision_agent),

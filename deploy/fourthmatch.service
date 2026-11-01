@@ -1,0 +1,22 @@
+[Unit]
+Description=FourthMatch API + SPA (uvicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=fourthmatch
+Group=fourthmatch
+WorkingDirectory=/opt/fourthmatch/backend
+# Secrets (MODEL_API_KEY, DEMO_PASSCODE, model IDs) live only here, chmod 600, never in the repo.
+EnvironmentFile=/etc/fourthmatch.env
+# Idempotent, no model calls: seed + import committed perception/rules. A failure is logged, not fatal.
+ExecStartPre=-/opt/fourthmatch/backend/.venv/bin/python -m app.seed --demo
+# One worker on purpose: the demo upload limiter and SSE state are in-process.
+ExecStart=/opt/fourthmatch/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1 --proxy-headers --forwarded-allow-ips=127.0.0.1
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

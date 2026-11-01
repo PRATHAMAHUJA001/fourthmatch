@@ -437,8 +437,18 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--ground-truth", type=Path, default=REPO_ROOT / "data" / "ground_truth.json")
     ap.add_argument("--reset", action="store_true",
                     help="DEV ONLY: drop and recreate the whole DB (wipes runtime tables too)")
+    ap.add_argument("--demo", action="store_true",
+                    help="after seeding, import committed perception + approved rules (no model calls)")
     args = ap.parse_args(argv)
     args.db.parent.mkdir(parents=True, exist_ok=True)
+
+    if args.demo:
+        from app.core.config import get_settings
+        from app.seed.demo import load_demo, print_report
+
+        report = load_demo(args.db, args.manifest, args.policy, args.ground_truth, get_settings())
+        print_report(report)
+        return 0
 
     result = seed(args.db, args.manifest, args.policy, args.ground_truth, reset=args.reset)
     c, t = result.counts, result.totals

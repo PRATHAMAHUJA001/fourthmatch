@@ -8,6 +8,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 
 from app.api.deps import get_policy_service, get_simulation_service
+from app.api.deps_demo import require_demo_passcode
 from app.api.deps_reporting import get_policy_docs
 from app.core.errors import ValidationError
 from app.domain.schemas.dashboard import PolicyRead
@@ -20,7 +21,7 @@ from app.services.simulation import PolicySimulationService
 router = APIRouter(tags=["policies"])
 
 
-@router.post("/policies", response_model=PolicyCompileResult, status_code=201)
+@router.post("/policies", response_model=PolicyCompileResult, status_code=201, dependencies=[Depends(require_demo_passcode)])
 async def upload_policy(
     policy: UploadFile = File(...),
     policy_version: str | None = Form(default=None),
@@ -49,7 +50,7 @@ def current_policy(policy_docs: PolicyDocService = Depends(get_policy_docs)) -> 
     return policy_docs.current()
 
 
-@router.post("/policies/{policy_id}/simulate", response_model=PolicySimulationResult)
+@router.post("/policies/{policy_id}/simulate", response_model=PolicySimulationResult, dependencies=[Depends(require_demo_passcode)])
 async def simulate_policy(
     policy_id: str,
     request: SimulatePolicyRequest,
@@ -73,7 +74,7 @@ def list_rules(
     return service.list_rules(status=status)
 
 
-@router.post("/rules/{rule_id}/approve", response_model=RuleRead)
+@router.post("/rules/{rule_id}/approve", response_model=RuleRead, dependencies=[Depends(require_demo_passcode)])
 def approve_rule(
     rule_id: int,
     service: PolicyCompilerService = Depends(get_policy_service),
@@ -81,7 +82,7 @@ def approve_rule(
     return service.approve_rule(rule_id)
 
 
-@router.post("/rules/{rule_id}/reject", response_model=RuleRead)
+@router.post("/rules/{rule_id}/reject", response_model=RuleRead, dependencies=[Depends(require_demo_passcode)])
 def reject_rule(
     rule_id: int,
     service: PolicyCompilerService = Depends(get_policy_service),
