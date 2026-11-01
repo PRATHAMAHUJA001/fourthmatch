@@ -56,6 +56,16 @@ class Decision(Base):
     amount_at_risk_paise: Mapped[int] = mapped_column(Integer, default=0)
     decided_by: Mapped[str] = mapped_column(String(80), default="agent")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    # Decision-agent columns (all nullable/defaulted: no migration needed).
+    job_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source: Mapped[str] = mapped_column(String(16), default="agent")  # agent | fallback
+    model: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    summary_en: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recommended_action: Mapped[str | None] = mapped_column(Text, nullable=True)
+    amount_held_paise: Mapped[int] = mapped_column(Integer, default=0)
+    trace: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    lines: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    fallback_reasons: Mapped[list[Any]] = mapped_column(JSON, default=list)
 
 
 class EvidencePack(Base):
@@ -64,8 +74,12 @@ class EvidencePack(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     po_id: Mapped[int] = mapped_column(ForeignKey("purchase_orders.id"), index=True)
     decision_id: Mapped[int | None] = mapped_column(ForeignKey("decisions.id"), nullable=True)
+    delivery_id: Mapped[int | None] = mapped_column(ForeignKey("deliveries.id"), nullable=True, index=True)
     pdf_path: Mapped[str | None] = mapped_column(String(300), nullable=True)
     json_path: Mapped[str | None] = mapped_column(String(300), nullable=True)
-    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # sha256 = SHA-256 of the exact bytes of evidence_pack.json; manifest holds the
+    # per-file hashes (pdf, debit note, frames) that verify re-checks.
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    manifest: Mapped[list[Any]] = mapped_column(JSON, default=list)
     verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)

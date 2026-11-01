@@ -42,6 +42,7 @@ from app.infra.db.models.perception import Track as TrackRow
 from app.infra.db.models.purchasing import Delivery, PoLine
 from app.infra.meta.client import MetaModelClient
 from app.infra.meta.sam import SamSegmenter
+from app.services.decision_agent import DecisionAgent
 
 logger = get_logger(__name__)
 
@@ -93,6 +94,8 @@ class PerceptionPipeline:
         *,
         model_client: MetaModelClient | None = None,
         sam: SamSegmenter | None = None,
+        decision_agent: DecisionAgent | None = None,
+        run_decision: bool = True,
     ) -> None:
         self._settings = settings
         self._factory = session_factory
@@ -101,6 +104,11 @@ class PerceptionPipeline:
         self._model = model_client or MetaModelClient(config, cache=self._cache)
         self._sam = sam or SamSegmenter(config, settings.cache_root)
         self._config = config
+        self._decision_agent: DecisionAgent | None = None
+        if run_decision:
+            self._decision_agent = decision_agent or DecisionAgent(
+                session_factory, self._model, config.decision_model, max_turns=settings.max_agent_turns
+            )
         self._counting = CountingConfig(
             sam_score_min=settings.sam_score_min,
             min_track_seconds=settings.min_track_seconds,
@@ -287,6 +295,7 @@ class PerceptionPipeline:
                 }
                 for result, state in zip(results, line_states, strict=True)
             ]
+            await self._run_decision(job_id, delivery_id)
             session = self._factory()
             try:
                 job = session.get(Job, job_id)
@@ -309,6 +318,17 @@ class PerceptionPipeline:
             logger.exception("pipeline failed", extra={"extra_data": {"job_id": job_id}})
             self._fail(job_id, "internal_error", f"pipeline failed: {type(exc).__name__}")
             raise
+
+    async def _run_decision(self, job_id: str, delivery_id: int) -> None:
+        """Payment decision after perception; its failure never fails the job."""
+        if self._decision_agent is None:
+            return
+        try:
+            await self._decision_agent.run(delivery_id, job_id=job_id)
+        except Exception as exc:  # noqa: BLE001 - perception results are already stored
+            logger.exception("decision failed", extra={"extra_data": {"job_id": job_id}})
+            self._event(job_id, "decision_failed", f"decision not recorded: {type(exc).__name__}",
+                        {"error_code": getattr(exc, "code", "internal_error")})
 
     # ------------------------------------------------------------- stages
     def _resolve_video_path(self, video_path: str | None) -> Path:
@@ -388,6 +408,10 @@ class PerceptionPipeline:
             session.commit()
         finally:
             session.close()
+        for position, track in enumerate(chosen.merged_tracks, start=1):
+            self._event(job_id, "tracking_progress", f"track {track.track_id} confirmed",
+                        {"po_line_id": po_line.id, "tracks": position,
+                         "track_id": track.track_id, "phrase": chosen_state["phrase"]})
         return {
             "po_line": po_line, "phrase": phrase, "sam_run_id": chosen_run_id,
             "count": chosen, "sam_cache_hit": bool(phrase_state["outcome"]["cache_hit"]),

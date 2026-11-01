@@ -8,6 +8,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
+from app.core.errors import UpstreamModelError
 from app.infra.cache import Sha256Cache
 from app.infra.db.repositories.cases import SqlCaseRepository
 from app.infra.db.repositories.policies import SqlRuleRepository
@@ -17,6 +18,7 @@ from app.infra.db.session import make_engine, make_session_factory
 from app.infra.meta.client import MetaModelClient
 from app.infra.storage import LocalFileStore
 from app.services.cases import CaseService
+from app.services.decision_agent import DecisionAgent
 from app.services.deliveries import DeliveryService
 from app.services.perception import PerceptionPipeline
 from app.services.policy_compiler import PolicyCompilerService
@@ -84,3 +86,13 @@ def get_simulation_service(
         SqlRuleRepository(session), client, settings.compiler_model, session=session, cache=cache
     )
     return PolicySimulationService(SqlSimulationRepository(session), compiler)
+
+
+def get_decision_agent(settings: Settings = Depends(get_app_settings)) -> DecisionAgent:
+    try:
+        config = settings.model_config_model()
+    except ValueError as exc:
+        raise UpstreamModelError(str(exc), code="model_not_configured") from exc
+    factory = make_session_factory(make_engine())
+    client = MetaModelClient(config, cache=Sha256Cache(settings.cache_root))
+    return DecisionAgent(factory, client, config.decision_model, max_turns=settings.max_agent_turns)

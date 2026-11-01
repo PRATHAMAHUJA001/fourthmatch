@@ -214,3 +214,13 @@ def strict_validate_rule(rule: CompiledRule) -> list[str]:
     elif not any(outcomes):
         errors.append("unsatisfiable condition: fires on no boundary facts")
     return errors
+
+
+def rule_applies_to_category(rule: CompiledRule, category: str) -> bool:
+    """True when the rule is category-wildcard or names this goods category."""
+    rule_cat = _norm_category(rule.goods_category or "")
+    return rule_cat in _WILDCARD_CATEGORIES or rule_cat == _norm_category(category)
+
+
+def is_category_specific(rule: CompiledRule) -> bool:
+    return _norm_category(rule.goods_category or "") not in _WILDCARD_CATEGORIES

@@ -14,12 +14,19 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.errors import NotFoundError
+from app.domain.agent_logic import discrepancy_types
 from app.domain.decision import build_facts, decide_delivery
 from app.domain.protocols import CaseRepository
 from app.domain.schemas.cases import CaseDetail, CaseLineRead, CaseSummary, CitedRule
 from app.domain.schemas.policies import CompiledRule
 from app.domain.schemas.simulation import LineDecisionInput
-from app.services.line_facts import build_line_decision_input, row_to_compiled
+from app.services.case_facts import (
+    approved_rules,
+    decision_row_to_read,
+    perception_read,
+    tracks_for,
+)
+from app.services.line_facts import build_line_decision_input
 
 
 class CaseService:
@@ -42,6 +49,16 @@ class CaseService:
         delivery = self._repository.get_delivery_for_po(po.id)
         grn = self._repository.get_grn_for_po(po.id)
         invoice = self._repository.get_invoice_for_po(po.id)
+        decision_row = self._repository.get_latest_decision(po.id)
+        decision = decision_row_to_read(decision_row) if decision_row is not None else None
+        if decision is not None:
+            # Stale: the stored agent result no longer equals the live Python
+            # recompute (e.g. policy changed). The served verdict is the recompute.
+            decision.stale = (
+                verdict is None
+                or decision.verdict != verdict.verdict
+                or decision.amount_held_paise != verdict.held_paise
+            )
         return CaseDetail(
             **summary.model_dump(),
             delivery_id=delivery.id if delivery else None,
@@ -50,21 +67,18 @@ class CaseService:
             triggered_rule_ids=verdict.triggered_rule_ids if verdict else [],
             signoff_roles=verdict.signoff_roles if verdict else [],
             lines=lines,
+            video_url=(
+                f"/api/deliveries/{delivery.id}/video"
+                if delivery is not None and delivery.video_path else None
+            ),
+            decision=decision,
+            invoice_total_paise=invoice.total_paise if invoice else None,
         )
 
     # -- internals ---------------------------------------------------------
 
     def _approved_rules(self) -> tuple[list[CompiledRule], str | None]:
-        """Valid approved compiled rules of the newest version that has any."""
-        pairs: list[tuple[Any, CompiledRule]] = []
-        for row in self._repository.list_approved_rules():
-            rule = row_to_compiled(row)
-            if rule is not None:
-                pairs.append((row, rule))
-        if not pairs:
-            return [], None
-        policy_version = max(pairs, key=lambda p: p[0].id)[0].policy_version
-        return [rule for row, rule in pairs if row.policy_version == policy_version], policy_version
+        return approved_rules(self._repository)
 
     def _summarise(
         self, po: Any, rules: list[CompiledRule], policy_version: str | None
@@ -87,10 +101,22 @@ class CaseService:
         rule_by_id = {r.rule_id: r for r in rules}
 
         lines: list[CaseLineRead] = []
+        discrepancies: list[str] = []
+        clauses: set[str] = set()
         for po_line in po_lines:
             line_input = input_by_line.get(po_line.id)
             line_verdict = line_verdicts.get(po_line.id)
             if line_input is not None:
+                fired = line_verdict.triggered_rule_ids if line_verdict else []
+                fired_fields = {rule_by_id[r].condition.field for r in fired if r in rule_by_id}
+                for tag in discrepancy_types(line_input, fired_fields):
+                    if tag not in discrepancies:
+                        discrepancies.append(tag)
+                clauses.update(rule_by_id[r].source_clause for r in fired if r in rule_by_id)
+                perception_row = (
+                    self._repository.get_perception_result(po_line.id)
+                    if line_input.evidence_source == "video" else None
+                )
                 lines.append(
                     CaseLineRead(
                         po_line_id=po_line.id,
@@ -116,6 +142,10 @@ class CaseService:
                         held_paise=line_verdict.held_paise if line_verdict else 0,
                         at_risk_paise=line_verdict.at_risk_paise if line_verdict else 0,
                         signoff_roles=line_verdict.signoff_roles if line_verdict else [],
+                        perception=(
+                            perception_read(perception_row, tracks_for(self._repository, perception_row))
+                            if perception_row is not None else None
+                        ),
                         cited_rules=[
                             CitedRule(
                                 rule_id=rule.rule_id,
@@ -158,6 +188,7 @@ class CaseService:
                 )
 
         vendor = self._repository.get_vendor(po.vendor_id)
+        latest = self._repository.get_latest_decision(po.id)
         summary = CaseSummary(
             po_id=po.id,
             po_number=po.po_number,
@@ -174,5 +205,16 @@ class CaseService:
             policy_version=policy_version if verdict else None,
             lines_evaluated=len(inputs),
             lines_total=len(po_lines),
+            discrepancy_types=discrepancies,
+            clauses=sorted(clauses),
+            evidence_source=_overall_source(inputs),
+            decided_at=latest.created_at.isoformat() if latest is not None and latest.created_at else None,
         )
         return summary, lines, verdict
+
+
+def _overall_source(inputs: list[LineDecisionInput]) -> str:
+    sources = {i.evidence_source for i in inputs}
+    if "video" in sources:
+        return "video"
+    return "document" if "document" in sources else "none"

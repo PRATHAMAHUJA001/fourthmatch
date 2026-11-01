@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.core.config import REPO_ROOT
 from app.core.errors import NotFoundError
 from app.domain.enums import JobKind, JobStatus
 from app.domain.schemas.jobs import DeliveryCreated, JobEventRead
@@ -58,6 +60,25 @@ class DeliveryService:
             return DeliveryCreated(delivery_id=delivery.id, job_id=job.id)
         finally:
             session.close()
+
+    def video_file(self, *, delivery_id: int) -> Path:
+        """Stored video for a delivery (path may be relative to repo or storage root)."""
+        session = self._factory()
+        try:
+            delivery = session.get(Delivery, delivery_id)
+            if delivery is None:
+                raise NotFoundError(f"Delivery {delivery_id} was not found.", code="delivery_not_found")
+            raw = delivery.video_path
+        finally:
+            session.close()
+        if raw:
+            candidate = Path(raw)
+            options = [candidate] if candidate.is_absolute() else [
+                candidate, REPO_ROOT / candidate, self._storage.root / candidate]
+            for option in options:
+                if option.is_file():
+                    return option
+        raise NotFoundError(f"Delivery {delivery_id} has no stored video.", code="video_not_found")
 
     def resolve_job(self, *, delivery_id: int, job_id: str | None) -> str:
         session = self._factory()

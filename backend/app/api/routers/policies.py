@@ -8,10 +8,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 
 from app.api.deps import get_policy_service, get_simulation_service
+from app.api.deps_reporting import get_policy_docs
 from app.core.errors import ValidationError
+from app.domain.schemas.dashboard import PolicyRead
 from app.domain.schemas.policies import PolicyCompileResult, RuleRead
 from app.domain.schemas.simulation import PolicySimulationResult, SimulatePolicyRequest
-from app.services.policy_compiler import PolicyCompilerService
+from app.services.policy_compiler import PolicyCompilerService, policy_version_of
+from app.services.policy_docs import PolicyDocService
 from app.services.simulation import PolicySimulationService
 
 router = APIRouter(tags=["policies"])
@@ -22,6 +25,7 @@ async def upload_policy(
     policy: UploadFile = File(...),
     policy_version: str | None = Form(default=None),
     service: PolicyCompilerService = Depends(get_policy_service),
+    policy_docs: PolicyDocService = Depends(get_policy_docs),
 ) -> PolicyCompileResult:
     filename = policy.filename or ""
     if not filename.lower().endswith(".md"):
@@ -33,7 +37,16 @@ async def upload_policy(
         markdown = raw.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise ValidationError("Policy upload must be UTF-8 text.", code="policy_not_utf8") from exc
-    return await service.compile_policy(markdown, policy_version=policy_version)
+    result = await service.compile_policy(markdown, policy_version=policy_version)
+    # Keep the uploaded text: GET /policies/current serves the newest upload.
+    policy_docs.save_uploaded(markdown, policy_version or policy_version_of(markdown))
+    return result
+
+
+@router.get("/policies/current", response_model=PolicyRead)
+def current_policy(policy_docs: PolicyDocService = Depends(get_policy_docs)) -> PolicyRead:
+    """The latest uploaded policy, or the bundled receiving policy when none was uploaded."""
+    return policy_docs.current()
 
 
 @router.post("/policies/{policy_id}/simulate", response_model=PolicySimulationResult)
