@@ -9,6 +9,7 @@ import { Wordmark } from "../components/shell/BrandMark";
 import { Button } from "../components/ui/Button";
 import { FourMatchStrip } from "../components/ui/FourMatch";
 import { useCountUp } from "../components/ui/LiveCounter";
+import { LoadDiagram } from "../components/ui/LoadDiagram";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { Kbd, Tag } from "../components/ui/Tag";
 import { api } from "../lib/api";
@@ -130,6 +131,36 @@ export function Landing() {
             </div>
           </div>
         </section>
+
+        {/* ——— the missing units (amber block) ——— */}
+        {line && detail.data && line.observed_count !== null && line.observed_count < line.invoiced_qty && (
+          <section className="mb-12 overflow-hidden rounded-fm text-[#16171a]" style={{ background: "#ffb224" }} aria-label="What the video found">
+            <div className="grid items-center gap-6 p-6 md:p-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+              <div>
+                <div className="font-cond text-[11px] font-semibold uppercase tracking-[0.1em] opacity-70">{detail.data.po_number} · what the video found</div>
+                <p className="mt-3 text-[34px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-[42px]">
+                  <span className="font-mono font-medium">{line.invoiced_qty - line.observed_count}</span> {line.unit === "box" ? "boxes" : `${line.unit}s`} never arrived.
+                </p>
+                <p className="mt-3 max-w-md text-[14px] leading-relaxed opacity-80">
+                  The storekeeper signed the GRN for {line.grn_qty}. SAM 3.1 tracked {line.observed_count} unique “{line.perception?.noun_phrase}” objects across the footage. Under clause 8.4 the video prevails, so the shortfall is held, not paid.
+                </p>
+              </div>
+              <LoadDiagram tone="ink" invoiced={line.invoiced_qty} observed={line.observed_count} damaged={line.damage_count} unit={line.unit} />
+            </div>
+            <div className="grid grid-cols-3 border-t border-black/15">
+              {[
+                ["Invoiced", `${line.invoiced_qty} ${line.unit}`],
+                ["Seen on video", `${line.observed_count} ${line.unit}`],
+                ["Held", formatINR(detail.data.held_paise)],
+              ].map(([k, v], i) => (
+                <div key={k} className={cn("px-6 py-4 md:px-8", i > 0 && "border-l border-black/15")}>
+                  <div className="font-cond text-[11px] font-semibold uppercase tracking-[0.1em] opacity-65">{k}</div>
+                  <div className="mt-1 font-mono text-[22px] font-medium tracking-[-0.03em] sm:text-[26px]">{v}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ——— proof row ——— */}
         {totals && (

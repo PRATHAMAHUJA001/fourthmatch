@@ -10,6 +10,7 @@ import { Filmstrip } from "../components/evidence/Filmstrip";
 import { Button } from "../components/ui/Button";
 import { EmptyState, ErrorState, Skeleton } from "../components/ui/EmptyState";
 import { FourMatchStrip } from "../components/ui/FourMatch";
+import { LoadDiagram } from "../components/ui/LoadDiagram";
 import { Money, Qty } from "../components/ui/Money";
 import { Panel } from "../components/ui/Panel";
 import { StatusBadge, VERDICT_SIGNAL } from "../components/ui/StatusBadge";
@@ -68,6 +69,17 @@ function LineStrip({ line, highlight }: { line: CaseLineRead; highlight?: boolea
             : "no dock video",
         }}
       />
+      {line.evidence_source === "video" && line.observed_count !== null && (
+        <div className="mt-3 flex items-center gap-4 rounded-fm border border-fm-border bg-fm-sunken px-3 py-2">
+          <LoadDiagram className="max-w-[260px]" invoiced={line.invoiced_qty} observed={line.observed_count} damaged={line.damage_count} unit={line.unit} />
+          <dl className="grid shrink-0 grid-cols-[auto_auto] gap-x-3 gap-y-0.5 font-mono text-[11px]">
+            <dt className="text-fm-faint">billed</dt><dd className="text-right">{line.invoiced_qty}</dd>
+            <dt className="text-fm-faint">seen</dt><dd className="text-right">{line.observed_count}</dd>
+            {line.invoiced_qty - line.observed_count > 0 && (<><dt className="text-fm-hold">missing</dt><dd className="text-right text-fm-hold">{line.invoiced_qty - line.observed_count}</dd></>)}
+            {line.damage_count > 0 && (<><dt className="text-fm-hold">damaged</dt><dd className="text-right text-fm-hold">{line.damage_count}</dd></>)}
+          </dl>
+        </div>
+      )}
       {(line.damage_count > 0 || line.evidence_quality === "insufficient") && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {line.damage_count > 0 && <Tag tone="hold">{line.damage_count} damaged · track {line.perception?.damaged_track_ids.join(", ") ?? "GRN"}</Tag>}
