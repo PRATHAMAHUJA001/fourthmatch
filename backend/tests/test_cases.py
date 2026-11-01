@@ -189,3 +189,33 @@ def test_missing_case_404(world: tuple[TestClient, dict[str, int]]) -> None:
     resp = client.get("/api/cases/424242")
     assert resp.status_code == 404
     assert resp.json()["error"]["code"] == "po_not_found"
+
+
+def test_case_detail_evidence_pack_null_then_attached(
+    world: tuple[TestClient, dict[str, int]], tmp_path: Path
+) -> None:
+    from datetime import UTC, datetime
+
+    from app.infra.db.models.decision import EvidencePack
+
+    client, ids = world
+    assert client.get(f"/api/cases/{ids['short']}").json()["evidence_pack"] is None
+
+    app_session = next(client.app.dependency_overrides[get_db_session]())  # type: ignore[attr-defined]
+    try:
+        app_session.add(EvidencePack(
+            po_id=ids["short"], sha256="f" * 64, verified=True,
+            created_at=datetime(2026, 11, 1, 10, 0, tzinfo=UTC),
+            manifest=[
+                {"name": "evidence_pack.json", "path": "x/evidence_pack.json", "sha256": "e" * 64, "bytes": 1, "role": "json"},
+                {"name": "frames/frame_1.jpg", "path": "x/frames/frame_1.jpg", "sha256": "d" * 64, "bytes": 1, "role": "frame"},
+            ],
+        ))
+        app_session.commit()
+    finally:
+        app_session.close()
+
+    pack = client.get(f"/api/cases/{ids['short']}").json()["evidence_pack"]
+    assert pack["sha256"] == "f" * 64 and pack["verified"] is True
+    assert pack["files"] == ["evidence_pack.json"]  # frames are not top-level artifacts
+    assert client.get(f"/api/cases/{ids['no_evidence']}").json()["evidence_pack"] is None

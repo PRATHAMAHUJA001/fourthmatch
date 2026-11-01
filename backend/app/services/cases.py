@@ -11,6 +11,7 @@ A PO with no evaluable line (no perception result and no GRN line) gets
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from app.core.errors import NotFoundError
@@ -18,6 +19,7 @@ from app.domain.agent_logic import discrepancy_types
 from app.domain.decision import build_facts, decide_delivery
 from app.domain.protocols import CaseRepository
 from app.domain.schemas.cases import CaseDetail, CaseLineRead, CaseSummary, CitedRule
+from app.domain.schemas.evidence import EvidencePackRead
 from app.domain.schemas.policies import CompiledRule
 from app.domain.schemas.simulation import LineDecisionInput
 from app.services.case_facts import (
@@ -30,8 +32,15 @@ from app.services.line_facts import build_line_decision_input
 
 
 class CaseService:
-    def __init__(self, repository: CaseRepository) -> None:
+    def __init__(
+        self,
+        repository: CaseRepository,
+        pack_lookup: Callable[[int], EvidencePackRead | None] | None = None,
+    ) -> None:
         self._repository = repository
+        # po_id -> latest evidence pack; injected so this module never imports
+        # the evidence service (which itself depends on CaseService).
+        self._pack_lookup = pack_lookup
 
     def list_cases(self) -> list[CaseSummary]:
         rules, policy_version = self._approved_rules()
@@ -73,6 +82,7 @@ class CaseService:
             ),
             decision=decision,
             invoice_total_paise=invoice.total_paise if invoice else None,
+            evidence_pack=self._pack_lookup(po.id) if self._pack_lookup else None,
         )
 
     # -- internals ---------------------------------------------------------
