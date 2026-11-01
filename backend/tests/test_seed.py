@@ -127,7 +127,7 @@ def test_video_scenarios_by_hand(seeded) -> None:
     by_scn = {e["scenario_id"]: e for e in seeded["truth_doc"]["scenarios_and_discrepancies"]
               if e["scenario_id"]}
     assert by_scn["scn1_clean"]["correct_verdict"] == "approve"
-    assert by_scn["scn2_short"]["correct_verdict"] in {"hold_payment", "partial_pay"}
+    assert by_scn["scn2_short"]["correct_verdict"] in {"hold", "partial_pay"}
     assert by_scn["scn3_damage"]["correct_verdict"] == "partial_pay"
     assert by_scn["scn3_damage"]["requires_debit_note"] is True
     assert by_scn["scn4_mixed"]["correct_verdict"] == "partial_pay"
@@ -196,7 +196,7 @@ def test_seed_prunes_stale_seeded_rows_but_never_runtime(tmp_path: Path) -> None
                                    total_paise=100, synthetic=True)
         session.add(runtime_po)
         session.flush()
-        session.add(Decision(po_id=runtime_po.id, verdict="hold_payment", reason="runtime"))
+        session.add(Decision(po_id=runtime_po.id, verdict="hold", reason="runtime"))
         session.commit()
     finally:
         session.close()

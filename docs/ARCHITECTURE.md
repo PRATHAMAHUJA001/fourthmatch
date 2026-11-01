@@ -19,7 +19,7 @@ backend/app/
   services/                 # use cases / orchestration. Depends on domain + Protocols only.
     perception.py           # video -> SamRun + tracks + PerceptionResult
     reconciliation.py       # PO vs GRN vs invoice vs tracks (pure numbers, via domain)
-    decision.py             # rule evaluation -> Decision (approve|hold_payment|human_review)
+    decision.py             # rule evaluation -> Decision (approve|hold|human_review)
     policy.py               # policy text -> compiled Rules (via model client Protocol)
   domain/                   # pure Python. Imports nothing from infra, fastapi, or sqlalchemy.
     schemas/                # Pydantic models crossing layers (Job, JobEvent, SamRun,
@@ -102,8 +102,8 @@ seeded business rows. Existing tables (`vendors`…`evidence_packs`) match
 | `tracks` | **id**, delivery_id FK→deliveries, **sam_run_id FK→sam_runs (idx)**, object_id, prompt, category, first_frame?, last_frame?, frame_count?, confidence?; `UniqueConstraint(sam_run_id, object_id)` | populated **only** by the perception pipeline from SAM output — never seeded, never from an LLM |
 | `damage_flags` | **id**, track_id FK→tracks (idx), delivery_id FK→deliveries, frame_index?, reason_code, confidence?, source (`sam\|perception\|human`), created_at | any cited `track_id`/`frame_index` is checked in Python to exist before insert |
 | `perception_results` | **id**, delivery_id FK→deliveries, sam_run_id FK→sam_runs (UQ per run+category), category, prompt, track_count (Python, distinct SAM ids), max_visible (Python, max distinct ids in any single frame), evidence_quality (`strong\|weak\|none`), reasons JSON=[] (stable codes, e.g. `low_frame_coverage`), created_at | persisted form of the `PerceptionResult` domain schema; the schema is what crosses layers, this row is its record |
-| `rules` | **id**, clause (idx, e.g. `4.2`), policy_version, category?, rule_type, threshold_pct?, threshold_paise?, action (`approve\|hold_payment\|human_review`), description | compiled from one numbered policy clause |
-| `decisions` | **id**, po_id FK→purchase_orders, delivery_id FK→deliveries?, verdict (`approve\|hold_payment\|human_review`), reason, policy_clauses JSON=[], variance_pct? (Python), amount_at_risk_paise=0 (Python), decided_by=agent, created_at | weak/`none` evidence can only yield `human_review` |
+| `rules` | **id**, clause (idx, e.g. `4.2`), policy_version, category?, rule_type, threshold_pct?, threshold_paise?, action (`approve\|hold\|human_review`), description | compiled from one numbered policy clause |
+| `decisions` | **id**, po_id FK→purchase_orders, delivery_id FK→deliveries?, verdict (`approve\|hold\|human_review`), reason, policy_clauses JSON=[], variance_pct? (Python), amount_at_risk_paise=0 (Python), decided_by=agent, created_at | weak/`none` evidence can only yield `human_review` |
 | `evidence_packs` | **id**, po_id FK→purchase_orders, decision_id FK→decisions?, pdf_path?, json_path?, sha256?, verified=false, created_at | PDF + JSON, SHA-256, re-verifiable |
 
 Key relationships:
@@ -164,6 +164,21 @@ raw SAM output and does not re-call SAM.
 - **Reconciliation/decision (services + domain)** compare PO/GRN/invoice quantities
   against SAM counts in Python and evaluate `rules`. `evidence_quality in {weak, none}`
   forces `human_review`.
+
+**Decision ownership (binding):** `backend/app/domain/decision.py` is THE decision
+function for the whole app — `decide_delivery(lines, rules) -> DeliveryVerdict`
+(mapping: insufficient evidence / `require_signoff` → `human_review`,
+`hold` → `hold`, `partial_pay` → disputed portion held; verdict vocabulary is
+`approve | partial_pay | hold | human_review`). The Day-3 decision agent and the
+policy simulator (`POST /api/policies/{policy_version}/simulate`) must call it and
+may not compute verdicts or held amounts themselves; agents supply precomputed
+`LineDecisionInput` facts (counts from SAM tracks or GRN, money in paise) only.
+
+**Cases read model (implemented):** `GET /api/cases` and
+`GET /api/cases/{po_id}` recompute verdicts on read via `decide_delivery`
+from approved compiled rules — stored `Decision` rows are never trusted
+as truth (same stance as the simulator's drift reporting). Full design,
+contract, and file/test traceability: `docs/CASES.md`.
 
 ---
 

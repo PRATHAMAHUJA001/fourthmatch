@@ -1,4 +1,5 @@
 """Domain schemas: Pydantic contracts crossing layers. No ORM, no I/O."""
+from app.domain.schemas.cases import CaseDetail, CaseLineRead, CaseSummary, CitedRule
 from app.domain.schemas.config import CountingConfig, ModelConfig
 from app.domain.schemas.damage import DamageVerdict
 from app.domain.schemas.jobs import JobCreate, JobEventCreate, JobEventRead, JobRead
@@ -12,6 +13,18 @@ from app.domain.schemas.perception import (
     PerceptionResultRead,
     Track,
     TrackFrame,
+)
+from app.domain.schemas.policies import (
+    Clause,
+    CompileClauseOutput,
+    CompiledRule,
+    ConflictPair,
+    ConflictReport,
+    PolicyCompileResult,
+    RuleCondition,
+    RuleFacts,
+    RuleOutcome,
+    RuleRead,
 )
 from app.domain.schemas.purchase_orders import HealthRead, PoLineRead, PurchaseOrderDetail, PurchaseOrderRead
 from app.domain.schemas.sam import SamRunCreate, SamRunRead, SamTrackRead
@@ -31,12 +44,35 @@ from app.domain.schemas.seed import (
     SeedResult,
     VendorSpec,
 )
+from app.domain.schemas.simulation import (
+    DeliveryVerdict,
+    DraftCompileResult,
+    DraftRule,
+    DriftItem,
+    EvidenceSourceTotals,
+    HeldTotals,
+    LineDecisionInput,
+    LineDiff,
+    LineVerdict,
+    PolicySimulationResult,
+    PoVerdictDiff,
+    SimulatePolicyRequest,
+)
 from app.domain.schemas.understanding import FootageNeeded, SceneFacts, Understanding, UnderstandingLine
 
 __all__ = [
     "BBox",
+    "CaseDetail",
+    "CaseLineRead",
+    "CaseSummary",
     "CatalogItem",
+    "CitedRule",
+    "Clause",
     "ClauseRewrite",
+    "CompiledRule",
+    "CompileClauseOutput",
+    "ConflictPair",
+    "ConflictReport",
     "CountResult",
     "CountingConfig",
     "DamageFlagCreate",
@@ -63,13 +99,30 @@ __all__ = [
     "PoLineRead",
     "PoLineSpec",
     "PoSpec",
+    "PolicyCompileResult",
     "PurchaseOrderDetail",
     "PurchaseOrderRead",
+    "RuleCondition",
+    "RuleFacts",
+    "RuleOutcome",
+    "RuleRead",
     "SamRunCreate",
     "SamRunRead",
     "SamTrackRead",
     "SceneFacts",
     "SeedResult",
+    "DeliveryVerdict",
+    "DraftCompileResult",
+    "DraftRule",
+    "DriftItem",
+    "EvidenceSourceTotals",
+    "HeldTotals",
+    "LineDecisionInput",
+    "LineDiff",
+    "LineVerdict",
+    "PolicySimulationResult",
+    "PoVerdictDiff",
+    "SimulatePolicyRequest",
     "Track",
     "TrackFrame",
     "Understanding",

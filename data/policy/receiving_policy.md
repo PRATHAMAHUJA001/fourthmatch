@@ -55,7 +55,7 @@
 
 **4.1** The quantity shall be verified at the time of unloading against the Purchase Order and the supplier challan, employing count for countable units and weighment where applicable, and combined methods where required by Purchase.
 
-**4.2** Quantity tolerance for acceptance without escalation shall be 0.0% for cartons, 2.0% for bagged material, and 0.0% for steel coils, and any shortage or excess beyond the applicable tolerance shall be documented and shall require review and approval in accordance with sign-off limits before closure of the Goods Receipt Note.
+**4.2** The quantity tolerance for acceptance without escalation is established at 0.0% for cartons, 2.0% for bagged material, and 0.0% for steel coils, and any shortage beyond the applicable tolerance requires review and approval by the Stores Manager before closure of the Goods Receipt Note, with payment to be released only for the quantity received within tolerance and the value of the shortfall beyond tolerance to be withheld pending such Stores Manager review.
 
 **4.3** Weighment slips, count sheets, and supporting photographs of the vehicle, unloading, stacking, and any shortage or excess shall be attached to the Goods Receipt Note.
 

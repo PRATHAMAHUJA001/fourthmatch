@@ -6,12 +6,12 @@ nothing from app.domain.rules, app.services, or app.seed.verdict, and nothing in
 services/ or domain/ may import it (enforced by tests/test_seed.py AST scans).
 The LLM never does arithmetic; every number here is computed in Python.
 
-Vocabulary (seed-local): approve | partial_pay | hold_payment.
+Vocabulary (seed-local): approve | partial_pay | hold.
   approve      — no discrepancy beyond tolerance, no damage, no duplicate.
   partial_pay  — pay the undisputed payable quantity, hold the disputed portion
                  (short shipment beyond tolerance, damaged units invoiced,
                  invoice quantity above PO/GRN). Damage also requires a debit note.
-  hold_payment — hold the invoice in full (duplicate invoice, price beyond
+  hold — hold the invoice in full (duplicate invoice, price beyond
                  tolerance, or nothing payable).
 """
 from __future__ import annotations
@@ -97,7 +97,7 @@ def expected_verdict(lines: Sequence[EvalLine], *, duplicate: bool = False) -> E
     if not types:
         return ExpectedResult(verdict="approve", per_line=per_line)
     if duplicate or "invoice_price_above_po" in types or payable_total <= 0:
-        verdict = "hold_payment"
+        verdict = "hold"
     else:
         verdict = "partial_pay"
     return ExpectedResult(

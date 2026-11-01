@@ -12,10 +12,14 @@ regenerated (max 3 attempts), then falls back to the canonical template text.
 The finished file is verified whole (check_policy) before it is written.
 Seeding only ever verifies this committed file and refuses on mismatch.
 
-Usage: PYTHONPATH=backend backend/.venv/bin/python scripts/generate_policy.py
+Usage: PYTHONPATH=backend backend/.venv/bin/python scripts/generate_policy.py [--clause 4.2]
+
+With --clause, only that clause is regenerated; every other clause keeps the
+prose already committed in data/policy/receiving_policy.md.
 """
 from __future__ import annotations
 
+import argparse
 import asyncio
 import sys
 from pathlib import Path
@@ -31,6 +35,7 @@ from app.seed.policy_template import (  # noqa: E402
     CLAUSES,
     check_policy,
     extract_numbers,
+    parse_clauses,
     render_policy_with,
 )
 
@@ -62,16 +67,20 @@ async def rewrite_clause(client: MetaModelClient, session, clause, *, model: str
     return clause.text, False
 
 
-async def amain() -> int:
+async def amain(only_clause: str | None = None) -> int:
     config = load_model_config()
     engine = make_engine(DB)
     create_all(engine)
     session = make_session_factory(engine)()
     client = MetaModelClient(config)
-    prose_by_id: dict[str, str] = {}
+    # Single-clause mode: start from the committed prose so untouched
+    # clauses render byte-identically; only the named clause is rewritten.
+    prose_by_id: dict[str, str] = parse_clauses(OUT.read_text()) if only_clause and OUT.exists() else {}
     fallbacks: list[str] = []
     try:
         for clause in CLAUSES:
+            if only_clause and clause.id != only_clause:
+                continue
             prose, used_model = await rewrite_clause(client, session, clause, model=config.bulk_model)
             prose_by_id[clause.id] = prose
             if not used_model:
@@ -94,4 +103,10 @@ async def amain() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(asyncio.run(amain()))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--clause", default=None,
+                        help="regenerate only this clause id (e.g. 4.2); others keep committed prose")
+    args = parser.parse_args()
+    if args.clause and args.clause not in {c.id for c in CLAUSES}:
+        parser.error(f"unknown clause id: {args.clause}")
+    raise SystemExit(asyncio.run(amain(args.clause)))

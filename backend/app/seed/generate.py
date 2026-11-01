@@ -401,7 +401,7 @@ def seed(db_path: Path, manifest_path: Path, policy_path: Path, truth_path: Path
             "policy_numbers": POLICY, "gst_pct_on_invoices": GST_PCT,
             "manifest": str(manifest_path.relative_to(REPO_ROOT)) if manifest_path.is_relative_to(REPO_ROOT) else str(manifest_path),
             "amount_basis": "amount_at_risk is ex-GST, computed in Python (backend/app/seed/expected.py)",
-            "verdict_vocabulary": ["approve", "partial_pay", "hold_payment"],
+            "verdict_vocabulary": ["approve", "partial_pay", "hold"],
             "scenarios_and_discrepancies": [c.model_dump() for c in ground_truth],
             "clean_po_numbers": clean_pos,
             "notes": [

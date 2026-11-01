@@ -229,9 +229,10 @@ class MetaModelClient:
         session: Session | None = None,
         reasoning_effort: str | None = None,
         cache_key: str | None = None,
+        instructions: str | None = None,
     ) -> T:
         return await self._execute(
-            purpose=purpose, model=model, input_payload=prompt, instructions=None,
+            purpose=purpose, model=model, input_payload=prompt, instructions=instructions,
             output_schema=output_schema, session=session,
             reasoning_effort=reasoning_effort, cache_key=cache_key,
         )

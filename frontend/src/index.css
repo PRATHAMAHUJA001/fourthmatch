@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-fm-bg: var(--fm-bg);
+  --color-fm-panel: var(--fm-panel);
+  --color-fm-raised: var(--fm-raised);
+  --color-fm-border: var(--fm-border);
+  --color-fm-border-strong: var(--fm-border-strong);
+  --color-fm-text: var(--fm-text);
+  --color-fm-muted: var(--fm-muted);
+  --color-fm-faint: var(--fm-faint);
+  --color-fm-hold: var(--fm-hold);
+  --color-fm-verified: var(--fm-verified);
+  --color-fm-fraud: var(--fm-fraud);
+  --color-fm-review: var(--fm-review);
+  --color-fm-hold-bg: var(--fm-hold-bg);
+  --color-fm-verified-bg: var(--fm-verified-bg);
+  --color-fm-fraud-bg: var(--fm-fraud-bg);
+  --color-fm-review-bg: var(--fm-review-bg);
+  --font-sans: var(--fm-font-sans);
+  --font-mono: var(--fm-font-mono);
+  --radius-fm: var(--fm-radius);
+  --radius-fm-sm: var(--fm-radius-sm);
+}
+
+/* ——— FourthMatch tokens ———
+   Dark graphite control room. Light derived by mist logic (#F5F5F7 canvas),
+   not a naive invert. Hairline borders are elevation; no shadows, no gradients.
+   Signal colours never alone: components pair them with icon + label. */
+:root,
+:root[data-theme="dark"] {
+  --fm-bg: #0e1013;
+  --fm-panel: #161a1f;
+  --fm-raised: #1c2128;
+  --fm-border: #252b33;
+  --fm-border-strong: #313a45;
+  --fm-text: #e6e8eb;
+  --fm-muted: #8a93a0;
+  --fm-faint: #5b6572;
+  --fm-hold: #f5a524;
+  --fm-verified: #2bb673;
+  --fm-fraud: #e5484d;
+  --fm-review: #6b7a90;
+  --fm-hold-bg: color-mix(in srgb, #f5a524 12%, transparent);
+  --fm-verified-bg: color-mix(in srgb, #2bb673 12%, transparent);
+  --fm-fraud-bg: color-mix(in srgb, #e5484d 12%, transparent);
+  --fm-review-bg: color-mix(in srgb, #6b7a90 16%, transparent);
+  --fm-font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --fm-font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", monospace;
+  --fm-radius: 6px;
+  --fm-radius-sm: 4px;
+  --fm-motion: 150ms;
+  --fm-row-h: 32px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --fm-bg: #f5f5f7;
+  --fm-panel: #ffffff;
+  --fm-raised: #fafafc;
+  --fm-border: #d6d6d6;
+  --fm-border-strong: #b8bcc2;
+  --fm-text: #1d1d1f;
+  --fm-muted: #5f6368;
+  --fm-faint: #86868b;
+  --fm-hold: #9a6200;
+  --fm-verified: #157347;
+  --fm-fraud: #c81e1e;
+  --fm-review: #475569;
+  --fm-hold-bg: #fef3c7;
+  --fm-verified-bg: #dcfce7;
+  --fm-fraud-bg: #fee2e2;
+  --fm-review-bg: #e2e8f0;
+  color-scheme: light;
+}
+
+* { border-color: var(--fm-border); }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: var(--fm-bg);
+  color: var(--fm-text);
+  font-family: var(--fm-font-sans);
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection { background: var(--fm-hold); color: #0e1013; }
+
+:focus-visible {
+  outline: 2px solid var(--fm-text);
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes fm-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.fm-live-dot { animation: fm-pulse 1.6s ease-in-out infinite; }
+
+@keyframes fm-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.fm-skeleton {
+  background: linear-gradient(90deg, var(--fm-raised) 25%, var(--fm-border) 50%, var(--fm-raised) 75%);
+  background-size: 200% 100%;
+  animation: fm-shimmer 1.4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fm-skeleton { animation: none; }
+  .fm-live-dot { animation: none; }
+}
+
+.fm-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.fm-scroll::-webkit-scrollbar-thumb { background: var(--fm-border-strong); border-radius: 4px; }
+.fm-scroll::-webkit-scrollbar-track { background: transparent; }
