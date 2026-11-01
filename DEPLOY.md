@@ -57,7 +57,7 @@ Rotate:
 sudo sed -i "s/^DEMO_PASSCODE=.*/DEMO_PASSCODE=$(head -c 18 /dev/urandom | base64 | tr -dc A-Za-z0-9 | head -c 16)/" /etc/fourthmatch.env
 sudo systemctl restart fourthmatch && sudo grep DEMO_PASSCODE /etc/fourthmatch.env
 ```
-Note: the frontend must send that header from its upload dialog (passcode field); curl works today.
+Note: the web app asks for the passcode in a dialog the first time a write is attempted and sends it as `X-Demo-Passcode` (kept for the browser session only); curl works with the same header.
 
 ## Demo data without a model key
 `python -m app.seed --demo` (run by setup.sh and before each service start) imports the perception

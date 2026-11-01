@@ -1,6 +1,6 @@
 # FourthMatch: handoff for the next session
 
-Last updated: 2026-11-01 (end of build day 3). Read this first, then `.claude/CLAUDE.md`
+Last updated: 2026-11-01 (end of build day 5 items; day 6 not started). Read this first, then `.claude/CLAUDE.md`
 (binding rules) and the playbook (Day 5 and 6 sections) if you have it.
 
 ## Ground rules that are easy to miss
@@ -18,20 +18,21 @@ Last updated: 2026-11-01 (end of build day 3). Read this first, then `.claude/CL
 | Day | Item | Status |
 |---|---|---|
 | 1 | Setup, model smoke tests, `docs/MODEL_NOTES.md` | Done |
-| 2 | Seed + manifest, perception pipeline A–E, `eval_counts.py` | Done; all 5 lines PASS (`data/eval_counts.json`) |
+| 2 | Seed + manifest, perception pipeline A-E, `eval_counts.py` | Done; all 5 lines PASS (`data/eval_counts.json`) |
 | 3 | Policy compiler, rules approve/reject, what-if simulate | Done |
 | 3 | Decision agent (muse-spark-1.3 tool loop) | **Built + unit-tested with a fake model; never run against the real API** |
 | 4 | Dashboard UI (all pages, hero case screen) | Done, polished; demo mode complete |
-| 5 | Evidence pack PDF+JSON, SHA-256 verify, debit note | Done (backend). Not yet shown on the case page from the live API (see To do 1) |
+| 5 | Evidence pack PDF+JSON, SHA-256 verify, debit note | Done, including the case page (`CaseDetail.evidence_pack` via `latest_pack_for_po`; button opens `/api/deliveries/{id}/evidence-pack`) |
 | 5 | Dashboard read endpoints (kpis, analytics, eval, policy) | Done |
-| 5 | Voice remark (muse-voice-transcribe-1.0) | Not started |
-| 5 | Muse Image synthetic eval set | Not started |
-| 5 | `scripts/run_eval.py` (full eval) | Not started |
-| 5 | Deploy (Dockerfile, Cloud Run, DEMO_MODE + passcode) | Not started |
-| 6 | README for judges, video, submission | Not started |
+| 5 | Voice remark (muse-voice-transcribe-1.0) | Done: `infra/meta/asr.py`, `domain/remark.py`, `transcribing_remark` stage, remark panel + record/upload in the New delivery dialog. Frontend stepper does not show the `transcribing_remark` stage yet |
+| 5 | Muse Image synthetic eval set | Scripts done (`gen_eval_images.py`, `confirm_eval_images.py`); **not run**: `data/eval_results.json` has 0 images |
+| 5 | `scripts/run_eval.py` (full eval) | Done; last run has video counts and damage 5/5, everything else null (see `not_measured` in the file) |
+| 5 | Deploy | Done as **AWS Lightsail files, no Docker**: `deploy/` (setup.sh, Caddy, systemd), `DEPLOY.md`, DEMO_MODE passcode + rate limit, SPA served by the API. Not deployed yet; replaces the old GCP/Dockerfile plan |
+| 6 | README for judges | Done (`README.md`, with screenshots in `docs/screenshots/`). Placeholders remain for the live URL and video |
+| 6 | Video, submission | Not started |
 
-Tests at handoff: backend `pytest` 121 passed / 1 skipped, ruff + mypy clean. Frontend `tsc` clean,
-vitest 27/27, Playwright e2e 22/22 (every route at 1440 and 390 px, replay, palette, cards view).
+Tests at handoff: backend `pytest` 183 passed / 1 skipped, ruff + mypy clean (102 source files). Frontend
+`tsc` clean, vitest 46/46, Playwright e2e 22/22 (every route at 1440 and 390 px, replay, palette, cards view).
 
 ## How to run
 
@@ -44,11 +45,8 @@ python -m pytest -q && ruff check . && mypy app
 ```
 Scripts (repo root `scripts/`): `smoke_models.py`, `eval_counts.py` (perception from cache, no
 decision), `compile_policy_cache.py`, `run_decisions.py` (needs `MODEL_API_KEY`, exits 2 without),
-`build_evidence_packs.py`.
-
-Likely order to get real data into a fresh DB (verify each step, the seeded DB has no approved
-rules or perception rows on its own): seed -> compile + approve policy rules -> `eval_counts.py`
-(stores perception) -> `run_decisions.py` -> `build_evidence_packs.py`.
+`gen_eval_images.py` + `confirm_eval_images.py`, `run_eval.py` (no model calls), `export_demo_snapshot.py`,
+`build_evidence_packs.py`. The order for real data is in "To do" below.
 
 Frontend (from `frontend/`):
 ```bash
@@ -81,6 +79,14 @@ PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome npx playwr
   `frontend/src/types/api.ts` match the backend. Demo data built from `data/ground_truth.json`,
   `data/eval_counts.json`, `data/policy/receiving_policy.md` in `src/mocks/dataset.ts`.
 
+- **Voice remark**: `infra/meta/asr.py` (httpx, `POST /v1/asr/transcribe`), `infra/audio.py` (ffmpeg to
+  16 kHz WAV), pure check in `domain/remark.py`. Context only; never changes a count, flag or verdict.
+- **Eval**: `services/eval_report.py` + `domain/metrics.py` build `data/eval_results.json` from stored
+  evidence; null means not measured, with the reason in `not_measured`.
+- **Demo gate**: `api/deps_demo.py` + `domain/rate_limit.py`; `DEMO_MODE`, `DEMO_PASSCODE`,
+  `LIVE_UPLOAD_LIMIT_PER_HOUR`. Rate limiter is per process (one uvicorn worker).
+- Fuller module notes: `docs/ARCHITECTURE.md` sections 9-15.
+
 ## Never run for real (needs Pratham's API key, on his Mac)
 - The decision agent against muse-spark-1.3: tool-call item shapes, `encrypted_content` replay,
   strict tool schemas (`record_decision` is non-strict), whether the model cites evidence as
@@ -90,24 +96,37 @@ PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome npx playwr
 - The full upload -> perception -> decision pipeline end to end with a new video.
 
 ## To do, in priority order
-1. **Small integration**: attach `latest_pack_for_po` (evidence service) to `CaseDetail.evidence_pack`
-   in `services/cases.py`; then run the frontend in live mode (`npm run dev` + backend) and fix any
-   shape mismatch page by page. In live mode the case page "Evidence pack" button should open
-   `/api/deliveries/{id}/evidence-pack`.
-2. **First real decision run** (above), then update `docs/ARCHITECTURE.md` with the new `decisions`
-   columns, `call_tool_turn`, evidence + dashboard modules (not yet documented there).
-3. **Deploy** (playbook Day 5 prompt 5): multi-stage Dockerfile (Node build -> Python 3.12 slim serves
-   API + SPA, non-root, port 8080), seed + load the 4 demo cases on startup, DEMO_MODE replays stored
-   SSE, live uploads only with `DEMO_PASSCODE` and max 10/hour, key from env. Install a font with the
-   ₹ glyph (e.g. `fonts-dejavu-core`) or PDFs print "Rs.". Alternative quick public link: `npm run build:demo`
-   on any static host.
-4. **Voice remark** (Day 5 prompt 2): MediaRecorder in the New delivery dialog, ffmpeg to 16 kHz wav,
-   POST /v1/asr/transcribe (see MODEL_NOTES §6), transcript is context only; show "Remark not supported
-   by video" when it disagrees.
-5. **Muse Image eval set** (Day 5 prompt 3), then **`scripts/run_eval.py`** -> `data/eval_results.json`
-   and feed the Eval page.
-6. **README for judges** (Day 6 prompt 1) with eval numbers, Mermaid diagram, model table, screenshots.
-7. Video (script in the playbook, Day 6). Cut order if late: voice, Muse Image, what-if, analytics.
+
+Everything below needs Pratham's API key on his Mac (the cloud container has none). Run from the repo
+root unless noted, check the output of each step before the next, and never edit expected answers to move a
+score.
+
+1. **Real-key run, in this order** (`.env` with `MODEL_API_KEY` and the model IDs):
+   1. Seed: `cd backend && .venv/bin/python -m app.seed` (the seeded DB has no approved rules or
+      perception rows on its own).
+   2. Compile and approve the policy rules (Policy page, or `POST /api/policies` then approve each rule).
+      `scripts/compile_policy_cache.py` only warms the compiler cache for the offline accuracy test.
+   3. `backend/.venv/bin/python scripts/eval_counts.py` (stores perception, rewrites `data/eval_counts.json`).
+   4. `backend/.venv/bin/python scripts/run_decisions.py`. First real run of the decision agent: if it falls
+      back, read the fallback reasons and adjust the prompt or guard, never the expected answers.
+   5. `backend/.venv/bin/python scripts/gen_eval_images.py`, look at `data/eval_images/grid.html`, count each
+      picture yourself, then `scripts/confirm_eval_images.py img01=7 ...`.
+   6. `backend/.venv/bin/python scripts/run_eval.py` (no model calls) -> `data/eval_results.json`. Set
+      `MODEL_COST_RATES` / `MODEL_COST_CURRENCY` first only if you have real prices.
+   7. `PYTHONPATH=backend backend/.venv/bin/python scripts/export_demo_snapshot.py` -> `data/demo/snapshot.json`.
+   8. `PYTHONPATH=backend backend/.venv/bin/python scripts/build_evidence_packs.py`.
+2. **Commit the data outputs** (`data/eval_counts.json`, `data/eval_results.json`, `data/eval_images/` labels
+   and PNGs, `data/demo/snapshot.json`). Then update the README Evaluation table: replace every "pending" row
+   with the number from `eval_results.json`, and remove the matching Limitations line.
+3. **Run the live pipeline once end to end** with a new video and a voice remark (frontend `npm run dev` plus the
+   backend) and fix any shape mismatch page by page. Add the `transcribing_remark` stage to the frontend stepper.
+4. **Deploy** per `DEPLOY.md` (Lightsail, `deploy/setup.sh`), set `MODEL_API_KEY` in `/etc/fourthmatch.env`,
+   verify with the curl checks in section 4 of that file, and put the URL and passcode into the README and the
+   submission notes. DEPLOY.md still says the frontend must send the passcode header; the frontend now asks for the
+   passcode in a dialog and sends it on non-GET requests (`frontend/src/components/shell/PasscodeDialog.tsx`,
+   `src/lib/api.ts`), so update that sentence after checking.
+5. **Video and submission.** Replace `<LIVE_DEMO_URL>` and `<DEMO_VIDEO_URL>` in the README. Cut order if late:
+   Muse Image set, what-if, analytics.
 
 ## Known issues / decisions already made
 - Demo mode serves verdicts from ground truth, so the Eval page hides verdict accuracy there and says so.
