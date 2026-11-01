@@ -39,6 +39,7 @@ def get_dashboard_service(
         SqlDashboardRepository(session),
         ground_truth_path=DATA_DIR / "ground_truth.json",
         eval_counts_path=DATA_DIR / "eval_counts.json",
+        eval_results_path=DATA_DIR / "eval_results.json",
     )
 
 

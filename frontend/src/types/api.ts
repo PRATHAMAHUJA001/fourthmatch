@@ -5,7 +5,7 @@
 export type Verdict = "approve" | "partial_pay" | "hold" | "human_review";
 export type EvidenceQuality = "reliable" | "insufficient";
 export type JobStatus =
-  | "queued" | "uploading" | "understanding" | "tracking" | "damage_check"
+  | "queued" | "uploading" | "transcribing_remark" | "understanding" | "tracking" | "damage_check"
   | "reconciling" | "applying_policy" | "verdict" | "done" | "failed";
 export type RuleAction = "approve" | "partial_pay" | "hold" | "require_signoff";
 
@@ -120,7 +120,16 @@ export interface CaseDetail extends CaseSummary {
   decision?: DecisionRead | null;
   evidence_pack?: EvidencePackRead | null;
   invoice_total_paise?: number | null;
+  /** Storekeeper voice remark: context, never evidence. */
+  remark?: RemarkRead | null;
 }
+
+export type RemarkStatus = "supported" | "not_supported" | "no_claim" | "unverifiable";
+export type ClaimVerdict = "supported" | "not_supported" | "unverifiable";
+export interface RemarkClaim { kind: "count" | "damage" | "other"; category: string | null; quantity: number | null; text: string }
+export interface RemarkItem { claim: RemarkClaim; verdict: ClaimVerdict; observed: number | null }
+export interface RemarkCheck { status: RemarkStatus; items: RemarkItem[] }
+export interface RemarkRead { transcript: string; check: RemarkCheck | null }
 
 /** Frontend contract: Dock Live. */
 export interface DockKpis {
@@ -173,6 +182,48 @@ export interface EvalRead {
   cases_total: number;
   verdict_accuracy: number;
   count_accuracy: number;
+  /** data/eval_results.json (scripts/run_eval.py); null until that has been run. */
+  results: EvalResults | null;
+}
+
+/** data/eval_results.json. A value that was not measured is null; `not_measured` says why. */
+export interface CountSummary {
+  n: number; measured: number; correct: number; accuracy: number | null; mean_abs_error: number | null;
+}
+export interface ClassMetric { label: Verdict; precision: number | null; recall: number | null; f1: number | null; support: number }
+export interface VerdictScore {
+  source: "served" | "agent";
+  cases_total: number; cases_correct: number; accuracy: number | null;
+  per_class: ClassMetric[];
+  macro_precision: number | null; macro_recall: number | null; macro_f1: number | null;
+  confusion: { labels: Verdict[]; matrix: number[][] };
+  cases: { po_number: string; scenario_id: string | null; expected: Verdict; predicted: Verdict; correct: boolean }[];
+}
+export interface EvalImageResult {
+  id: string; file: string; phrase: string; prompted_count: number;
+  sam_count: number | null; true_count: number; correct: boolean | null; synthetic: true;
+}
+export interface EvalResults {
+  schema_version: 1;
+  generated_at: string;
+  videos: { rows: VideoCountResult[]; count_summary: CountSummary; damage_summary: CountSummary };
+  images: { synthetic: true; images_total: number; images_confirmed: number; rows: EvalImageResult[]; summary: CountSummary };
+  verdicts: { served: VerdictScore | null; served_reason: string | null; agent: VerdictScore | null; agent_reason: string | null };
+  latency: { model: string; role: string; calls: number; live_calls: number; p50_ms: number | null; p95_ms: number | null }[];
+  cost: {
+    rates_configured: boolean; currency: string | null; deliveries_processed: number;
+    total_input_tokens: number; total_output_tokens: number;
+    total_cost: number | null; cost_per_delivery: number | null;
+    per_model: { model: string; input_tokens: number; output_tokens: number; cost: number | null }[];
+  };
+  not_measured: string[];
+}
+export interface VideoCountResult {
+  scenario: string; category: string; noun_phrase: string | null;
+  true_count: number; observed_count: number | null;
+  true_damaged: number; flagged_damaged: number | null;
+  source: "db" | "eval_counts" | "none";
+  count_correct: boolean | null; damage_correct: boolean | null;
 }
 
 export const VERDICT_LABEL: Record<Verdict, string> = {

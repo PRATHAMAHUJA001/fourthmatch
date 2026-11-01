@@ -21,6 +21,7 @@ from app.domain.protocols import CaseRepository
 from app.domain.schemas.cases import CaseDetail, CaseLineRead, CaseSummary, CitedRule
 from app.domain.schemas.evidence import EvidencePackRead
 from app.domain.schemas.policies import CompiledRule
+from app.domain.schemas.remark import RemarkCheck, RemarkRead
 from app.domain.schemas.simulation import LineDecisionInput
 from app.services.case_facts import (
     approved_rules,
@@ -83,6 +84,7 @@ class CaseService:
             decision=decision,
             invoice_total_paise=invoice.total_paise if invoice else None,
             evidence_pack=self._pack_lookup(po.id) if self._pack_lookup else None,
+            remark=_remark_read(delivery),
         )
 
     # -- internals ---------------------------------------------------------
@@ -228,3 +230,12 @@ def _overall_source(inputs: list[LineDecisionInput]) -> str:
     if "video" in sources:
         return "video"
     return "document" if "document" in sources else "none"
+
+
+def _remark_read(delivery: Any) -> RemarkRead | None:
+    """Stored storekeeper remark (context, not evidence) and its check, if any."""
+    transcript = getattr(delivery, "remark_transcript", None) if delivery is not None else None
+    if not transcript:
+        return None
+    raw = getattr(delivery, "remark_check", None)
+    return RemarkRead(transcript=transcript, check=RemarkCheck.model_validate(raw) if raw else None)

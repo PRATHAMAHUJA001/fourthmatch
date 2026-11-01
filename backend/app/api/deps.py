@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.core.errors import UpstreamModelError
+from app.domain.protocols import Transcriber
 from app.infra.cache import Sha256Cache
 from app.infra.db.repositories.cases import SqlCaseRepository
 from app.infra.db.repositories.evidence import SqlEvidenceRepository
@@ -16,6 +17,7 @@ from app.infra.db.repositories.policies import SqlRuleRepository
 from app.infra.db.repositories.purchase_orders import SqlPurchaseOrderRepository
 from app.infra.db.repositories.simulation import SqlSimulationRepository
 from app.infra.db.session import make_engine, make_session_factory
+from app.infra.meta.asr import MetaTranscriber
 from app.infra.meta.client import MetaModelClient
 from app.infra.storage import LocalFileStore
 from app.services.cases import CaseService
@@ -58,10 +60,24 @@ def get_delivery_service(settings: Settings = Depends(get_app_settings)) -> Deli
     return DeliveryService(factory, LocalFileStore(settings.storage_root))
 
 
-def get_pipeline_runner(settings: Settings = Depends(get_app_settings)):  # noqa: ANN202
+def get_transcriber(settings: Settings = Depends(get_app_settings)) -> Transcriber:
+    """Speech-to-text for the storekeeper remark (override in tests with a fake)."""
+    try:
+        config = settings.model_config_model()
+    except ValueError as exc:
+        raise UpstreamModelError(str(exc), code="model_not_configured") from exc
+    return MetaTranscriber(
+        config, session_factory=make_session_factory(make_engine()), cache=Sha256Cache(settings.cache_root)
+    )
+
+
+def get_pipeline_runner(
+    settings: Settings = Depends(get_app_settings),
+    transcriber: Transcriber = Depends(get_transcriber),
+):  # noqa: ANN202
     """Callable(job_id, delivery_id) run as a FastAPI background task."""
     factory = make_session_factory(make_engine())
-    pipeline = PerceptionPipeline(settings, factory)
+    pipeline = PerceptionPipeline(settings, factory, transcriber=transcriber)
 
     async def _run(job_id: str, delivery_id: int) -> dict:
         return await pipeline.run(job_id, delivery_id)

@@ -34,11 +34,16 @@ async def create_delivery(
     background: BackgroundTasks,
     video: UploadFile = File(...),
     po_id: int = Form(...),
+    remark: UploadFile | None = File(default=None),
     service: DeliveryService = Depends(get_delivery_service),
     runner: PipelineRunner = Depends(get_pipeline_runner),
 ) -> DeliveryCreated:
     video_bytes = await video.read()
-    created = service.create_delivery(po_id=po_id, video_bytes=video_bytes, filename=video.filename or "video.mp4")
+    remark_bytes = await remark.read() if remark is not None else None
+    created = service.create_delivery(
+        po_id=po_id, video_bytes=video_bytes, filename=video.filename or "video.mp4",
+        remark_bytes=remark_bytes or None, remark_filename=remark.filename if remark else None,
+    )
     background.add_task(runner, created.job_id, created.delivery_id)
     return created
 

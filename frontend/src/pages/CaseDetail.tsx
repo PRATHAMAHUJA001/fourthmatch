@@ -7,6 +7,7 @@ import { AgentTrace } from "../components/evidence/AgentTrace";
 import { EvidenceSeal } from "../components/evidence/EvidenceSeal";
 import { EvidenceVideo, type EvidenceVideoHandle } from "../components/evidence/EvidenceVideo";
 import { Filmstrip } from "../components/evidence/Filmstrip";
+import { RemarkNotSupportedChip, RemarkPanel } from "../components/evidence/RemarkPanel";
 import { Button } from "../components/ui/Button";
 import { EmptyState, ErrorState, Skeleton } from "../components/ui/EmptyState";
 import { FourMatchStrip } from "../components/ui/FourMatch";
@@ -149,6 +150,7 @@ export function CaseDetail() {
             <h1 className="font-mono text-[22px] font-medium tracking-[-0.02em]">{data.po_number}</h1>
             <StatusBadge verdict={verdict} size="md" />
             {data.scenario_id && <Tag>{data.scenario_id}</Tag>}
+            {data.remark?.check?.status === "not_supported" && <RemarkNotSupportedChip />}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-fm-muted">
             <span className="text-fm-text">{data.vendor_name}</span>
@@ -318,6 +320,8 @@ export function CaseDetail() {
             </table>
             <p className="mt-2 text-[11px] text-fm-faint">Ex-GST. Every rupee recomputed in Python after the agent records its decision.</p>
           </Panel>
+
+          {data.remark && <RemarkPanel remark={data.remark} />}
 
           {data.evidence_pack && <EvidenceSeal pack={data.evidence_pack} />}
         </div>

@@ -1,10 +1,11 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Film, Upload, X } from "lucide-react";
+import { Film, Mic, RotateCcw, Square, Trash2, Upload, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "../../lib/api";
 import { cn } from "../../lib/cn";
 import { IS_MOCK } from "../../lib/demo";
+import { formatClock, useVoiceRecorder } from "../../lib/useVoiceRecorder";
 import { formatINR } from "../../lib/format";
 import { Button } from "../ui/Button";
 import { Tag } from "../ui/Tag";
@@ -17,16 +18,17 @@ export function NewDeliveryDialog({ open, onOpenChange, onStarted }: {
   const [poId, setPoId] = useState<number | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
+  const voice = useVoiceRecorder();
   const create = useMutation({
-    mutationFn: () => api.createDelivery(poId!, file),
-    onSuccess: (r) => { onStarted(r.delivery_id, poId!); onOpenChange(false); setFile(null); },
+    mutationFn: () => api.createDelivery(poId!, file, voice.file),
+    onSuccess: (r) => { onStarted(r.delivery_id, poId!); onOpenChange(false); setFile(null); voice.remove(); },
   });
   const videoPos = (pos.data ?? []).filter((p) => p.scenario_id);
   const selected = videoPos.find((p) => p.id === poId);
   const needsFile = !IS_MOCK;
 
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={(o) => { if (!o) voice.remove(); onOpenChange(o); }}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/55" />
         <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(560px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-fm border border-fm-border-strong bg-fm-panel">
@@ -85,6 +87,42 @@ export function NewDeliveryDialog({ open, onOpenChange, onStarted }: {
                   </>
                 )}
               </label>
+            </div>
+            <div>
+              <div className="fm-label mb-1.5">3 · Storekeeper remark <span className="normal-case text-fm-faint">(optional)</span></div>
+              <div className="flex min-h-10 flex-wrap items-center gap-2 rounded-fm border border-fm-border px-3 py-2">
+                {voice.state === "idle" && (
+                  <Button type="button" size="sm" variant="secondary" onClick={() => void voice.start()}><Mic size={13} /> Record remark</Button>
+                )}
+                {voice.state === "recording" && (
+                  <>
+                    <Button type="button" size="sm" variant="danger" onClick={voice.stop}><Square size={12} /> Stop</Button>
+                    <span className="flex items-center gap-2 font-mono text-[12px]" role="status" aria-live="off">
+                      <span className="fm-live-dot inline-block h-2 w-2 rounded-full bg-fm-fraud" aria-hidden />
+                      Recording {formatClock(voice.seconds)} / {formatClock(voice.maxSeconds)}
+                    </span>
+                  </>
+                )}
+                {voice.state === "recorded" && (
+                  <>
+                    <span className="flex items-center gap-2 font-mono text-[12px]"><Mic size={13} /> Remark recorded · {formatClock(voice.seconds)}</span>
+                    <span className="ml-auto flex gap-1">
+                      <Button type="button" size="xs" variant="ghost" onClick={() => void voice.start()}><RotateCcw size={12} /> Re-record</Button>
+                      <Button type="button" size="xs" variant="ghost" onClick={voice.remove}><Trash2 size={12} /> Remove</Button>
+                    </span>
+                  </>
+                )}
+                {voice.state === "denied" && (
+                  <>
+                    <span className="text-[12px] text-fm-muted">Microphone access was blocked. Allow it in the browser to record a remark.</span>
+                    <Button type="button" size="xs" variant="ghost" className="ml-auto" onClick={() => void voice.start()}>Try again</Button>
+                  </>
+                )}
+                {voice.state === "unsupported" && <span className="text-[12px] text-fm-muted">This browser cannot record audio. You can still start without a remark.</span>}
+                {(voice.state === "idle" || voice.state === "denied") && (
+                  <span className="text-[11px] text-fm-faint">Transcribed as context only. It never changes a count or a damage flag.</span>
+                )}
+              </div>
             </div>
             {create.isError && <p className="text-[12px] text-fm-fraud" role="alert">{create.error instanceof Error ? create.error.message : "Could not start the delivery."}</p>}
           </div>

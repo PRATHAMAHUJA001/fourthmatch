@@ -8,6 +8,7 @@ from enum import StrEnum
 class JobStatus(StrEnum):
     QUEUED = "queued"
     UPLOADING = "uploading"
+    TRANSCRIBING_REMARK = "transcribing_remark"
     UNDERSTANDING = "understanding"
     TRACKING = "tracking"
     DAMAGE_CHECK = "damage_check"

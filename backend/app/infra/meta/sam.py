@@ -17,7 +17,12 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
 
-from meta_sam_parser import decode_mask_to_raster, parse_responses_stream, video_segmentation_format
+from meta_sam_parser import (
+    decode_mask_to_raster,
+    image_segmentation_format,
+    parse_responses_stream,
+    video_segmentation_format,
+)
 from openai import APIStatusError, AsyncOpenAI
 from PIL import Image
 from sqlalchemy.orm import Session
@@ -26,6 +31,7 @@ from app.core.errors import UpstreamModelError
 from app.core.logging import get_logger
 from app.domain.schemas.config import ModelConfig
 from app.domain.schemas.perception import BBox, Track, TrackFrame
+from app.domain.schemas.sam import ImageSamBox, ImageSegmentation
 from app.infra.cache import Sha256Cache, cache_key_for, sha256_hex
 from app.infra.db.models.jobs import ModelCall
 from app.infra.meta.client import get_shared_client
@@ -110,16 +116,17 @@ class SamSegmenter:
 
     # -------------------------------------------------------- segmentation
     def _write_call(self, session: Session | None, *, latency_ms: int | None, status: str,
-                    cache_hit: bool, error: str | None = None, usage: Any | None = None) -> None:
+                    cache_hit: bool, error: str | None = None, usage: Any | None = None,
+                    purpose: str = "sam_segmentation") -> None:
         if session is None:
             return
         session.add(ModelCall(
-            purpose="sam_segmentation", model=self._config.seg_model, latency_ms=latency_ms,
+            purpose=purpose, model=self._config.seg_model, latency_ms=latency_ms,
             input_tokens=getattr(usage, "input_tokens", None) if not isinstance(usage, dict) else usage.get("input_tokens"),
             output_tokens=getattr(usage, "output_tokens", None) if not isinstance(usage, dict) else usage.get("output_tokens"),
             total_tokens=getattr(usage, "total_tokens", None) if not isinstance(usage, dict) else usage.get("total_tokens"),
             cache_hit=cache_hit, status=status, error=error,
-            request_meta={"purpose": "sam_segmentation"},
+            request_meta={"purpose": purpose},
         ))
         session.commit()
 
@@ -251,3 +258,85 @@ class SamSegmenter:
             "tracks": tracks, "total_frames": resolved_total, "cache_hit": False,
             "raw_cache_path": str(raw_path), "file_id": file_id, "sam_key": sam_key,
         }
+
+    # ------------------------------------------------------- still images
+    async def segment_image(
+        self,
+        *,
+        image_bytes: bytes,
+        mime: str,
+        phrase: str,
+        session: Session | None = None,
+    ) -> ImageSegmentation:
+        """SAM on one still (MODEL_NOTES §4): short noun phrase + input_image data URL.
+
+        Raw events are cached by (image sha256, phrase, seg model) under
+        storage/cache/sam and re-parsed offline with the official parser, so
+        re-running never re-calls SAM.
+        """
+        import base64
+        from contextlib import aclosing
+
+        purpose = "sam_image_segmentation"
+        image_sha = sha256_hex(image_bytes)
+        raw_key = cache_key_for(image_sha, phrase, self._config.seg_model, "image", "raw-events")
+        cached = self._sam.get_json(raw_key)
+        latency_ms = 0
+        usage: Any = None
+        raw_events: list[dict[str, Any]]
+        raw_path: Path
+        if cached is not None:
+            raw_events = cached
+            raw_path = self._sam.root / f"{raw_key}.json"
+            self._write_call(session, latency_ms=0, status="ok", cache_hit=True, purpose=purpose)
+        else:
+            data_url = f"data:{mime};base64," + base64.b64encode(image_bytes).decode()
+            started = time.perf_counter()
+            try:
+                sam_input: Any = [{"type": "message", "role": "user", "content": [
+                    {"type": "input_text", "text": phrase},
+                    {"type": "input_image", "image_url": data_url},
+                ]}]
+                stream: Any = await self._client.responses.create(
+                    model=self._config.seg_model,
+                    stream=True,
+                    metadata={"mask_encoding": "one_bit", "include_confidence": "true"},
+                    input=sam_input,
+                )
+                collected: list[dict[str, Any]] = []
+                async with stream:
+                    async for event in stream:
+                        collected.append(event.model_dump() if hasattr(event, "model_dump") else dict(event))
+            except APIStatusError as exc:
+                self._write_call(session, latency_ms=int((time.perf_counter() - started) * 1000),
+                                 status="error", cache_hit=False, error=str(exc), purpose=purpose)
+                raise UpstreamModelError(f"SAM image call failed: {exc}", code="model_upstream") from exc
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            raw_events = collected
+            for event in raw_events:
+                if event.get("type") == "response.completed":
+                    usage = (event.get("response") or {}).get("usage")
+
+        async with aclosing(_stream_events(raw_events)) as events:
+            result = await parse_responses_stream(events, image_segmentation_format()).final_result()
+        errors = [d for d in result.diagnostics if d.severity == "error"]
+        if result.outcome.status != "completed" or errors:
+            if cached is None:
+                self._write_call(session, latency_ms=latency_ms, status="error", cache_hit=False,
+                                 error=f"SAM image incomplete: {result.outcome} {errors}", usage=usage,
+                                 purpose=purpose)
+            raise UpstreamModelError(f"SAM image incomplete: {result.outcome} {errors}", code="model_upstream")
+        if cached is None:  # only cache a parse-clean result
+            raw_path = self._sam.put_json(raw_key, raw_events)
+            self._write_call(session, latency_ms=latency_ms, status="ok", cache_hit=False, usage=usage,
+                             purpose=purpose)
+        boxes = [
+            ImageSamBox(
+                object_id=str(rec.object_id), confidence=getattr(rec, "confidence", None),
+                left=float(rec.left), top=float(rec.top), right=float(rec.right), bottom=float(rec.bottom),
+            )
+            for rec in result.records
+            if rec.kind == "box"
+        ]
+        return ImageSegmentation(image_sha256=image_sha, phrase=phrase, boxes=boxes,
+                                 cache_hit=cached is not None, raw_cache_path=str(raw_path))

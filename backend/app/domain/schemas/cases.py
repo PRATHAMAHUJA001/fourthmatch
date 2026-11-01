@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 from app.domain.enums import Verdict
 from app.domain.schemas.decision_agent import DecisionRead, PerceptionRead
 from app.domain.schemas.evidence import EvidencePackRead
+from app.domain.schemas.remark import RemarkRead
 
 
 class CitedRule(BaseModel):
@@ -88,3 +89,4 @@ class CaseDetail(CaseSummary):
     decision: DecisionRead | None = None  # latest stored agent decision (see CASES.md §1)
     invoice_total_paise: int | None = None
     evidence_pack: EvidencePackRead | None = None  # latest pack for the PO; None if never built
+    remark: RemarkRead | None = None  # storekeeper voice remark: context, never evidence

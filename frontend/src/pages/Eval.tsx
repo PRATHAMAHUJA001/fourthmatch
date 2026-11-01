@@ -11,6 +11,7 @@ import { IS_MOCK } from "../lib/demo";
 import { VERDICT_LABEL, type EvalCountRow, type EvalRead } from "../types/api";
 import { ConfusionMatrix } from "./eval/Confusion";
 import { CountBars } from "./eval/CountBars";
+import { AgentPanel, CostPanel, ImageEvalPanel, NotMeasured, pctOrDash } from "./eval/Sections";
 
 type Metric = EvalRead["verdict_metrics"][number];
 type Latency = EvalRead["latency"][number];
@@ -74,14 +75,21 @@ export function Eval() {
 
   const d = q.data;
   const pass = d.counts.filter((c) => c.result === "PASS").length;
+  const res = d.results;
+  const imgSummary = res?.images.summary ?? null;
+  const imgHint = res && res.images.images_total > 0
+    ? `synthetic · ${res.images.images_confirmed}/${res.images.images_total} confirmed`
+    : "synthetic · none confirmed yet";
+  const macro = res?.verdicts.served ?? null;
   const noLatency = d.latency.every((l) => l.p50_ms === null && l.p95_ms === null);
 
   return (
     <div className="fm-rise">
       {header}
-      <KpiStrip className="mb-3 md:grid-cols-4">
-        <KpiTile label="Verdict accuracy" tone="verified" value={IS_MOCK ? "—" : pct(d.verdict_accuracy)} unit={IS_MOCK ? undefined : "%"} hint={IS_MOCK ? "measured on the live agent run" : "agent vs ground truth"} />
-        <KpiTile label="Count accuracy" tone="verified" value={pct(d.count_accuracy)} unit="%" hint="SAM tracks vs manifest" />
+      <KpiStrip className="mb-3 md:grid-cols-5">
+        <KpiTile label="Verdict accuracy" tone="verified" value={IS_MOCK ? "—" : pct(d.verdict_accuracy)} unit={IS_MOCK ? undefined : "%"} hint={IS_MOCK ? "measured on the live agent run" : "served verdict vs ground truth"} />
+        <KpiTile label="Video count accuracy" tone="verified" value={pct(d.count_accuracy)} unit="%" hint="SAM tracks vs manifest" />
+        <KpiTile label="Image count accuracy" value={pctOrDash(imgSummary?.accuracy)} unit={imgSummary?.accuracy == null ? undefined : "%"} hint={imgHint} />
         <KpiTile label="Cases evaluated" value={d.cases_total} hint="synthetic scenarios" />
         <KpiTile label="Video lines PASS" tone={pass === d.counts.length ? "verified" : "hold"} value={<>{pass}<span className="text-fm-faint"> / {d.counts.length}</span></>} hint="count within manifest" />
       </KpiStrip>
@@ -95,6 +103,10 @@ export function Eval() {
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <Panel index="01" title="Verdict metrics" padded={false}>
           <DataTable<Metric> columns={metricCols} data={d.verdict_metrics} label="Verdict metrics" />
+          <p className="border-t border-fm-border px-3 py-2 font-mono text-[11.5px] text-fm-muted">
+            Macro precision {macro?.macro_precision == null ? "—" : macro.macro_precision.toFixed(2)} · recall {macro?.macro_recall == null ? "—" : macro.macro_recall.toFixed(2)} · F1 {macro?.macro_f1 == null ? "—" : macro.macro_f1.toFixed(2)}
+            {macro ? "" : " (served verdicts not measured in the eval report)"}
+          </p>
           <p className="border-t border-fm-border px-3 py-2 text-[11.5px] text-fm-muted">
             Precision = correct holds of this kind / all predicted. Recall = caught / all in ground truth. A label with zero support shows “—” because the ratio is undefined, not zero.
           </p>
@@ -107,10 +119,16 @@ export function Eval() {
         <DataTable<EvalCountRow> columns={countCols} data={d.counts} label="Count accuracy per video" />
       </Panel>
 
-      <Panel index="04" title="Model latency" padded={false} className="mt-3">
+      <ImageEvalPanel results={res} />
+
+      <Panel index="05" title="Model latency" subtitle="p50 / p95 over live calls" padded={false} className="mt-3">
         <DataTable<Latency> columns={latencyCols} data={d.latency} label="Model latency" />
         {noLatency && <p className="border-t border-fm-border px-3 py-2 text-[11.5px] text-fm-muted">Latency fills in from the model_calls table when the backend runs live.</p>}
       </Panel>
+
+      <CostPanel results={res} />
+      <AgentPanel results={res} />
+      <NotMeasured results={res} />
     </div>
   );
 }

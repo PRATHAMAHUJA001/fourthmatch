@@ -12,6 +12,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.domain.enums import Verdict
+from app.domain.schemas.eval import EvalResults
 
 
 class DockKpis(BaseModel):
@@ -96,6 +97,9 @@ class EvalRead(BaseModel):
     cases_total: int
     verdict_accuracy: float
     count_accuracy: float
+    # data/eval_results.json (scripts/run_eval.py) when present: video + synthetic
+    # image count accuracy, verdict P/R/F1, latency, cost, and what is not measured.
+    results: EvalResults | None = None
 
 
 class PolicyClause(BaseModel):
