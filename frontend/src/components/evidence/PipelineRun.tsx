@@ -12,10 +12,8 @@ import { StatusBadge } from "../ui/StatusBadge";
 import { LiveCounter } from "../ui/LiveCounter";
 import { LoadDiagram } from "../ui/LoadDiagram";
 import { RouteProgress } from "../ui/RouteProgress";
-import { PIPELINE_STAGES, type StageState } from "../ui/Stepper";
+import { type Stage, type StageState, stagesFor } from "../ui/Stepper";
 import { EvidenceVideo } from "./EvidenceVideo";
-
-const STAGE_KEYS = PIPELINE_STAGES.map((s) => s.key);
 
 function baseOf(t: string) {
   return t.replace(/_(finished|progress)$/, "");
@@ -23,6 +21,12 @@ function baseOf(t: string) {
 
 /** Derives stepper state, timings and the live counter from stored job events. */
 export function derive(events: JobEventRead[], arrivals: number[]) {
+  // The remark stage exists only when the upload carried one (queued payload) or its events appear.
+  const hasRemark = events.some(
+    (e) => e.event_type.startsWith("transcribing_remark") || (e.payload as { has_remark?: boolean }).has_remark === true,
+  );
+  const stages: Stage[] = stagesFor(hasRemark);
+  const STAGE_KEYS = stages.map((s) => s.key);
   const states: Record<string, StageState> = {};
   const started: Record<string, number> = {};
   const timing: Record<string, number> = {};
@@ -34,8 +38,10 @@ export function derive(events: JobEventRead[], arrivals: number[]) {
     const at = arrivals[i] ?? 0;
     const b = baseOf(e.event_type);
     if (e.event_type === "failed") { failed = true; return; }
+    // Optional stage failing is non-fatal: the pipeline carries on without the remark.
+    if (e.event_type === "transcribing_remark_failed") { states.transcribing_remark = "failed"; return; }
     if (e.event_type === "done") {
-      for (const k of STAGE_KEYS) { if (states[k] !== "done") { states[k] = "done"; if (started[k] != null) timing[k] = at - started[k]; } }
+      for (const k of STAGE_KEYS) { if (states[k] !== "done" && states[k] !== "failed") { states[k] = "done"; if (started[k] != null) timing[k] = at - started[k]; } }
       return;
     }
     if (!STAGE_KEYS.includes(b)) return;
@@ -60,7 +66,7 @@ export function derive(events: JobEventRead[], arrivals: number[]) {
     if (b === "verdict") verdict = e.payload as { verdict: Verdict; held_paise: number };
   });
   if (failed) for (const k of STAGE_KEYS) if (states[k] === "active") states[k] = "failed";
-  return { states, timing, tracks, perLine, verdict: verdict as { verdict: Verdict; held_paise: number } | null, failed };
+  return { stages, states, timing, tracks, perLine, verdict: verdict as { verdict: Verdict; held_paise: number } | null, failed };
 }
 
 /** Live pipeline view: dock video with scanline, stepper, live counter, event log, verdict. */
@@ -119,7 +125,7 @@ export function PipelineRun({ deliveryId, poId, onReset }: { deliveryId: number;
   const seenOf = (l: { po_line_id: number; observed_count: number | null }) =>
     reconciled ? l.observed_count ?? 0 : d.perLine.get(l.po_line_id) ?? 0;
   const seenTotal = videoLines.reduce((sum, l) => sum + seenOf(l), 0);
-  const activeStage = PIPELINE_STAGES.find((s) => d.states[s.key] === "active");
+  const activeStage = d.stages.find((s) => d.states[s.key] === "active");
 
   const hero = (
     <section className="fm-amber-block flex min-w-0 flex-col rounded-fm" aria-label="Active delivery">
@@ -194,7 +200,7 @@ export function PipelineRun({ deliveryId, poId, onReset }: { deliveryId: number;
           <span className="fm-label">Pipeline</span>
           <span className="font-mono text-[11px] tabular-nums text-fm-muted">T+{elapsed.toFixed(1)}s</span>
         </div>
-        <RouteProgress states={d.states} timing={d.timing} />
+        <RouteProgress stages={d.stages} states={d.states} timing={d.timing} />
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">

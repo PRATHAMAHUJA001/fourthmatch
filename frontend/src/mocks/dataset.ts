@@ -404,9 +404,15 @@ export function pipelineReplay(poId: number): ReplayEvent[] {
   const c = caseDetails.find((x) => x.po_id === poId) ?? caseDetails[1];
   const videoLines = c.lines.filter((l) => l.perception);
   const ev: ReplayEvent[] = [
-    { event_type: "queued", message: "Job queued", payload: {}, delay: 250 },
+    { event_type: "queued", message: "Job queued", payload: { has_remark: Boolean(c.remark) }, delay: 250 },
     { event_type: "uploading", message: "Hashing video (SHA-256) and uploading to Files API", payload: {}, delay: 500 },
     { event_type: "uploading_finished", message: "Upload cached by video hash", payload: { cache: "hit" }, delay: 900 },
+    ...(c.remark
+      ? [
+          { event_type: "transcribing_remark", message: "muse-voice-transcribe-1.0 transcribing the storekeeper remark", payload: { model: "muse-voice-transcribe-1.0" }, delay: 400 },
+          { event_type: "transcribing_remark_finished", message: "Remark transcribed (context only, never evidence)", payload: {}, delay: 1100 },
+        ]
+      : []),
     { event_type: "understanding", message: "muse-spark-1.3 watching the dock video", payload: { model: "muse-spark-1.3" }, delay: 400 },
     {
       event_type: "understanding_finished", message: "Noun phrases chosen for each PO line",
