@@ -25,7 +25,7 @@ doc_entries = [e for e in entries if not e["scenario_id"]]
 
 assert len(entries) == len(manifest) + 8, "ground truth must hold manifest scenarios + 8 document cases"
 assert len(doc_entries) == 8 and len(truth["clean_po_numbers"]) == 30 - len(entries)
-assert all(e["correct_verdict"] in {"hold_payment", "partial_pay"} for e in doc_entries)
+assert all(e["correct_verdict"] in {"hold", "partial_pay"} for e in doc_entries)
 
 s = make_session_factory(make_engine())()
 assert s.query(Vendor).count() == 4

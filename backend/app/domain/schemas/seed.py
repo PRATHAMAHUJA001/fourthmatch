@@ -84,7 +84,7 @@ class ExpectedLineResult(EvalLine):
 
 class ExpectedResult(BaseModel):
     """Ground-truth outcome. Vocabulary is seed-local and independent of the
-    runtime decision path: approve | partial_pay | hold_payment."""
+    runtime decision path: approve | partial_pay | hold."""
 
     verdict: str
     policy_clauses: list[str] = []

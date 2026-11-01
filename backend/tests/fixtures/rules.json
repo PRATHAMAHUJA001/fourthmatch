@@ -1,0 +1,440 @@
+{
+  "evaluate_cases": [
+    {
+      "name": "duplicate invoice boolean triggers",
+      "rule": {
+        "rule_id": "R-DUP",
+        "goods_category": "all",
+        "condition": {
+          "field": "duplicate_invoice",
+          "op": "==",
+          "value": true
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "5.3",
+        "source_text": "duplicate held",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "cartons",
+        "duplicate_invoice": true
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "price variance beyond tolerance triggers",
+      "rule": {
+        "rule_id": "R-PRICE",
+        "goods_category": "all",
+        "condition": {
+          "field": "price_variance_pct",
+          "op": ">",
+          "value": 2.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "5.1",
+        "source_text": "price beyond tolerance held",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "steel_coils",
+        "price_variance_pct": 8.0
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "invoiced above observed triggers on variance_vs_invoice_pct",
+      "rule": {
+        "rule_id": "R-INV",
+        "goods_category": "all",
+        "condition": {
+          "field": "variance_vs_invoice_pct",
+          "op": ">",
+          "value": 0.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "5.2",
+        "source_text": "invoiced above observed held",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "cartons",
+        "variance_vs_invoice_pct": 10.7
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "cartons variance beyond zero tolerance holds",
+      "rule": {
+        "rule_id": "R1",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "variance_pct",
+          "op": ">",
+          "value": 0.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "tolerance 0.0% for cartons",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "cartons",
+        "variance_pct": 5.0
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "bagged variance inside 2pct tolerance does not hold",
+      "rule": {
+        "rule_id": "R2",
+        "goods_category": "bagged material",
+        "condition": {
+          "field": "variance_pct",
+          "op": ">",
+          "value": 2.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "tolerance 2.0% for bagged",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "bagged_material",
+        "variance_pct": 1.5
+      },
+      "expected_triggered": false
+    },
+    {
+      "name": "bagged variance beyond 2pct tolerance holds",
+      "rule": {
+        "rule_id": "R2",
+        "goods_category": "bagged material",
+        "condition": {
+          "field": "variance_pct",
+          "op": ">",
+          "value": 2.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "tolerance 2.0% for bagged",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "bagged material",
+        "variance_pct": 3.0
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "category mismatch never triggers",
+      "rule": {
+        "rule_id": "R1",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "variance_pct",
+          "op": ">",
+          "value": 0.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "steel coils",
+        "variance_pct": 9.0
+      },
+      "expected_triggered": false
+    },
+    {
+      "name": "missing fact never triggers",
+      "rule": {
+        "rule_id": "R1",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "variance_pct",
+          "op": ">",
+          "value": 0.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "cartons"
+      },
+      "expected_triggered": false
+    },
+    {
+      "name": "damage count triggers partial pay",
+      "rule": {
+        "rule_id": "R3",
+        "goods_category": "all",
+        "condition": {
+          "field": "damage_count",
+          "op": ">",
+          "value": 0.0
+        },
+        "action": "partial_pay",
+        "signoff_role": null,
+        "source_clause": "6.1",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "cartons",
+        "damage_count": 2.0
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "between inside band triggers signoff",
+      "rule": {
+        "rule_id": "R4",
+        "goods_category": "",
+        "condition": {
+          "field": "line_value",
+          "op": "between",
+          "value": [
+            100000.0,
+            500000.0
+          ]
+        },
+        "action": "require_signoff",
+        "signoff_role": "Purchase Manager",
+        "source_clause": "3.4",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "facts": {
+        "line_value": 250000.0
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "between outside band does not trigger",
+      "rule": {
+        "rule_id": "R4",
+        "goods_category": "",
+        "condition": {
+          "field": "line_value",
+          "op": "between",
+          "value": [
+            100000.0,
+            500000.0
+          ]
+        },
+        "action": "require_signoff",
+        "signoff_role": "Purchase Manager",
+        "source_clause": "3.4",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "facts": {
+        "line_value": 50000.0
+      },
+      "expected_triggered": false
+    },
+    {
+      "name": "goods category equality triggers",
+      "rule": {
+        "rule_id": "R5",
+        "goods_category": "all",
+        "condition": {
+          "field": "goods_category",
+          "op": "==",
+          "value": "steel coils"
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "facts": {
+        "goods_category": "steel_coils"
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "equality exact match triggers",
+      "rule": {
+        "rule_id": "R6",
+        "goods_category": "all",
+        "condition": {
+          "field": "invoiced_qty",
+          "op": "==",
+          "value": 100.0
+        },
+        "action": "approve",
+        "signoff_role": null,
+        "source_clause": "5.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "facts": {
+        "invoiced_qty": 100.0
+      },
+      "expected_triggered": true
+    },
+    {
+      "name": "less-than above threshold does not trigger",
+      "rule": {
+        "rule_id": "R7",
+        "goods_category": "all",
+        "condition": {
+          "field": "observed_count",
+          "op": "<",
+          "value": 9.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.5",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "facts": {
+        "observed_count": 9.5
+      },
+      "expected_triggered": false
+    }
+  ],
+  "invalid_rules": [
+    {
+      "name": "unknown field",
+      "rule": {
+        "rule_id": "B1",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "weight_kg",
+          "op": ">",
+          "value": 1.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "expected_error": "unknown field"
+    },
+    {
+      "name": "unknown op",
+      "rule": {
+        "rule_id": "B2",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "variance_pct",
+          "op": "!=",
+          "value": 1.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "expected_error": "unknown op"
+    },
+    {
+      "name": "unknown action",
+      "rule": {
+        "rule_id": "B3",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "variance_pct",
+          "op": ">",
+          "value": 1.0
+        },
+        "action": "block_forever",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "expected_error": "unknown action"
+    },
+    {
+      "name": "between needs pair",
+      "rule": {
+        "rule_id": "B4",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "line_value",
+          "op": "between",
+          "value": 5.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "expected_error": "between"
+    },
+    {
+      "name": "signoff needs role",
+      "rule": {
+        "rule_id": "B5",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "line_value",
+          "op": ">",
+          "value": 1.0
+        },
+        "action": "require_signoff",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "expected_error": "signoff_role"
+    },
+    {
+      "name": "string field needs string value",
+      "rule": {
+        "rule_id": "B7",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "goods_category",
+          "op": "==",
+          "value": 3.0
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "expected_error": "string value"
+    },
+    {
+      "name": "numeric field needs numeric value",
+      "rule": {
+        "rule_id": "B6",
+        "goods_category": "cartons",
+        "condition": {
+          "field": "variance_pct",
+          "op": ">",
+          "value": "high"
+        },
+        "action": "hold",
+        "signoff_role": null,
+        "source_clause": "4.2",
+        "source_text": "x",
+        "ambiguity": null
+      },
+      "expected_error": "needs a numeric value"
+    }
+  ]
+}

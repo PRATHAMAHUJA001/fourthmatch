@@ -31,7 +31,7 @@
   "verdict_vocabulary": [
     "approve",
     "partial_pay",
-    "hold_payment"
+    "hold"
   ],
   "scenarios_and_discrepancies": [
     {
@@ -329,7 +329,7 @@
       ],
       "seeded_type": "invoice_price_above_po",
       "is_discrepancy": true,
-      "correct_verdict": "hold_payment",
+      "correct_verdict": "hold",
       "policy_clauses": [
         "5.1"
       ],
@@ -435,7 +435,7 @@
       ],
       "seeded_type": "duplicate_invoice_number",
       "is_discrepancy": true,
-      "correct_verdict": "hold_payment",
+      "correct_verdict": "hold",
       "policy_clauses": [
         "5.3"
       ],
@@ -541,7 +541,7 @@
       ],
       "seeded_type": "invoice_price_above_po",
       "is_discrepancy": true,
-      "correct_verdict": "hold_payment",
+      "correct_verdict": "hold",
       "policy_clauses": [
         "5.1"
       ],

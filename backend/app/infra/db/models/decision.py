@@ -1,4 +1,5 @@
 """Decision ORM: rules, decisions, evidence_packs."""
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -26,6 +27,20 @@ class Rule(Base):
     threshold_paise: Mapped[int | None] = mapped_column(Integer, nullable=True)
     action: Mapped[str] = mapped_column(String(32))
     description: Mapped[str] = mapped_column(Text)
+    # Compiled-rule columns (policy compiler). Seed-template rows leave these
+    # null; compiled rows fill them and start as pending_approval.
+    rule_id: Mapped[str | None] = mapped_column(String(80), unique=True, nullable=True, index=True)
+    goods_category: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    condition_field: Mapped[str | None] = mapped_column(String(48), nullable=True)
+    condition_op: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    condition_value: Mapped[Any] = mapped_column(JSON, nullable=True)
+    tolerance_pct: Mapped[float | None] = mapped_column(Float, nullable=True)
+    signoff_role: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    source_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ambiguity: Mapped[str | None] = mapped_column(Text, nullable=True)
+    status: Mapped[str] = mapped_column(String(32), default="pending_approval", index=True)
+    validation_errors: Mapped[list[Any]] = mapped_column(JSON, default=list)
+    conflict_with: Mapped[list[Any]] = mapped_column(JSON, default=list)
 
 
 class Decision(Base):

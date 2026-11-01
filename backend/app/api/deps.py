@@ -1,4 +1,5 @@
 """FastAPI dependencies: session, settings, repositories, services."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -7,12 +8,20 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
+from app.infra.cache import Sha256Cache
+from app.infra.db.repositories.cases import SqlCaseRepository
+from app.infra.db.repositories.policies import SqlRuleRepository
 from app.infra.db.repositories.purchase_orders import SqlPurchaseOrderRepository
+from app.infra.db.repositories.simulation import SqlSimulationRepository
 from app.infra.db.session import make_engine, make_session_factory
+from app.infra.meta.client import MetaModelClient
 from app.infra.storage import LocalFileStore
+from app.services.cases import CaseService
 from app.services.deliveries import DeliveryService
 from app.services.perception import PerceptionPipeline
+from app.services.policy_compiler import PolicyCompilerService
 from app.services.purchase_orders import PurchaseOrderService
+from app.services.simulation import PolicySimulationService
 
 
 def get_db_session() -> Iterator[Session]:
@@ -32,6 +41,10 @@ def get_po_service(session: Session = Depends(get_db_session)) -> PurchaseOrderS
     return PurchaseOrderService(SqlPurchaseOrderRepository(session))
 
 
+def get_case_service(session: Session = Depends(get_db_session)) -> CaseService:
+    return CaseService(SqlCaseRepository(session))
+
+
 def get_delivery_service(settings: Settings = Depends(get_app_settings)) -> DeliveryService:
     factory = make_session_factory(make_engine())
     return DeliveryService(factory, LocalFileStore(settings.storage_root))
@@ -46,3 +59,28 @@ def get_pipeline_runner(settings: Settings = Depends(get_app_settings)):  # noqa
         return await pipeline.run(job_id, delivery_id)
 
     return _run
+
+
+def get_policy_service(
+    session: Session = Depends(get_db_session),
+    settings: Settings = Depends(get_app_settings),
+) -> PolicyCompilerService:
+    config = settings.model_config_model()
+    cache = Sha256Cache(settings.cache_root)
+    client = MetaModelClient(config, cache=cache)
+    return PolicyCompilerService(
+        SqlRuleRepository(session), client, settings.compiler_model, session=session, cache=cache
+    )
+
+
+def get_simulation_service(
+    session: Session = Depends(get_db_session),
+    settings: Settings = Depends(get_app_settings),
+) -> PolicySimulationService:
+    config = settings.model_config_model()
+    cache = Sha256Cache(settings.cache_root)
+    client = MetaModelClient(config, cache=cache)
+    compiler = PolicyCompilerService(
+        SqlRuleRepository(session), client, settings.compiler_model, session=session, cache=cache
+    )
+    return PolicySimulationService(SqlSimulationRepository(session), compiler)

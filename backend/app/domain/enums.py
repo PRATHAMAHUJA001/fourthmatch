@@ -1,4 +1,5 @@
 """Domain enums. Pure Python, no framework imports."""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -35,7 +36,8 @@ class EvidenceQuality(StrEnum):
 
 class Verdict(StrEnum):
     APPROVE = "approve"
-    HOLD_PAYMENT = "hold_payment"
+    PARTIAL_PAY = "partial_pay"
+    HOLD = "hold"
     HUMAN_REVIEW = "human_review"
 
 
@@ -43,3 +45,16 @@ class DamageSource(StrEnum):
     SAM = "sam"
     PERCEPTION = "perception"
     HUMAN = "human"
+
+
+class RuleStatus(StrEnum):
+    PENDING_APPROVAL = "pending_approval"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class RuleAction(StrEnum):
+    APPROVE = "approve"
+    PARTIAL_PAY = "partial_pay"
+    HOLD = "hold"
+    REQUIRE_SIGNOFF = "require_signoff"
