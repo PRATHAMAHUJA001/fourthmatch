@@ -23,7 +23,7 @@ interface DataTableProps<T> {
   label?: string;
 }
 
-/** Dense, sortable, keyboard-navigable table. Mono numbers right-aligned via column meta. */
+/** Sortable, keyboard-navigable table. Hairline rows, mono numbers right-aligned via column meta. */
 export function DataTable<T>({ columns, data, emptyMessage = "No rows", onRowClick, keyboard, rowClassName, initialSorting = [], className, label }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
   const [active, setActive] = useState(-1);
@@ -58,7 +58,7 @@ export function DataTable<T>({ columns, data, emptyMessage = "No rows", onRowCli
 
   return (
     <div className={cn("fm-scroll overflow-auto", className)}>
-      <table className="w-full border-collapse text-[12.5px]" aria-label={label}>
+      <table className="w-full border-collapse text-[13.5px]" aria-label={label}>
         <thead className="sticky top-0 z-10 bg-fm-panel">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
@@ -70,13 +70,13 @@ export function DataTable<T>({ columns, data, emptyMessage = "No rows", onRowCli
                   <th
                     key={h.id}
                     style={meta?.width ? { width: meta.width } : undefined}
-                    className={cn("h-8 whitespace-nowrap border-b border-fm-border-strong px-3 font-cond text-[10.5px] font-semibold uppercase tracking-[0.08em] text-fm-muted", alignCls(meta?.align))}
+                    className={cn("h-10 whitespace-nowrap border-b border-fm-border px-4 text-[12px] font-semibold tracking-[-0.003em] text-fm-muted", alignCls(meta?.align))}
                     aria-sort={sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined}
                   >
                     {sortable && !h.isPlaceholder ? (
-                      <button type="button" onClick={h.column.getToggleSortingHandler()} className={cn("inline-flex items-center gap-1 uppercase hover:text-fm-text", sorted && "text-fm-text")}>
+                      <button type="button" onClick={h.column.getToggleSortingHandler()} className={cn("inline-flex items-center gap-1 hover:text-fm-text", sorted && "text-fm-text")}>
                         {flexRender(h.column.columnDef.header, h.getContext())}
-                        <span className="w-2 font-mono text-[9px]">{sorted === "asc" ? "▲" : sorted === "desc" ? "▼" : ""}</span>
+                        <span className="w-2 text-[9px]">{sorted === "asc" ? "▲" : sorted === "desc" ? "▼" : ""}</span>
                       </button>
                     ) : (
                       flexRender(h.column.columnDef.header, h.getContext())
@@ -89,7 +89,7 @@ export function DataTable<T>({ columns, data, emptyMessage = "No rows", onRowCli
         </thead>
         <tbody ref={bodyRef}>
           {rows.length === 0 ? (
-            <tr><td colSpan={columns.length} className="h-20 px-3 text-center text-fm-muted">{emptyMessage}</td></tr>
+            <tr><td colSpan={columns.length} className="h-24 px-4 text-center text-fm-muted">{emptyMessage}</td></tr>
           ) : (
             rows.map((row, i) => (
               <tr
@@ -98,14 +98,14 @@ export function DataTable<T>({ columns, data, emptyMessage = "No rows", onRowCli
                 onMouseEnter={keyboard ? () => setActive(i) : undefined}
                 data-active={i === active || undefined}
                 className={cn(
-                  "group border-b border-fm-border transition-colors duration-75 last:border-0 hover:bg-fm-hover data-[active]:bg-fm-hover",
+                  "group border-b border-fm-border transition-colors duration-100 last:border-0 hover:bg-fm-raised data-[active]:bg-fm-raised",
                   onRowClick && "cursor-pointer",
                   rowClassName?.(row.original),
                 )}
               >
                 {row.getVisibleCells().map((cell, ci) => (
-                  <td key={cell.id} className={cn("relative h-[var(--fm-row-h)] whitespace-nowrap px-3 align-middle", alignCls(cell.column.columnDef.meta?.align))}>
-                    {ci === 0 && <span className="absolute inset-y-0 left-0 w-[2px] bg-fm-hold opacity-0 group-data-[active]:opacity-100" aria-hidden />}
+                  <td key={cell.id} className={cn("relative h-[var(--fm-row-h)] whitespace-nowrap px-4 align-middle", alignCls(cell.column.columnDef.meta?.align))}>
+                    {ci === 0 && <span className="absolute inset-y-2 left-0 w-[3px] rounded-full bg-fm-accent opacity-0 group-data-[active]:opacity-100" aria-hidden />}
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

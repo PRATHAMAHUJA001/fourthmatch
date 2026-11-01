@@ -121,7 +121,7 @@ export function Policy() {
           title="Compiled rules"
           subtitle={rulesQ.data ? `${rules.length} rules` : undefined}
           padded={false}
-          className="lg:sticky lg:top-3 lg:max-h-[calc(100vh-24px)]"
+          className="lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)]"
           bodyClassName="fm-scroll overflow-y-auto"
         >
           {rulesQ.isError ? (

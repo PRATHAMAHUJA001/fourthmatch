@@ -6,11 +6,11 @@ export function EmptyState({ title, description, action, className }: {
   title: string; description?: string; action?: ReactNode; className?: string;
 }) {
   return (
-    <div className={cn("fm-dotgrid flex flex-col items-center justify-center gap-2 px-4 py-12 text-center", className)}>
-      <BrandMark size={22} muted />
-      <p className="mt-1 text-[13px] font-semibold">{title}</p>
-      {description && <p className="max-w-sm text-[12px] text-fm-muted">{description}</p>}
-      {action && <div className="mt-2">{action}</div>}
+    <div className={cn("flex flex-col items-center justify-center gap-2 px-6 py-14 text-center", className)}>
+      <BrandMark size={26} muted />
+      <p className="mt-2 text-[17px] font-semibold tracking-[-0.016em]">{title}</p>
+      {description && <p className="max-w-sm text-[14px] text-fm-muted">{description}</p>}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }
@@ -23,7 +23,7 @@ export function SkeletonRows({ rows = 4, className }: { rows?: number; className
   return (
     <div className={cn("flex flex-col gap-1.5", className)} role="status" aria-label="Loading">
       {Array.from({ length: rows }).map((_, i) => (
-        <Skeleton key={i} className="h-[30px] w-full" />
+        <Skeleton key={i} className="h-9 w-full" />
       ))}
     </div>
   );
@@ -32,8 +32,8 @@ export function SkeletonRows({ rows = 4, className }: { rows?: number; className
 export function ErrorState({ message, action }: { message: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center gap-2 px-4 py-10 text-center" role="alert">
-      <p className="fm-label !text-fm-fraud">Request failed</p>
-      <p className="max-w-md text-[12.5px] text-fm-muted">{message}</p>
+      <p className="text-[15px] font-semibold text-fm-fraud">Request failed</p>
+      <p className="max-w-md text-[14px] text-fm-muted">{message}</p>
       {action}
     </div>
   );

@@ -29,9 +29,9 @@ export function FourMatchMini({ values, className }: { values: MatchValues; clas
         <span
           key={k}
           className={cn(
-            "w-[5px] rounded-[1px]",
+            "w-[5px] rounded-full",
             k === "vision" ? "h-[16px]" : "h-[12px]",
-            values[k] === null ? "bg-fm-border" : mm[k] ? "bg-fm-hold" : k === "vision" ? "bg-fm-verified" : "bg-fm-muted",
+            values[k] === null ? "bg-fm-hover" : mm[k] ? "bg-fm-hold-fill" : k === "vision" ? "bg-fm-verified-fill" : "bg-fm-faint",
           )}
         />
       ))}
@@ -67,21 +67,19 @@ export function FourMatchStrip({ values, unit, sub, live, visionPending, varianc
           <Fragment key={k}>
             <div
               className={cn(
-                "relative flex min-w-0 flex-col justify-between rounded-fm border bg-fm-raised",
-                big ? "gap-3 px-4 py-3.5" : "gap-2 px-3 py-2.5",
-                isVision ? "border-fm-border-strong" : "border-fm-border",
-                bad && isVision && "fm-glow-hold border-fm-hold bg-fm-hold-bg",
-                bad && !isVision && "border-fm-hold-line",
-                isVision && !bad && values.vision !== null && "border-fm-verified-line bg-fm-verified-bg",
+                "relative flex min-w-0 flex-col justify-between rounded-fm-sm bg-fm-raised transition-colors duration-500 ease-[var(--fm-ease)]",
+                big ? "gap-3 px-4 py-4" : "gap-2 px-3.5 py-3",
+                bad && isVision && "fm-glow-hold bg-fm-hold-bg",
+                isVision && !bad && values.vision !== null && "bg-fm-verified-bg",
               )}
             >
               <div className="flex items-center justify-between gap-1">
                 <span className={cn("fm-label", isVision && "!text-fm-text", bad && "!text-fm-hold")}>
-                  {isVision && <span className="mr-1 text-fm-hold">◉</span>}{LABEL[k]}
+                  {LABEL[k]}
                 </span>
-                {isVision && live && <span className="font-mono text-[9.5px] font-semibold tracking-[0.08em] text-fm-hold">LIVE</span>}
+                {isVision && live && <span className="text-[11px] font-semibold text-fm-accent-text">Live</span>}
               </div>
-              <div className={cn("font-mono font-medium leading-none tracking-[-0.04em] tabular-nums", big ? "text-[44px]" : "text-[30px]", bad && "text-fm-hold", isVision && !bad && values.vision !== null && "text-fm-verified")}>
+              <div className={cn("fm-figure leading-none", big ? "text-[48px]" : "text-[36px]", bad && "text-fm-hold", isVision && !bad && values.vision !== null && "text-fm-verified")}>
                 {values[k] === null ? (
                   <span className="text-fm-faint">{visionPending && isVision ? "··" : "—"}</span>
                 ) : isVision && live ? (
@@ -91,7 +89,7 @@ export function FourMatchStrip({ values, unit, sub, live, visionPending, varianc
                 )}
                 {unit && values[k] !== null && <span className={cn("ml-1 font-sans font-normal tracking-normal text-fm-faint", big ? "text-[14px]" : "text-[11px]")}>{unit}</span>}
               </div>
-              <div className="line-clamp-2 min-h-[16px] break-words text-[11px] leading-tight text-fm-muted">
+              <div className="line-clamp-2 min-h-[16px] break-words text-[12px] leading-tight text-fm-muted">
                 {isVision && bad && variancePct != null ? (
                   <span className="font-mono font-semibold text-fm-hold">{formatPct(variancePct)} vs PO</span>
                 ) : (
@@ -101,7 +99,7 @@ export function FourMatchStrip({ values, unit, sub, live, visionPending, varianc
             </div>
             {next && (
               <div className="flex w-6 items-center justify-center" aria-hidden>
-                <span className={cn("font-mono text-[16px] font-semibold", nextBad ? "text-fm-hold" : "text-fm-faint")}>{nextBad ? "≠" : "="}</span>
+                <span className={cn("font-mono text-[18px] font-medium", nextBad ? "text-fm-hold" : "text-fm-faint")}>{nextBad ? "≠" : "="}</span>
               </div>
             )}
           </Fragment>
