@@ -2,6 +2,8 @@
 Agent that holds procurement payments when receiving-dock video contradicts the
 PO / GRN / invoice, citing the company's own policy. All data synthetic.
 
+**New session? Read docs/HANDOFF.md first: current status, how to run, what is next.**
+
 ## Meta Model API (base https://api.meta.ai/v1, env MODEL_API_KEY, OpenAI Python SDK)
 - ALWAYS use the Responses API (client.responses.create / .stream), never chat.completions.
   Video input works only on Responses; pass include=["reasoning.encrypted_content"] in agent loops.
