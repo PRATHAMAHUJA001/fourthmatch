@@ -1,55 +1,55 @@
-import { CheckCircle2, Eye, PauseCircle, ShieldAlert, Split, CircleHelp } from "lucide-react";
 import { cn } from "../../lib/cn";
 import type { EvidenceQuality, Verdict } from "../../types/api";
 import { VERDICT_LABEL } from "../../types/api";
+import { SignalGlyph, type Signal } from "./Glyph";
 
-const VERDICT_META: Record<Verdict, { icon: typeof CheckCircle2; classes: string; dot: string }> = {
-  approve: { icon: CheckCircle2, classes: "text-fm-verified border-fm-verified/40 bg-fm-verified-bg", dot: "bg-fm-verified" },
-  partial_pay: { icon: Split, classes: "text-fm-hold border-fm-hold/40 bg-fm-hold-bg", dot: "bg-fm-hold" },
-  hold: { icon: PauseCircle, classes: "text-fm-hold border-fm-hold/40 bg-fm-hold-bg", dot: "bg-fm-hold" },
-  human_review: { icon: Eye, classes: "text-fm-review border-fm-review/40 bg-fm-review-bg", dot: "bg-fm-review" },
+export const VERDICT_SIGNAL: Record<Verdict, Signal> = {
+  approve: "verified", partial_pay: "partial", hold: "hold", human_review: "review",
 };
-
-const QUALITY_META: Record<EvidenceQuality, { icon: typeof CheckCircle2; label: string; classes: string }> = {
-  reliable: { icon: CheckCircle2, label: "Evidence reliable", classes: "text-fm-verified border-fm-verified/40 bg-fm-verified-bg" },
-  insufficient: { icon: CircleHelp, label: "Evidence insufficient", classes: "text-fm-review border-fm-review/40 bg-fm-review-bg" },
+export const SIGNAL_TONE: Record<Signal, string> = {
+  verified: "text-fm-verified bg-fm-verified-bg border-fm-verified-line",
+  hold: "text-fm-hold bg-fm-hold-bg border-fm-hold-line",
+  partial: "text-fm-hold bg-fm-hold-bg border-fm-hold-line",
+  review: "text-fm-review bg-fm-review-bg border-fm-review-line",
+  fraud: "text-fm-fraud bg-fm-fraud-bg border-fm-fraud-line",
+  neutral: "text-fm-muted bg-fm-raised border-fm-border",
+  live: "text-fm-info bg-fm-info-bg border-fm-border",
 };
 
 interface StatusBadgeProps {
-  verdict?: Verdict;
+  verdict?: Verdict | null;
   quality?: EvidenceQuality;
   fraud?: boolean;
+  signal?: Signal;
   label?: string;
-  pulse?: boolean;
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
-export function StatusBadge({ verdict, quality, fraud, label, pulse, className }: StatusBadgeProps) {
-  if (fraud) {
-    return (
-      <span className={cn("inline-flex items-center gap-1.5 rounded-fm-sm border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-fm-fraud border-fm-fraud/40 bg-fm-fraud-bg", className)}>
-        <ShieldAlert size={13} strokeWidth={2.2} aria-hidden />
-        {label ?? "Fraud risk"}
-      </span>
-    );
-  }
-  if (quality) {
-    const M = QUALITY_META[quality];
-    const Icon = M.icon;
-    return (
-      <span className={cn("inline-flex items-center gap-1.5 rounded-fm-sm border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.04em]", M.classes, className)}>
-        <Icon size={13} strokeWidth={2.2} aria-hidden />
-        {label ?? M.label}
-      </span>
-    );
-  }
-  const v: Verdict = verdict ?? "human_review";
-  const M = VERDICT_META[v];
-  const Icon = M.icon;
+const SIZE = {
+  sm: "h-5 gap-1 px-1.5 text-[10px]",
+  md: "h-[22px] gap-1.5 px-2 text-[11px]",
+  lg: "h-8 gap-2 px-3 text-[13px]",
+};
+
+/** Verdict / evidence / risk badge. Never colour alone: glyph shape + text label. */
+export function StatusBadge({ verdict, quality, fraud, signal, label, size = "md", className }: StatusBadgeProps) {
+  let s: Signal;
+  let text: string;
+  if (fraud) { s = "fraud"; text = label ?? "Fraud risk"; }
+  else if (quality) { s = quality === "reliable" ? "verified" : "review"; text = label ?? (quality === "reliable" ? "Evidence reliable" : "Evidence insufficient"); }
+  else if (signal) { s = signal; text = label ?? signal; }
+  else if (verdict) { s = VERDICT_SIGNAL[verdict]; text = label ?? VERDICT_LABEL[verdict]; }
+  else { s = "neutral"; text = label ?? "Not decided"; }
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-fm-sm border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.04em]", M.classes, className)}>
-      {pulse ? <span className={cn("fm-live-dot h-1.5 w-1.5 rounded-full", M.dot)} aria-hidden /> : <Icon size={13} strokeWidth={2.2} aria-hidden />}
-      {label ?? VERDICT_LABEL[v]}
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center whitespace-nowrap rounded-fm-sm border font-cond font-semibold uppercase leading-none tracking-[0.06em]",
+        SIZE[size], SIGNAL_TONE[s], className,
+      )}
+    >
+      <SignalGlyph signal={s} size={size === "lg" ? 14 : size === "sm" ? 9 : 11} />
+      {text}
     </span>
   );
 }
