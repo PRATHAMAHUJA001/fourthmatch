@@ -14,13 +14,23 @@ from app.infra.db.models.jobs import Job, JobEvent, append_job_event
 from app.infra.db.models.purchasing import Delivery, PurchaseOrder
 from app.infra.storage import LocalFileStore
 
+_AUDIO_SUFFIXES = {"webm", "m4a", "wav", "ogg", "mp3", "mp4", "aac", "opus"}
+
+
+def _audio_suffix(filename: str | None) -> str:
+    suffix = filename.rsplit(".", 1)[-1].lower() if filename and "." in filename else ""
+    return suffix if suffix in _AUDIO_SUFFIXES else "webm"
+
 
 class DeliveryService:
     def __init__(self, session_factory: sessionmaker[Session], storage: LocalFileStore) -> None:
         self._factory = session_factory
         self._storage = storage
 
-    def create_delivery(self, *, po_id: int, video_bytes: bytes, filename: str) -> DeliveryCreated:
+    def create_delivery(
+        self, *, po_id: int, video_bytes: bytes, filename: str,
+        remark_bytes: bytes | None = None, remark_filename: str | None = None,
+    ) -> DeliveryCreated:
         session = self._factory()
         try:
             po = session.get(PurchaseOrder, po_id)
@@ -32,12 +42,17 @@ class DeliveryService:
             suffix = filename.rsplit(".", 1)[-1].lower() if "." in filename else "mp4"
             path = self._storage.put_bytes(f"deliveries/{delivery.id}/video.{suffix}", video_bytes)
             delivery.video_path = str(path)
+            has_remark = bool(remark_bytes)
+            if remark_bytes:
+                remark_path = self._storage.put_bytes(
+                    f"deliveries/{delivery.id}/remark.{_audio_suffix(remark_filename)}", remark_bytes)
+                delivery.remark_audio_path = str(remark_path)
             job = Job(kind=JobKind.PERCEPTION.value, status=JobStatus.QUEUED.value,
                       delivery_id=delivery.id, po_id=po_id)
             session.add(job)
             session.flush()
             append_job_event(session, job.id, JobStatus.QUEUED.value, "job queued",
-                             {"delivery_id": delivery.id, "po_id": po_id})
+                             {"delivery_id": delivery.id, "po_id": po_id, "has_remark": has_remark})
             session.commit()
             return DeliveryCreated(delivery_id=delivery.id, job_id=job.id)
         finally:

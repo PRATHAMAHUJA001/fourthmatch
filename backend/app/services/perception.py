@@ -29,10 +29,19 @@ from app.core.errors import AppError, ValidationError
 from app.core.logging import get_logger
 from app.domain.counting import apply_phrase_coverage, count_line, generic_noun_for
 from app.domain.enums import EvidenceQuality, JobStatus
+from app.domain.protocols import Transcriber
+from app.domain.remark import check_remark, validate_claims
 from app.domain.schemas.config import CountingConfig
 from app.domain.schemas.damage import DamageVerdict
 from app.domain.schemas.perception import PerceptionResult, Track
+from app.domain.schemas.remark import (
+    LineObservation,
+    RemarkCheck,
+    RemarkClaims,
+    RemarkStatus,
+)
 from app.domain.schemas.understanding import FootageNeeded, Understanding
+from app.infra import audio as audio_lib
 from app.infra import video as video_lib
 from app.infra.cache import Sha256Cache, cache_key_for, sha256_hex
 from app.infra.db.models.jobs import Job, append_job_event
@@ -40,6 +49,7 @@ from app.infra.db.models.perception import DamageFlag, SamRun
 from app.infra.db.models.perception import PerceptionResult as PerceptionResultRow
 from app.infra.db.models.perception import Track as TrackRow
 from app.infra.db.models.purchasing import Delivery, PoLine
+from app.infra.meta.asr import MetaTranscriber
 from app.infra.meta.client import MetaModelClient
 from app.infra.meta.sam import SamSegmenter
 from app.services.decision_agent import DecisionAgent
@@ -82,6 +92,18 @@ FOOTAGE_SYSTEM_PROMPT = (
 )
 
 
+REMARK_PROMPT_VERSION = "remark-claims-v1"
+REMARK_SYSTEM_PROMPT = (
+    "You extract factual claims from a storekeeper's spoken remark about a delivery. Use only\n"
+    "what the remark says; never infer. For each claim set kind: 'count' (how many units arrived),\n"
+    "'damage' (how many units are damaged), or 'other' (anything else, e.g. lateness). For\n"
+    "count/damage claims set category to EXACTLY one of the allowed categories if the remark names\n"
+    "or clearly implies one, else null; set quantity to the integer said, else null. Copy the\n"
+    "claim's words into text. Return only JSON:\n"
+    '{"claims":[{"kind":"count|damage|other","category":null,"quantity":null,"text":""}]}'
+)
+
+
 def _utcnow() -> datetime:
     return datetime.now(UTC)
 
@@ -96,6 +118,7 @@ class PerceptionPipeline:
         sam: SamSegmenter | None = None,
         decision_agent: DecisionAgent | None = None,
         run_decision: bool = True,
+        transcriber: Transcriber | None = None,
     ) -> None:
         self._settings = settings
         self._factory = session_factory
@@ -104,6 +127,9 @@ class PerceptionPipeline:
         self._model = model_client or MetaModelClient(config, cache=self._cache)
         self._sam = sam or SamSegmenter(config, settings.cache_root)
         self._config = config
+        self._transcriber: Transcriber = transcriber or MetaTranscriber(
+            config, session_factory=session_factory, cache=self._cache
+        )
         self._decision_agent: DecisionAgent | None = None
         if run_decision:
             self._decision_agent = decision_agent or DecisionAgent(
@@ -184,6 +210,7 @@ class PerceptionPipeline:
                 ]
                 line_by_id = {str(line.id): line for line in po_lines}
                 video_path = self._resolve_video_path(delivery.video_path)
+                remark_audio = delivery.remark_audio_path
             finally:
                 session.close()
 
@@ -205,9 +232,15 @@ class PerceptionPipeline:
                              {"video_sha256": video_sha, "file_id": file_id, "cache_hit": upload_hit},
                              event_suffix="_finished")
 
+            # ---- Remark: transcribe the storekeeper's voice note (context only, optional)
+            transcript: str | None = None
+            if remark_audio:
+                transcript = await self._transcribe_remark(job_id, delivery_id, remark_audio)
+
             # ---- Stage B: understanding
             self._transition(job_id, JobStatus.UNDERSTANDING, 25, "understanding started")
-            understanding = await self._understand(job_id, video_sha, file_id, video_bytes, line_inputs)
+            understanding = await self._understand(job_id, video_sha, file_id, video_bytes, line_inputs,
+                                                   remark=transcript)
             valid_ids = set(line_by_id)
             cited = {line.po_line_id for line in understanding.lines}
             if not cited <= valid_ids or cited != valid_ids:
@@ -295,6 +328,8 @@ class PerceptionPipeline:
                 }
                 for result, state in zip(results, line_states, strict=True)
             ]
+            if transcript:
+                await self._check_remark(job_id, delivery_id, transcript, results, line_by_id)
             await self._run_decision(job_id, delivery_id)
             session = self._factory()
             try:
@@ -318,6 +353,78 @@ class PerceptionPipeline:
             logger.exception("pipeline failed", extra={"extra_data": {"job_id": job_id}})
             self._fail(job_id, "internal_error", f"pipeline failed: {type(exc).__name__}")
             raise
+
+    # ------------------------------------------------------------- remark
+    async def _transcribe_remark(self, job_id: str, delivery_id: int, audio_path: str) -> str | None:
+        """Stage: transcribing_remark. Optional: any failure is an event, never a failed job."""
+        self._transition(job_id, JobStatus.TRANSCRIBING_REMARK, 18, "transcribing_remark started")
+        try:
+            src = self._resolve_video_path(audio_path)
+            wav = audio_lib.to_wav_16k_mono(src, src.with_name("remark_16k.wav"))
+            result = await self._transcriber.transcribe(
+                wav=wav.read_bytes(), filename="remark.wav", session_id=f"delivery-{delivery_id}"
+            )
+        except Exception as exc:  # noqa: BLE001 - the remark is optional context
+            logger.exception("remark transcription failed", extra={"extra_data": {"job_id": job_id}})
+            self._event(job_id, "transcribing_remark_failed", f"remark not transcribed: {type(exc).__name__}",
+                        {"error_code": getattr(exc, "code", "internal_error")})
+            return None
+        transcript = result.transcript.strip()
+        session = self._factory()
+        try:
+            row = session.get(Delivery, delivery_id)
+            if row is not None:
+                row.remark_transcript = transcript or None
+                session.commit()
+        finally:
+            session.close()
+        self._transition(job_id, JobStatus.TRANSCRIBING_REMARK, 22, "transcribing_remark finished",
+                         {"chars": len(transcript)}, event_suffix="_finished")
+        return transcript or None
+
+    async def _check_remark(self, job_id: str, delivery_id: int, transcript: str,
+                            results: list[PerceptionResult], line_by_id: dict[str, PoLine]) -> None:
+        """Extract claims (BULK_MODEL), compare in Python with perception, persist. Non-fatal."""
+        try:
+            categories = sorted({line.category for line in line_by_id.values()})
+            prompt = (
+                f"{REMARK_SYSTEM_PROMPT}\nAllowed categories: {json.dumps(categories)}.\n"
+                f"Remark transcript: {json.dumps(transcript)}"
+            )
+            cache_key = cache_key_for(transcript, ",".join(categories), self._config.bulk_model,
+                                      REMARK_PROMPT_VERSION)
+            session = self._factory()
+            try:
+                claims = await self._model.call_model(
+                    purpose="remark_claims", model=self._config.bulk_model, prompt=prompt,
+                    output_schema=RemarkClaims, session=session, cache_key=cache_key,
+                )
+            finally:
+                session.close()
+            claims = validate_claims(claims, categories)
+            observations = [
+                LineObservation(
+                    po_line_id=r.po_line_id, category=r.category, observed_count=r.observed_count,
+                    damaged_count=len(r.damaged_track_ids),
+                    reliable=r.evidence_quality is EvidenceQuality.RELIABLE,
+                )
+                for r in results
+            ]
+            check = check_remark(claims, observations)
+        except Exception as exc:  # noqa: BLE001 - context only; perception results are stored
+            logger.exception("remark check failed", extra={"extra_data": {"job_id": job_id}})
+            self._event(job_id, "remark_check_failed", f"remark not checked: {type(exc).__name__}",
+                        {"error_code": getattr(exc, "code", "internal_error")})
+            check = RemarkCheck(status=RemarkStatus.UNVERIFIABLE, items=[])
+        session = self._factory()
+        try:
+            row = session.get(Delivery, delivery_id)
+            if row is not None:
+                row.remark_check = check.model_dump(mode="json")
+                session.commit()
+        finally:
+            session.close()
+        self._event(job_id, "remark_checked", f"remark {check.status.value}", {"status": check.status.value})
 
     async def _run_decision(self, job_id: str, delivery_id: int) -> None:
         """Payment decision after perception; its failure never fails the job."""
@@ -344,11 +451,21 @@ class PerceptionPipeline:
         raise ValidationError(f"video file not found: {video_path}", code="delivery_not_found")
 
     async def _understand(self, job_id: str, video_sha: str, file_id: str,
-                          video_bytes: bytes, line_inputs: list[dict[str, Any]]) -> Understanding:
+                          video_bytes: bytes, line_inputs: list[dict[str, Any]],
+                          remark: str | None = None) -> Understanding:
         lines_hash = cache_key_for(json.dumps(line_inputs, sort_keys=True))
-        cache_key = cache_key_for(video_sha, lines_hash, self._config.perception_model, STAGE_B_PROMPT_VERSION)
-        self._last_b_hit = "hit" if self._cache.get_json(cache_key) is not None else "miss"
+        key_parts = [video_sha, lines_hash, self._config.perception_model, STAGE_B_PROMPT_VERSION]
         user_text = f"PO lines: {json.dumps(line_inputs)}. Return JSON."
+        if remark:
+            # Context only: appended so a delivery without a remark keeps its exact prompt and cache key.
+            key_parts.append(cache_key_for(remark))
+            user_text = (
+                f"{user_text} Storekeeper remark, unverified: {json.dumps(remark)}. Use it only as context "
+                "for scene facts; it must not change which phrase you choose for a line, and you must "
+                "never state a count or judge damage from it."
+            )
+        cache_key = cache_key_for(*key_parts)
+        self._last_b_hit = "hit" if self._cache.get_json(cache_key) is not None else "miss"
         session = self._factory()
         try:
             try:

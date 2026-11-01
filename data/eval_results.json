@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-11-01T16:35:33.568505Z",
+  "videos": {
+    "rows": [
+      {
+        "scenario": "scn1_clean",
+        "category": "cartons",
+        "noun_phrase": "cardboard box",
+        "true_count": 12,
+        "observed_count": 12,
+        "true_damaged": 0,
+        "flagged_damaged": 0,
+        "source": "eval_counts",
+        "count_correct": true,
+        "damage_correct": true
+      },
+      {
+        "scenario": "scn2_short",
+        "category": "cartons",
+        "noun_phrase": "cardboard box",
+        "true_count": 12,
+        "observed_count": 12,
+        "true_damaged": 0,
+        "flagged_damaged": 0,
+        "source": "eval_counts",
+        "count_correct": true,
+        "damage_correct": true
+      },
+      {
+        "scenario": "scn3_damage",
+        "category": "cartons",
+        "noun_phrase": "cardboard box",
+        "true_count": 12,
+        "observed_count": 12,
+        "true_damaged": 1,
+        "flagged_damaged": 1,
+        "source": "eval_counts",
+        "count_correct": true,
+        "damage_correct": true
+      },
+      {
+        "scenario": "scn4_mixed",
+        "category": "cartons",
+        "noun_phrase": "cardboard box",
+        "true_count": 4,
+        "observed_count": 4,
+        "true_damaged": 0,
+        "flagged_damaged": 0,
+        "source": "eval_counts",
+        "count_correct": true,
+        "damage_correct": true
+      },
+      {
+        "scenario": "scn4_mixed",
+        "category": "bagged material",
+        "noun_phrase": "sack",
+        "true_count": 4,
+        "observed_count": 4,
+        "true_damaged": 0,
+        "flagged_damaged": 0,
+        "source": "eval_counts",
+        "count_correct": true,
+        "damage_correct": true
+      }
+    ],
+    "count_summary": {
+      "n": 5,
+      "measured": 5,
+      "correct": 5,
+      "accuracy": 1.0,
+      "mean_abs_error": 0.0
+    },
+    "damage_summary": {
+      "n": 5,
+      "measured": 5,
+      "correct": 5,
+      "accuracy": 1.0,
+      "mean_abs_error": 0.0
+    }
+  },
+  "images": {
+    "synthetic": true,
+    "images_total": 0,
+    "images_confirmed": 0,
+    "rows": [],
+    "summary": {
+      "n": 0,
+      "measured": 0,
+      "correct": 0,
+      "accuracy": null,
+      "mean_abs_error": null
+    }
+  },
+  "verdicts": {
+    "served": null,
+    "served_reason": "no approved policy rules in this database (compile + approve rules first), so the Python recompute has nothing to apply",
+    "agent": null,
+    "agent_reason": "no stored agent decision (run scripts/run_decisions.py with MODEL_API_KEY)"
+  },
+  "latency": [],
+  "cost": {
+    "rates_configured": false,
+    "currency": null,
+    "deliveries_processed": 0,
+    "total_input_tokens": 0,
+    "total_output_tokens": 0,
+    "total_cost": null,
+    "cost_per_delivery": null,
+    "per_model": []
+  },
+  "not_measured": [
+    "eval images: none generated (run scripts/gen_eval_images.py)",
+    "served verdicts: no approved policy rules in this database (compile + approve rules first), so the Python recompute has nothing to apply",
+    "agent verdicts: no stored agent decision (run scripts/run_decisions.py with MODEL_API_KEY)",
+    "latency: no model_calls rows in the database",
+    "cost: MODEL_COST_RATES / MODEL_COST_CURRENCY not configured (no prices are assumed)",
+    "cost per delivery: no delivery has been processed by the pipeline in this database"
+  ]
+}

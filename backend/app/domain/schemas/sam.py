@@ -52,3 +52,24 @@ class SamTrackRead(BaseModel):
     last_frame: int | None = None
     frame_count: int | None = None
     confidence: float | None = None
+
+
+class ImageSamBox(BaseModel):
+    """One SAM box record on a still image (pixels in the source image)."""
+
+    object_id: str
+    confidence: float | None = None
+    left: float
+    top: float
+    right: float
+    bottom: float
+
+
+class ImageSegmentation(BaseModel):
+    """Parsed SAM result for one still image. Counting is done in Python from ``boxes``."""
+
+    image_sha256: str
+    phrase: str
+    boxes: list[ImageSamBox]
+    cache_hit: bool
+    raw_cache_path: str | None = None

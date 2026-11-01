@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/shell/AppShell";
+import { PasscodeDialog } from "./components/shell/PasscodeDialog";
 import { Analytics } from "./pages/Analytics";
 import { CaseDetail } from "./pages/CaseDetail";
 import { Cases } from "./pages/Cases";
@@ -18,6 +19,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <PasscodeDialog />
       <BrowserRouter>
         <Routes>
           <Route index element={<Landing />} />

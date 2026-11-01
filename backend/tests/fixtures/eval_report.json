@@ -1,0 +1,32 @@
+{
+  "count_pairs": {
+    "all_measured": [[12, 12], [12, 11], [4, 4], [4, 6]],
+    "with_missing": [[12, 12], [12, null], [4, 5]],
+    "none_measured": [[3, null], [5, null]]
+  },
+  "verdict_cases": [
+    {"po_number": "P1", "expected": "approve", "predicted": "approve"},
+    {"po_number": "P2", "expected": "approve", "predicted": "partial_pay"},
+    {"po_number": "P3", "expected": "partial_pay", "predicted": "partial_pay"},
+    {"po_number": "P4", "expected": "partial_pay", "predicted": "partial_pay"},
+    {"po_number": "P5", "expected": "hold", "predicted": "hold"},
+    {"po_number": "P6", "expected": "hold", "predicted": "human_review"}
+  ],
+  "expected_class_metrics": {
+    "approve": {"precision": 1.0, "recall": 0.5, "support": 2},
+    "partial_pay": {"precision": 0.6666666666666666, "recall": 1.0, "support": 2},
+    "hold": {"precision": 1.0, "recall": 0.5, "support": 2},
+    "human_review": {"precision": 0.0, "recall": null, "support": 0}
+  },
+  "usage": [
+    {"model": "model-a", "input_tokens": 2000000, "output_tokens": 500000},
+    {"model": "model-b", "input_tokens": 1000000, "output_tokens": 0}
+  ],
+  "rates_json": "{\"model-a\": {\"input_per_1m\": 1.5, \"output_per_1m\": 6.0}, \"model-b\": {\"input_per_1m\": 0.5, \"output_per_1m\": 2.0}}",
+  "model_calls": [
+    {"model": "model-a", "purpose": "decision", "latency_ms": 100, "cache_hit": false},
+    {"model": "model-a", "purpose": "decision", "latency_ms": 300, "cache_hit": false},
+    {"model": "model-a", "purpose": "decision", "latency_ms": 0, "cache_hit": true},
+    {"model": "model-b", "purpose": "seg", "latency_ms": 50, "cache_hit": false}
+  ]
+}

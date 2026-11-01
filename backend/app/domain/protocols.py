@@ -8,6 +8,7 @@ from typing import Any, Protocol, TypeVar, runtime_checkable
 from pydantic import BaseModel
 
 from app.domain.schemas.decision_agent import DecisionRecord, ToolTurn
+from app.domain.schemas.remark import Transcription
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -171,3 +172,12 @@ class CacheStore(Protocol):
     def get_bytes(self, key: str) -> bytes | None: ...
 
     def put_bytes(self, key: str, data: bytes) -> Path: ...
+
+
+@runtime_checkable
+class Transcriber(Protocol):
+    """Speech-to-text for the storekeeper remark (16 kHz mono WAV in)."""
+
+    async def transcribe(
+        self, *, wav: bytes, filename: str = "remark.wav", session_id: str | None = None
+    ) -> Transcription: ...

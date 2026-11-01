@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infra.db.session import Base
@@ -143,6 +143,10 @@ class Delivery(Base):
     vehicle_no: Mapped[str | None] = mapped_column(String(20), nullable=True)
     driver_name: Mapped[str | None] = mapped_column(String(120), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="recorded")
+    # Storekeeper voice remark: context only, never evidence (schema change = drop + recreate seed).
+    remark_audio_path: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    remark_transcript: Mapped[str | None] = mapped_column(Text, nullable=True)
+    remark_check: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     po: Mapped[PurchaseOrder] = relationship(back_populates="deliveries")
     tracks: Mapped[list[Track]] = relationship(back_populates="delivery", cascade="all, delete-orphan")

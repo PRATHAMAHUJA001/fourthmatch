@@ -40,9 +40,12 @@ from app.domain.schemas.dashboard import (
     EvalCountRow,
     EvalRead,
     JobSpan,
+    LatencyRow,
     ModelCallStat,
 )
+from app.domain.schemas.eval import EvalResults
 from app.services.cases import CaseService
+from app.services.eval_files import load_results
 
 
 class DashboardRepository(Protocol):
@@ -66,12 +69,14 @@ class DashboardService:
         *,
         ground_truth_path: Path,
         eval_counts_path: Path,
+        eval_results_path: Path | None = None,
         today: Callable[[], date] = lambda: datetime.now(UTC).date(),
     ) -> None:
         self._cases = cases
         self._repo = repository
         self._ground_truth_path = ground_truth_path
         self._eval_counts_path = eval_counts_path
+        self._eval_results_path = eval_results_path
         self._today = today
 
     # --------------------------------------------------------------- KPIs
@@ -116,11 +121,19 @@ class DashboardService:
             pairs.append((correct, predicted.value))
         matrix = confusion_matrix(pairs)
         counts = self._load_counts()
+        results = self._load_results()
+        latency = latency_rows(self._repo.model_call_stats())
+        if not latency and results is not None:  # no live calls here (e.g. a demo container): use the measured run
+            latency = [
+                LatencyRow(model=r.model, role=r.role, calls=r.calls, p50_ms=r.p50_ms, p95_ms=r.p95_ms)
+                for r in results.latency
+            ]
         return EvalRead(
             verdict_metrics=verdict_metrics(matrix),
             confusion=Confusion(labels=list(VERDICT_LABELS), matrix=matrix),
             counts=counts,
-            latency=latency_rows(self._repo.model_call_stats()),
+            latency=latency,
+            results=results,
             cases_total=len(pairs),
             verdict_accuracy=ratio(sum(1 for t, p in pairs if t == p), len(pairs)),
             count_accuracy=ratio(sum(1 for c in counts if c.result == "PASS"), len(counts)),
@@ -138,6 +151,14 @@ class DashboardService:
             except (KeyError, ValueError, TypeError) as exc:
                 raise DataFilesError(f"{self._ground_truth_path.name}: bad case entry ({exc}).") from exc
         return out
+
+    def _load_results(self) -> EvalResults | None:
+        if self._eval_results_path is None:
+            return None
+        try:
+            return load_results(self._eval_results_path)
+        except (OSError, PydanticValidationError) as exc:
+            raise DataFilesError(f"{self._eval_results_path.name} is unreadable or failed validation.") from exc
 
     def _load_counts(self) -> list[EvalCountRow]:
         if not self._eval_counts_path.exists():

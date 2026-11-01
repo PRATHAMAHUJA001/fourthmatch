@@ -7,10 +7,12 @@ dashboard shows is produced by these functions from stored rows.
 
 from __future__ import annotations
 
+import json
 import math
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from datetime import UTC, date, datetime, timedelta
+from typing import Literal
 
 from app.domain.enums import Verdict
 from app.domain.schemas.cases import CaseDetail, CaseSummary
@@ -23,6 +25,18 @@ from app.domain.schemas.dashboard import (
     TypeMix,
     VendorRisk,
     VerdictMetric,
+)
+from app.domain.schemas.eval import (
+    ClassMetric,
+    ConfusionTable,
+    CostRate,
+    CostSection,
+    CountSummary,
+    LatencyEntry,
+    ModelCost,
+    ModelUsage,
+    VerdictCaseResult,
+    VerdictScore,
 )
 
 VERDICT_LABELS: list[Verdict] = [Verdict.APPROVE, Verdict.PARTIAL_PAY, Verdict.HOLD, Verdict.HUMAN_REVIEW]
@@ -242,3 +256,134 @@ def trend_buckets(
         )
         for i in range(days)
     ]
+
+
+# ------------------------------------------------------------ eval report
+def count_summary(pairs: Sequence[tuple[int, int | None]]) -> CountSummary:
+    """Exact-match count accuracy over (true, observed) pairs.
+
+    ``observed`` None means not measured: it is excluded from accuracy and MAE
+    (never counted as wrong or as zero) but still counted in ``n``.
+    """
+    measured = [(t, o) for t, o in pairs if o is not None]
+    correct = sum(1 for t, o in measured if t == o)
+    return CountSummary(
+        n=len(pairs),
+        measured=len(measured),
+        correct=correct,
+        accuracy=correct / len(measured) if measured else None,
+        mean_abs_error=sum(abs(t - o) for t, o in measured) / len(measured) if measured else None,
+    )
+
+
+def macro_average(metrics: Sequence[VerdictMetric]) -> tuple[float | None, float | None, float | None]:
+    """Macro precision/recall/F1 over labels that have ground-truth support.
+
+    Labels with support 0 are skipped (nothing to recall). For a supported
+    label whose precision is undefined (the system never predicted it) the
+    undefined value counts as 0.0, the usual zero-division convention.
+    """
+    supported = [m for m in metrics if m.support > 0]
+    if not supported:
+        return None, None, None
+    n = len(supported)
+    return (
+        sum(m.precision or 0.0 for m in supported) / n,
+        sum(m.recall or 0.0 for m in supported) / n,
+        sum(m.f1 or 0.0 for m in supported) / n,
+    )
+
+
+def verdict_score(
+    source: Literal["served", "agent"],
+    cases: Sequence[VerdictCaseResult],
+    labels: Sequence[Verdict] = VERDICT_LABELS,
+) -> VerdictScore:
+    """Accuracy, per-class P/R/F1, macro averages and confusion for one verdict source."""
+    matrix = confusion_matrix([(c.expected.value, c.predicted.value) for c in cases], labels)
+    per_class = verdict_metrics(matrix, labels)
+    macro_p, macro_r, macro_f = macro_average(per_class)
+    correct = sum(1 for c in cases if c.correct)
+    return VerdictScore(
+        source=source,
+        cases_total=len(cases),
+        cases_correct=correct,
+        accuracy=correct / len(cases) if cases else None,
+        per_class=[
+            ClassMetric(label=m.label, precision=m.precision, recall=m.recall, f1=m.f1, support=m.support)
+            for m in per_class
+        ],
+        macro_precision=macro_p,
+        macro_recall=macro_r,
+        macro_f1=macro_f,
+        confusion=ConfusionTable(labels=list(labels), matrix=matrix),
+        cases=list(cases),
+    )
+
+
+def latency_entries(calls: Iterable[ModelCallStat]) -> list[LatencyEntry]:
+    """Per (model, purpose) latency with the number of live (non-cache) calls."""
+    stats = list(calls)
+    live: Counter[tuple[str, str]] = Counter(
+        (c.model, c.purpose) for c in stats if c.latency_ms is not None and not c.cache_hit
+    )
+    return [
+        LatencyEntry(
+            model=r.model, role=r.role, calls=r.calls, live_calls=live[(r.model, r.role)],
+            p50_ms=r.p50_ms, p95_ms=r.p95_ms,
+        )
+        for r in latency_rows(stats)
+    ]
+
+
+def parse_cost_rates(raw: str | None) -> dict[str, CostRate]:
+    """Parse MODEL_COST_RATES: JSON {"<model id>": {"input_per_1m": x, "output_per_1m": y}}.
+
+    Empty/unset returns {} (cost is then reported as not measured). Malformed
+    input raises ValueError rather than silently pricing at zero.
+    """
+    if raw is None or not raw.strip():
+        return {}
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"MODEL_COST_RATES is not valid JSON: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError("MODEL_COST_RATES must be a JSON object keyed by model id")
+    return {str(model): CostRate.model_validate(rate) for model, rate in data.items()}
+
+
+def estimate_cost(
+    usage: Sequence[ModelUsage],
+    rates: dict[str, CostRate],
+    deliveries_processed: int,
+    currency: str | None,
+) -> CostSection:
+    """Token cost per model and per delivery. Never guesses a price.
+
+    A model that used tokens but has no configured rate has cost None, and then
+    the total (and per-delivery) is None too, so a partial price never passes
+    as the whole cost. Covers token-billed usage only.
+    """
+    per_model: list[ModelCost] = []
+    for u in sorted(usage, key=lambda x: x.model):
+        rate = rates.get(u.model)
+        if rate is not None:
+            cost: float | None = u.input_tokens / 1_000_000 * rate.input_per_1m + u.output_tokens / 1_000_000 * rate.output_per_1m
+        elif u.input_tokens + u.output_tokens == 0:
+            cost = 0.0
+        else:
+            cost = None
+        per_model.append(ModelCost(model=u.model, input_tokens=u.input_tokens, output_tokens=u.output_tokens, cost=cost))
+    priced = bool(per_model) and all(m.cost is not None for m in per_model) and currency is not None
+    total = sum(m.cost or 0.0 for m in per_model) if priced else None
+    return CostSection(
+        rates_configured=bool(rates) and currency is not None,
+        currency=currency if priced else None,
+        deliveries_processed=deliveries_processed,
+        total_input_tokens=sum(u.input_tokens for u in usage),
+        total_output_tokens=sum(u.output_tokens for u in usage),
+        total_cost=total,
+        cost_per_delivery=total / deliveries_processed if total is not None and deliveries_processed > 0 else None,
+        per_model=per_model,
+    )

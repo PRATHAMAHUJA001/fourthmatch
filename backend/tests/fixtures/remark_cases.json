@@ -1,0 +1,26 @@
+{
+  "claims_damage_and_late": {
+    "claims": [
+      {"kind": "damage", "category": "cartons", "quantity": 2, "text": "Two boxes are damaged"},
+      {"kind": "other", "category": null, "quantity": null, "text": "the truck was late"}
+    ]
+  },
+  "claims_late_only": {
+    "claims": [{"kind": "other", "category": null, "quantity": null, "text": "the truck was late"}]
+  },
+  "claims_count": {
+    "claims": [{"kind": "count", "category": "cartons", "quantity": 12, "text": "twelve boxes came"}]
+  },
+  "claims_unknown_category": {
+    "claims": [{"kind": "damage", "category": "pallets", "quantity": 1, "text": "one pallet broken"}]
+  },
+  "obs_zero_damaged": [
+    {"po_line_id": 1, "category": "cartons", "observed_count": 12, "damaged_count": 0, "reliable": true}
+  ],
+  "obs_two_damaged": [
+    {"po_line_id": 1, "category": "cartons", "observed_count": 12, "damaged_count": 2, "reliable": true}
+  ],
+  "obs_weak_evidence": [
+    {"po_line_id": 1, "category": "cartons", "observed_count": 9, "damaged_count": 0, "reliable": false}
+  ]
+}

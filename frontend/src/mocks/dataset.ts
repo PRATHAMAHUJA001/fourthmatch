@@ -5,16 +5,18 @@
  * the repo's own data files at build time:
  *   - data/ground_truth.json      (documents, expected verdicts, Python-computed amounts)
  *   - data/eval_counts.json       (real SAM pipeline output per scenario line)
+ *   - data/eval_results.json      (scripts/run_eval.py: video + synthetic-image counts, verdict P/R/F1, cost)
  *   - data/policy/receiving_policy.md (verbatim clauses)
  *   - samples/scenarios/manifest.json (via ground_truth)
  * Dates, latencies and the 30-day trend are synthetic presentation data.
  */
 import groundTruthRaw from "../../../data/ground_truth.json";
 import evalCountsRaw from "../../../data/eval_counts.json";
+import evalResultsRaw from "../../../data/eval_results.json";
 import policyMd from "../../../data/policy/receiving_policy.md?raw";
 import type {
   AgentStep, AnalyticsRead, CaseDetail, CaseLineRead, CaseSummary, CitedRule, DockKpis,
-  EvalRead, PolicyClause, PolicyRead, PurchaseOrderDetail, RuleRead, Verdict,
+  EvalRead, EvalResults, PolicyClause, PolicyRead, PurchaseOrderDetail, RemarkClaim, RemarkItem, RemarkRead, RemarkStatus, RuleRead, Verdict,
 } from "../types/api";
 
 interface GtCase {
@@ -192,7 +194,32 @@ function buildCase(c: GtCase, idx: number): CaseDetail {
     },
   };
   base.decision = buildDecision(base, c, isDuplicate);
+  if (c.scenario_id === REMARK_SCENARIO) base.remark = mockRemark(base);
   return base;
+}
+
+/* ——— Storekeeper voice remark (demo) ———
+ * Transcript of samples/remark.wav (docs/MODEL_NOTES.md §6). The claims are what a person reads
+ * out of that sentence; the check is computed here from the case's own perception data with the
+ * same rules as backend/app/domain/remark.py. Nothing about the video is invented. */
+const REMARK_SCENARIO = "scn3_damage";
+const REMARK_TRANSCRIPT = "Two boxes are damaged and the truck was late.";
+const REMARK_CLAIMS: RemarkClaim[] = [
+  { kind: "damage", category: "cartons", quantity: 2, text: "Two boxes are damaged" },
+  { kind: "other", category: null, quantity: null, text: "the truck was late" },
+];
+
+function mockRemark(c: CaseDetail): RemarkRead {
+  const items: RemarkItem[] = [];
+  for (const claim of REMARK_CLAIMS) {
+    if (claim.kind !== "damage") continue; // only count/damage claims can be checked against video
+    const lines = c.lines.filter((l) => claim.category === null || l.category === claim.category);
+    const damaged = lines.reduce((s, l) => s + (l.perception?.damaged_track_ids.length ?? 0), 0);
+    const supported = claim.quantity === null ? damaged >= 1 : claim.quantity === 0 ? damaged === 0 : damaged >= claim.quantity;
+    items.push({ claim, verdict: supported ? "supported" : "not_supported", observed: damaged });
+  }
+  const status: RemarkStatus = items.length === 0 ? "no_claim" : items.some((i) => i.verdict === "not_supported") ? "not_supported" : "supported";
+  return { transcript: REMARK_TRANSCRIPT, check: { status, items } };
 }
 
 const DISCREPANCY_LABEL: Record<string, string> = {
@@ -272,7 +299,7 @@ function buildDecision(cd: CaseDetail, c: GtCase, duplicate: boolean) {
 export const caseDetails: CaseDetail[] = gt.scenarios_and_discrepancies.map(buildCase);
 export const caseSummaries: CaseSummary[] = caseDetails.map(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ({ lines: _l, decision: _d, evidence_pack: _e, delivery_id: _di, grn_number: _g, invoice_number: _i, triggered_rule_ids: _t, signoff_roles: _s, video_url: _v, invoice_total_paise: _it, ...rest }) => rest,
+  ({ lines: _l, decision: _d, evidence_pack: _e, delivery_id: _di, grn_number: _g, invoice_number: _i, triggered_rule_ids: _t, signoff_roles: _s, video_url: _v, invoice_total_paise: _it, remark: _r, ...rest }) => rest,
 );
 
 export const purchaseOrders: PurchaseOrderDetail[] = caseDetails.map((c) => ({
@@ -363,6 +390,7 @@ export function evalResults(): EvalRead {
       { model: "muse-spark-1.3", role: "Decision agent · reasoning high", calls: 12, p50_ms: null, p95_ms: null },
       { model: "muse-spark-1.3", role: "Policy compiler", calls: 41, p50_ms: null, p95_ms: null },
     ],
+    results: evalResultsRaw as unknown as EvalResults,
     cases_total: pairs.length,
     verdict_accuracy: pairs.filter(([t, p]) => t === p).length / pairs.length,
     count_accuracy: counts.filter((c) => c.result === "PASS").length / counts.length,
