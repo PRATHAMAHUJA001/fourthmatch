@@ -28,6 +28,16 @@ class ConflictError(AppError):
     status_code = 409
 
 
+class ForbiddenError(AppError):
+    code = "forbidden"
+    status_code = 403
+
+
+class RateLimitError(AppError):
+    code = "rate_limited"
+    status_code = 429
+
+
 class UpstreamModelError(AppError):
     code = "model_upstream"
     status_code = 502

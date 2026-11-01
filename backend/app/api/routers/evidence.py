@@ -10,6 +10,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 
+from app.api.deps_demo import require_demo_passcode
 from app.api.deps_reporting import get_evidence_service
 from app.domain.schemas.dashboard import EvidenceVerifyRead
 from app.domain.schemas.evidence import EvidenceFile, EvidencePackRead
@@ -36,7 +37,7 @@ def get_evidence_pack(
     return _file_response(service.get_artifact(delivery_id, format))
 
 
-@router.post("/deliveries/{delivery_id}/evidence-pack", response_model=EvidencePackRead, status_code=201)
+@router.post("/deliveries/{delivery_id}/evidence-pack", response_model=EvidencePackRead, status_code=201, dependencies=[Depends(require_demo_passcode)])
 def build_evidence_pack(
     delivery_id: int,
     service: EvidenceService = Depends(get_evidence_service),

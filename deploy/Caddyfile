@@ -1,0 +1,16 @@
+# Reverse proxy for FourthMatch. Site address comes from $FM_SITE (set by setup.sh):
+#   FM_SITE=demo.example.com  -> automatic HTTPS (DNS A record must point at this server)
+#   FM_SITE unset / ":80"     -> plain HTTP on the server's IP (no domain needed)
+{$FM_SITE::80} {
+	encode gzip zstd
+
+	# Uploaded dock videos can be large.
+	request_body {
+		max_size 200MB
+	}
+
+	reverse_proxy 127.0.0.1:8000 {
+		# SSE (/api/deliveries/{id}/events) must not be buffered.
+		flush_interval -1
+	}
+}
