@@ -16,7 +16,7 @@ Meta Global AI Hackathon entry, built solo between Oct 30 and Nov 4, 2026. All d
 | Demo video | `<DEMO_VIDEO_URL>` (placeholder) |
 | Docs | [Architecture](docs/ARCHITECTURE.md) · [Model API notes](docs/MODEL_NOTES.md) · [Cases](docs/CASES.md) · [Evaluation findings](docs/EVAL.md) · [Deploy](DEPLOY.md) · [Handoff](docs/HANDOFF.md) |
 
-![Dock Live](docs/screenshots/dock.png)
+![FourthMatch landing page](docs/screenshots/landing.png)
 
 ## The problem
 
@@ -49,6 +49,10 @@ say 14, clause 4.2 (tolerance on cartons is 0.0%) fires, ₹1,100 is held, and t
 is released.
 
 ![Delivery case for scn2_short](docs/screenshots/case-scn2-short.png)
+
+![Live replay: 12 of 14 seen, ₹1,100 held](docs/screenshots/replay.png)
+
+![Receiving dock](docs/screenshots/dock.png)
 
 ## Architecture
 
