@@ -113,7 +113,11 @@
   --fm-motion: 150ms;
   --fm-ease: cubic-bezier(0.2, 0, 0, 1);
   --fm-row-h: 34px;
+  /* Fixed in both themes: the amber signal block and the ink drawn on it. */
+  --fm-amber-fixed: #ffb224;
+  --fm-ink-fixed: #16171a;
 }
+.fm-amber-block { background: var(--fm-amber-fixed); color: var(--fm-ink-fixed); }
 
 * { border-color: var(--fm-border); }
 html, body, #root { height: 100%; }
@@ -218,3 +222,7 @@ body {
 .fm-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
 .fm-scroll::-webkit-scrollbar-thumb { background: var(--fm-border-strong); border-radius: 4px; }
 .fm-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* LoadDiagram live fill: a slot lands with a short opacity ramp. */
+@keyframes fm-slot-in { from { fill-opacity: 0.15; } to { fill-opacity: 1; } }
+.fm-slot-in { animation: fm-slot-in 200ms var(--fm-ease) both; }

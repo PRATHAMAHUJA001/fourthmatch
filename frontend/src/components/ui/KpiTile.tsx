@@ -28,11 +28,11 @@ export function KpiTile({ label, value, unit, delta, tone = "neutral", hint, spa
         <span className="fm-label truncate">{label}</span>
       </div>
       <div className="flex items-end justify-between gap-3">
-        <div className={cn("font-mono text-[28px] font-medium leading-none tracking-[-0.03em] tabular-nums", tone !== "neutral" && TONE_TEXT[tone])}>
+        <div className={cn("min-w-0 font-mono text-[28px] font-medium leading-none tracking-[-0.03em] tabular-nums max-sm:text-[24px]", tone !== "neutral" && TONE_TEXT[tone])}>
           {value}
           {unit && <span className="ml-1 text-[13px] font-normal tracking-normal text-fm-faint">{unit}</span>}
         </div>
-        {spark && spark.length > 1 && <Spark values={spark} className={tone === "neutral" ? "text-fm-muted" : TONE_TEXT[tone]} />}
+        {spark && spark.length > 1 && <Spark values={spark} className={cn("max-md:hidden", tone === "neutral" ? "text-fm-muted" : TONE_TEXT[tone])} />}
       </div>
       {(delta || hint) && (
         <div className="flex items-center gap-2 text-[11.5px] text-fm-muted">

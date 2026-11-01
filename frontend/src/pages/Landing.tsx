@@ -134,7 +134,7 @@ export function Landing() {
 
         {/* ——— the missing units (amber block) ——— */}
         {line && detail.data && line.observed_count !== null && line.observed_count < line.invoiced_qty && (
-          <section className="mb-12 overflow-hidden rounded-fm text-[#16171a]" style={{ background: "#ffb224" }} aria-label="What the video found">
+          <section className="fm-amber-block mb-12 overflow-hidden rounded-fm" aria-label="What the video found">
             <div className="grid items-center gap-6 p-6 md:p-8 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
               <div>
                 <div className="font-cond text-[11px] font-semibold uppercase tracking-[0.1em] opacity-70">{detail.data.po_number} · what the video found</div>

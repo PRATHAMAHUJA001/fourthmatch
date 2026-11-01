@@ -12,13 +12,17 @@ interface Props {
   tone?: "default" | "ink";
   className?: string;
   label?: string;
+  /** Seen slots are drawn solid ink instead of outlined. */
+  solid?: boolean;
+  /** Unseen slots are faint hairlines (still arriving) instead of dashed gaps (confirmed missing). */
+  pending?: boolean;
 }
 
 const W = 600;
 const H = 200;
 const TX = 8, TY = 14, TW = 432, TH = 128; // trailer box
 
-export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", tone = "default", className, label }: Props) {
+export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", tone = "default", className, label, solid = false, pending = false }: Props) {
   const n = Math.max(1, Math.min(invoiced, 120));
   const rows = n <= 6 ? 1 : n <= 16 ? 2 : n <= 45 ? 3 : 4;
   const cols = Math.ceil(n / rows);
@@ -28,7 +32,8 @@ export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", to
   const ch = Math.min((TH - pad * 2 - gap * (rows - 1)) / rows, cw * 0.78);
   const ink = tone === "ink" ? "var(--fm-ink-fixed, #16171a)" : "var(--fm-text)";
   const faint = tone === "ink" ? "rgba(22,23,26,0.45)" : "var(--fm-faint)";
-  const miss = tone === "ink" ? "#16171a" : "var(--fm-hold)";
+  const miss = tone === "ink" ? "var(--fm-ink-fixed, #16171a)" : "var(--fm-hold)";
+  const notch = tone === "ink" ? "var(--fm-amber-fixed, #ffb224)" : "var(--fm-panel)";
   const seen = Math.min(observed, n);
   const missing = Math.max(0, invoiced - observed);
   const cells = Array.from({ length: n }, (_, i) => {
@@ -76,8 +81,15 @@ export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", to
       {/* cargo */}
       {cells.map(({ i, x, y, state }) => (
         <g key={i}>
-          {state === "missing" ? (
+          {state === "missing" && pending ? (
+            <rect x={x} y={y} width={cw} height={ch} rx="1.5" fill="none" stroke={faint} strokeWidth="1" />
+          ) : state === "missing" ? (
             <rect x={x} y={y} width={cw} height={ch} rx="1.5" fill="none" stroke={miss} strokeWidth="1.4" strokeDasharray="4 3" />
+          ) : solid && state === "ok" ? (
+            <>
+              <rect x={x} y={y} width={cw} height={ch} rx="1.5" fill={ink} stroke={ink} strokeWidth="1.3" className="fm-slot-in" />
+              {cw > 14 && <line x1={x + cw / 2} y1={y} x2={x + cw / 2} y2={y + ch * 0.32} stroke={notch} strokeWidth="1.2" />}
+            </>
           ) : (
             <>
               <rect x={x} y={y} width={cw} height={ch} rx="1.5" fill={state === "damaged" ? "url(#fm-hatch)" : "none"} stroke={state === "damaged" ? miss : ink} strokeWidth="1.3" />

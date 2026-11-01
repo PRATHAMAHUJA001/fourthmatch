@@ -35,3 +35,13 @@ test("command palette jumps to a case", async ({ page }) => {
   await page.getByRole("option", { name: /FM\/PO\/26-27\/004/ }).click();
   await expect(page).toHaveURL(/\/cases\/4$/);
 });
+
+test("receiving queue: cards view persists and opens a case", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/dock");
+  await page.getByRole("button", { name: /cards/i }).click();
+  await page.reload();
+  await expect(page.getByRole("button", { name: /cards/i })).toHaveAttribute("aria-pressed", "true");
+  await page.getByLabel("Receiving queue").getByRole("link").first().click();
+  await expect(page).toHaveURL(/\/cases\/\d+$/);
+});
