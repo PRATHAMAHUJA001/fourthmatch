@@ -23,13 +23,6 @@ import { formatDate, formatINR, formatTs, titleCase } from "../lib/format";
 import type { CaseDetail as CaseDetailT, CaseLineRead, CitedRule } from "../types/api";
 import { VERDICT_LABEL } from "../types/api";
 
-const VERDICT_TEXT = {
-  approve: "text-fm-verified",
-  partial_pay: "text-fm-hold",
-  hold: "text-fm-hold",
-  human_review: "text-fm-review",
-} as const;
-
 function downloadPack(c: CaseDetailT) {
   const blob = new Blob([JSON.stringify({
     kind: "fourthmatch.evidence_pack", synthetic: true, po_number: c.po_number, vendor: c.vendor_name,
@@ -184,42 +177,47 @@ export function CaseDetail() {
       )}
 
       {/* ——— verdict band ——— */}
-      {verdict && (
-        <section
-          className={cn(
-            "grid gap-0 overflow-hidden rounded-fm border bg-fm-panel md:grid-cols-[auto_1fr_auto]",
-            verdict === "approve" ? "border-fm-verified-line" : verdict === "human_review" ? "border-fm-review-line" : "border-fm-hold-line",
-          )}
-          aria-label="Verdict"
-        >
-          <div className={cn("flex flex-col justify-center gap-1 border-fm-border px-5 py-4 md:border-r",
-            verdict === "approve" ? "bg-fm-verified-bg" : verdict === "human_review" ? "bg-fm-review-bg" : "bg-fm-hold-bg")}>
-            <span className="fm-label">Verdict</span>
-            <span className={cn("flex items-center gap-2 font-cond text-[26px] font-bold uppercase leading-none tracking-[0.02em]", VERDICT_TEXT[verdict])}>
-              <SignalGlyph signal={VERDICT_SIGNAL[verdict]} size={20} />
-              {VERDICT_LABEL[verdict]}
-            </span>
-          </div>
-          <div className="flex min-w-0 flex-col justify-center gap-1.5 px-5 py-4">
-            <p className="text-[14px] leading-relaxed text-fm-text">{data.decision?.summary_en ?? "Decision pending."}</p>
-            {data.decision && (
-              <p className="flex flex-wrap items-center gap-2 text-[12px] text-fm-muted">
-                <span className="fm-label !text-fm-faint">Next</span>{data.decision.recommended_action}
-              </p>
+      {verdict && (() => {
+        const ok = verdict === "approve";
+        const sub = ok ? "text-fm-muted" : "opacity-75";
+        const amount = ok ? data.invoice_total_paise ?? data.total_paise : data.held_paise;
+        return (
+          <section
+            className={cn(
+              "grid overflow-hidden rounded-fm border md:grid-cols-[minmax(0,1fr)_auto]",
+              ok ? "border-fm-verified-line bg-fm-verified-bg" : "fm-amber-block border-transparent",
             )}
-          </div>
-          <div className="flex flex-col justify-center gap-0.5 border-fm-border px-5 py-4 md:border-l md:text-right">
-            <span className="fm-label">{verdict === "approve" ? "Payable" : "Held"}</span>
-            <span className={cn("font-mono text-[34px] font-medium leading-none tracking-[-0.04em] tabular-nums", verdict === "approve" ? "text-fm-verified" : VERDICT_TEXT[verdict])}>
-              {formatINR(verdict === "approve" ? data.invoice_total_paise ?? data.total_paise : data.held_paise)}
-            </span>
-            {data.invoice_total_paise != null && verdict !== "approve" && (
-              <span className="font-mono text-[11px] text-fm-faint">of {formatINR(data.invoice_total_paise)} invoiced (incl. GST)</span>
-            )}
-            {data.decided_at && <span className="font-mono text-[10.5px] text-fm-faint">{formatTs(data.decided_at)} IST</span>}
-          </div>
-        </section>
-      )}
+            aria-label="Verdict"
+          >
+            <div className="flex min-w-0 flex-col justify-center gap-3 px-6 py-6">
+              <span className={cn("font-cond text-[11px] font-semibold uppercase tracking-[0.1em]", sub)}>Verdict</span>
+              <span className={cn("flex items-center gap-3 font-cond text-[44px] font-bold uppercase leading-none tracking-[0.01em]", ok && "text-fm-verified")}>
+                <SignalGlyph signal={VERDICT_SIGNAL[verdict]} size={34} />
+                {VERDICT_LABEL[verdict]}
+              </span>
+              <p className="max-w-3xl text-[15px] leading-relaxed">{data.decision?.summary_en ?? "Decision pending."}</p>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px]">
+                {data.decision && (
+                  <span className="flex items-center gap-2"><span className={cn("font-cond text-[11px] font-semibold uppercase tracking-[0.1em]", sub)}>Next</span>{data.decision.recommended_action}</span>
+                )}
+                {(data.clauses ?? []).map((cl) => (
+                  <span key={cl} className={cn("inline-flex h-5 items-center rounded-fm-sm border px-1.5 font-mono text-[10.5px] font-medium", ok ? "border-fm-verified-line text-fm-verified" : "border-black/35")}>§{cl}</span>
+                ))}
+              </div>
+            </div>
+            <div className={cn("flex flex-col justify-center gap-1.5 border-t px-6 py-6 md:min-w-[340px] md:border-l md:border-t-0 md:text-right", ok ? "border-fm-verified-line" : "border-black/15")}>
+              <span className={cn("font-cond text-[11px] font-semibold uppercase tracking-[0.1em]", sub)}>{ok ? "Payable" : "Held"}</span>
+              <span className={cn("font-mono text-[56px] font-medium leading-none tracking-[-0.05em] tabular-nums max-sm:text-[40px]", ok && "text-fm-verified")}>
+                {formatINR(amount)}
+              </span>
+              {data.invoice_total_paise != null && !ok && (
+                <span className={cn("font-mono text-[11.5px]", sub)}>of {formatINR(data.invoice_total_paise)} invoiced (incl. GST)</span>
+              )}
+              {data.decided_at && <span className={cn("font-mono text-[11px]", sub)}>{formatTs(data.decided_at)} IST</span>}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ——— main grid ——— */}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">

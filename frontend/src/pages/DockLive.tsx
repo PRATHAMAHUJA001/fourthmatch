@@ -1,9 +1,9 @@
 /** Dock Live (home): the receiving queue, today's readouts, and the live pipeline bay. */
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Play, Plus } from "lucide-react";
+import { LayoutGrid, Play, Plus, Rows3 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { NewDeliveryDialog } from "../components/evidence/NewDeliveryDialog";
 import { PipelineRun } from "../components/evidence/PipelineRun";
 import { Button } from "../components/ui/Button";
@@ -16,6 +16,7 @@ import { StatusBadge } from "../components/ui/StatusBadge";
 import { Kbd, Tag } from "../components/ui/Tag";
 import { BrandMark } from "../components/shell/BrandMark";
 import { api } from "../lib/api";
+import { cn } from "../lib/cn";
 import { formatINR, formatTs } from "../lib/format";
 import type { CaseSummary } from "../types/api";
 
@@ -65,12 +66,79 @@ const FINDING: Record<string, string> = {
   duplicate_invoice_number: "Duplicate invoice",
 };
 
+type QueueView = "cards" | "table";
+const VIEW_KEY = "fm.dock.queueView";
+
+function readView(): QueueView {
+  try { return localStorage.getItem(VIEW_KEY) === "cards" ? "cards" : "table"; } catch { return "table"; }
+}
+
+function ViewToggle({ value, onChange }: { value: QueueView; onChange: (v: QueueView) => void }) {
+  const opts: { v: QueueView; label: string; icon: typeof LayoutGrid }[] = [
+    { v: "cards", label: "Cards", icon: LayoutGrid },
+    { v: "table", label: "Table", icon: Rows3 },
+  ];
+  return (
+    <div role="group" aria-label="Queue view" className="inline-flex overflow-hidden rounded-fm-sm border border-fm-border-strong">
+      {opts.map(({ v, label, icon: Icon }, i) => (
+        <button
+          key={v} type="button" aria-pressed={value === v} onClick={() => onChange(v)}
+          className={cn(
+            "inline-flex h-6 items-center gap-1 px-2 font-cond text-[11px] font-semibold uppercase tracking-[0.06em] transition-colors duration-150",
+            i > 0 && "border-l border-fm-border-strong",
+            value === v ? "bg-fm-text text-fm-bg" : "text-fm-muted hover:bg-fm-hover hover:text-fm-text",
+          )}
+        >
+          <Icon size={12} aria-hidden />{label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function DeliveryCard({ r }: { r: Row }) {
+  const types = r.discrepancy_types ?? [];
+  const finding = types.length ? FINDING[types[0]] ?? types[0] : "All four sources agree";
+  const held = r.held_paise > 0;
+  return (
+    <Link
+      to={`/cases/${r.po_id}`}
+      className={cn(
+        "group flex min-w-0 flex-col gap-3 rounded-fm border bg-fm-panel p-3.5 transition-colors duration-150 hover:bg-fm-hover",
+        held ? "border-fm-hold-line" : "border-fm-border",
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="truncate text-[13.5px] font-semibold tracking-[-0.01em]">{r.vendor_name}</div>
+          <div className="mt-1 flex items-center gap-1.5">
+            <span className="font-mono text-[11.5px] text-fm-muted">{r.po_number.replace("FM/PO/26-27/", "PO-")}</span>
+            {r.evidence_source === "video" ? <Tag tone="info">VIDEO</Tag> : <Tag>DOCS</Tag>}
+          </div>
+        </div>
+        <StatusBadge verdict={r.verdict} size="sm" />
+      </div>
+      <div>
+        <div className="fm-label">Held</div>
+        <Money paise={r.held_paise} className={cn("block text-[30px] font-medium leading-[1.05] tracking-[-0.04em]", held && "text-fm-hold")} />
+      </div>
+      <div className="mt-auto flex flex-wrap items-center gap-1.5 border-t border-fm-border pt-2.5">
+        <span className={cn("min-w-0 flex-1 truncate text-[12px]", types.length ? "text-fm-muted" : "text-fm-faint")}>{finding}</span>
+        {(r.clauses ?? []).map((c) => <Tag key={c} tone="hold">§{c}</Tag>)}
+        <span className="font-mono text-[10.5px] text-fm-faint">{r.decided_at ? formatTs(r.decided_at).split(" · ")[1] : "—"}</span>
+      </div>
+    </Link>
+  );
+}
+
 export function DockLive() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [dialog, setDialog] = useState(params.get("new") === "1");
   const replayPo = params.get("replay");
   const [run, setRun] = useState<{ deliveryId: number; poId: number } | null>(null);
+  const [view, setViewState] = useState<QueueView>(readView);
+  const setView = (v: QueueView) => { setViewState(v); try { localStorage.setItem(VIEW_KEY, v); } catch { /* storage unavailable */ } };
   const cases = useQuery({ queryKey: ["cases"], queryFn: api.cases });
   const kpis = useQuery({ queryKey: ["dock-kpis"], queryFn: api.dockKpis });
 
@@ -154,11 +222,22 @@ export function DockLive() {
         index="02"
         title="Receiving queue"
         subtitle={cases.data ? `${cases.data.length} deliveries` : undefined}
-        actions={<span className="flex items-center gap-1 text-[11px] text-fm-faint"><Kbd>J</Kbd><Kbd>K</Kbd> move <Kbd>↵</Kbd> open</span>}
+        actions={
+          <>
+            {view === "table"
+              ? <span className="flex items-center gap-1 text-[11px] text-fm-faint max-sm:hidden"><Kbd>J</Kbd><Kbd>K</Kbd> move <Kbd>↵</Kbd> open</span>
+              : <span className="flex items-center gap-1 text-[11px] text-fm-faint max-sm:hidden"><Kbd>Tab</Kbd> move <Kbd>↵</Kbd> open</span>}
+            <ViewToggle value={view} onChange={setView} />
+          </>
+        }
         padded={false}
       >
         {cases.isLoading ? <SkeletonRows rows={8} className="p-3" /> : cases.isError ? (
           <ErrorState message={cases.error instanceof Error ? cases.error.message : "Could not load the queue."} />
+        ) : view === "cards" ? (
+          <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Receiving queue">
+            {rows.map((r) => <DeliveryCard key={r.po_id} r={r} />)}
+          </div>
         ) : (
           <DataTable columns={columns} data={rows} keyboard onRowClick={(r) => navigate(`/cases/${r.po_id}`)} label="Receiving queue" />
         )}

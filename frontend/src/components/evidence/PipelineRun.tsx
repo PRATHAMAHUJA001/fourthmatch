@@ -9,7 +9,10 @@ import type { JobEventRead, Verdict } from "../../types/api";
 import { Button } from "../ui/Button";
 import { FourMatchStrip } from "../ui/FourMatch";
 import { StatusBadge } from "../ui/StatusBadge";
-import { PIPELINE_STAGES, Stepper, type StageState } from "../ui/Stepper";
+import { LiveCounter } from "../ui/LiveCounter";
+import { LoadDiagram } from "../ui/LoadDiagram";
+import { RouteProgress } from "../ui/RouteProgress";
+import { PIPELINE_STAGES, type StageState } from "../ui/Stepper";
 import { EvidenceVideo } from "./EvidenceVideo";
 
 const STAGE_KEYS = PIPELINE_STAGES.map((s) => s.key);
@@ -108,68 +111,131 @@ export function PipelineRun({ deliveryId, poId, onReset }: { deliveryId: number;
     </div>
   ) : null;
 
-  return (
-    <div ref={rootRef} className="grid scroll-mt-4 gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(340px,1fr)]">
-      <div className="flex min-w-0 flex-col gap-3">
-        {c?.video_url ? (
-          <EvidenceVideo
-            src={c.video_url}
-            phrase={phrase ?? null}
-            count={d.states.tracking ? d.tracks : null}
-            countLabel={tracking ? "Tracking" : "Unique tracks"}
-            scanning={tracking || d.states.understanding === "active" || d.states.damage_check === "active"}
-            camera={`DOCK-01 · ${c.po_number}`}
-          />
-        ) : (
-          <div className="fm-dotgrid flex aspect-video items-center justify-center rounded-fm border border-fm-border bg-fm-sunken text-[12px] text-fm-muted">Loading footage…</div>
-        )}
-        <Stepper orientation="horizontal" states={d.states} />
-        <div className="rounded-fm border border-fm-border bg-fm-sunken">
-          <div className="flex items-center justify-between border-b border-fm-border px-3 py-1.5">
-            <span className="fm-label">job_events</span>
-            <span className="font-mono text-[10.5px] text-fm-faint">SSE · {events.length} stored · T+{elapsed.toFixed(1)}s</span>
+  const videoLines = (c?.lines ?? []).filter((l) => l.evidence_source === "video" && l.observed_count !== null);
+  const invoicedTotal = videoLines.reduce((sum, l) => sum + l.invoiced_qty, 0);
+  const units = new Set(videoLines.map((l) => l.unit));
+  const unitLabel = units.size === 1 ? [...units][0] : "units";
+  const decided = d.verdict !== null;
+  const seenOf = (l: { po_line_id: number; observed_count: number | null }) =>
+    reconciled ? l.observed_count ?? 0 : d.perLine.get(l.po_line_id) ?? 0;
+  const seenTotal = videoLines.reduce((sum, l) => sum + seenOf(l), 0);
+  const activeStage = PIPELINE_STAGES.find((s) => d.states[s.key] === "active");
+
+  const hero = (
+    <section className="fm-amber-block flex min-w-0 flex-col rounded-fm" aria-label="Active delivery">
+      <div className="flex items-start justify-between gap-3 px-5 pt-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 font-cond text-[11px] font-semibold uppercase tracking-[0.1em] opacity-75">
+            {!done && <span className="fm-live-dot h-1.5 w-1.5 rounded-full bg-current" aria-hidden />}
+            {done ? "Delivery checked" : "Active delivery"} · Bay 01
           </div>
-          <ol ref={logRef} className="fm-scroll h-[132px] overflow-auto px-3 py-2 font-mono text-[11px] leading-[1.7]" aria-live="polite">
-            {events.map((e, i) => (
-              <li key={e.seq} className={cn("flex gap-2", e.event_type.endsWith("_progress") ? "text-fm-faint" : "text-fm-muted", e.event_type === "verdict" && "text-fm-hold")}>
-                <span className="w-12 shrink-0 tabular-nums text-fm-faint">{((arrivals.current[i] ?? 0) / 1000).toFixed(2)}</span>
-                <span className="w-[150px] shrink-0 truncate text-fm-text">{e.event_type}</span>
-                <span className="truncate">{e.message}</span>
-              </li>
-            ))}
-            {!done && <li className="fm-live-dot text-fm-faint">▍</li>}
-          </ol>
+          <h2 className="mt-1.5 truncate font-mono text-[30px] max-sm:text-[22px] font-medium leading-none tracking-[-0.04em]">{c?.po_number ?? "···"}</h2>
+          <p className="mt-1.5 truncate text-[15px] font-semibold tracking-[-0.01em]">{c?.vendor_name ?? "Loading delivery…"}</p>
         </div>
-        {error && <p className="text-[12px] text-fm-fraud" role="alert">{error}</p>}
+        <span className="shrink-0 rounded-fm-sm border border-black/25 px-1.5 py-1 font-mono text-[10.5px] font-medium uppercase leading-none tracking-[0.04em]">
+          {decided ? "Decided" : activeStage?.short ?? "Queued"}
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col justify-center px-5 pb-2 pt-3">
+        {videoLines.length > 0 ? (
+          <div className={cn("grid gap-x-4 gap-y-1", videoLines.length > 1 && "sm:grid-cols-2")}>
+            {videoLines.map((l) => (
+              <div key={l.po_line_id} className="min-w-0">
+                {videoLines.length > 1 && <div className="mb-0.5 truncate font-mono text-[10.5px] opacity-70">{l.sku}</div>}
+                <LoadDiagram
+                  tone="ink" solid pending={!decided}
+                  invoiced={l.invoiced_qty} observed={seenOf(l)} damaged={reconciled ? l.damage_count : 0} unit={l.unit}
+                  className={videoLines.length > 1 ? "max-h-[96px]" : undefined}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex h-[120px] items-center text-[12.5px] opacity-70">{c ? "No dock video for this delivery." : "Loading delivery…"}</div>
+        )}
+      </div>
+      <dl className="mt-auto grid grid-cols-3 border-t border-black/15">
+        {[
+          { k: "Invoiced", v: <span>{invoicedTotal}<span className="ml-1 font-sans text-[12px] font-normal opacity-65">{unitLabel}</span></span> },
+          { k: "Seen on video", v: <span className="inline-flex items-baseline"><LiveCounter value={seenTotal} digits={Math.max(2, String(invoicedTotal).length)} label="Seen on video" className="text-[28px]" /><span className="ml-1 font-sans text-[12px] opacity-65">{!decided && tracking ? "live" : unitLabel}</span></span> },
+          { k: "Held", v: decided ? formatINR(d.verdict!.held_paise) : <span className="opacity-40">—</span> },
+        ].map((x, i) => (
+          <div key={x.k} className={cn("min-w-0 px-5 py-3", i > 0 && "border-l border-black/15")}>
+            <dt className="font-cond text-[11px] font-semibold uppercase tracking-[0.1em] opacity-70">{x.k}</dt>
+            <dd className="mt-1 truncate font-mono text-[28px] font-medium leading-none tracking-[-0.04em] tabular-nums">{x.v}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+
+  const video = c?.video_url ? (
+    <EvidenceVideo
+      src={c.video_url}
+      phrase={phrase ?? null}
+      count={d.states.tracking ? d.tracks : null}
+      countLabel={tracking ? "Tracking" : "Unique tracks"}
+      scanning={tracking || d.states.understanding === "active" || d.states.damage_check === "active"}
+      camera={`DOCK-01 · ${c.po_number}`}
+    />
+  ) : (
+    <div className="fm-dotgrid flex aspect-video items-center justify-center rounded-fm border border-fm-border bg-fm-sunken text-[12px] text-fm-muted">Loading footage…</div>
+  );
+
+  return (
+    <div ref={rootRef} className="flex scroll-mt-4 flex-col gap-3">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        {hero}
+        <div className="min-w-0">{video}</div>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-3">
-        <div className="rounded-fm border border-fm-border bg-fm-panel p-3">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="fm-label">Pipeline</span>
-            <span className="font-mono text-[11px] tabular-nums text-fm-muted">T+{elapsed.toFixed(1)}s</span>
-          </div>
-          <Stepper states={d.states} timing={d.timing} />
+      <div className="rounded-fm border border-fm-border bg-fm-panel px-3 pb-2 pt-2.5">
+        <div className="mb-1 flex items-center justify-between">
+          <span className="fm-label">Pipeline</span>
+          <span className="font-mono text-[11px] tabular-nums text-fm-muted">T+{elapsed.toFixed(1)}s</span>
         </div>
-        {strips}
-        {d.verdict && c && (
-          <div className={cn("fm-rise rounded-fm border p-3.5", d.verdict.verdict === "approve" ? "border-fm-verified-line bg-fm-verified-bg" : "border-fm-hold bg-fm-hold-bg")}>
-            <div className="flex items-center justify-between gap-2">
-              <StatusBadge verdict={d.verdict.verdict} size="lg" />
-              <span className="font-mono text-[11px] text-fm-muted">{(c.clauses ?? []).map((x) => `§${x}`).join(" · ")}</span>
-            </div>
-            <div className="mt-3 flex items-end justify-between gap-3">
-              <div>
-                <div className="fm-label">{d.verdict.verdict === "approve" ? "Released" : "Held"}</div>
-                <div className={cn("font-mono text-[30px] font-medium leading-none tracking-[-0.04em]", d.verdict.verdict === "approve" ? "text-fm-verified" : "text-fm-hold")}>
-                  {formatINR(d.verdict.verdict === "approve" ? c.invoice_total_paise ?? c.total_paise : d.verdict.held_paise)}
-                </div>
+        <RouteProgress states={d.states} timing={d.timing} />
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-3">{strips}</div>
+        <div className="flex min-w-0 flex-col gap-3">
+          {d.verdict && c && (
+            <div className={cn("fm-rise rounded-fm border p-3.5", d.verdict.verdict === "approve" ? "border-fm-verified-line bg-fm-verified-bg" : "border-fm-hold bg-fm-hold-bg")}>
+              <div className="flex items-center justify-between gap-2">
+                <StatusBadge verdict={d.verdict.verdict} size="lg" />
+                <span className="font-mono text-[11px] text-fm-muted">{(c.clauses ?? []).map((x) => `§${x}`).join(" · ")}</span>
               </div>
-              <Button asChild variant="primary" size="sm"><Link to={`/cases/${poId}`}>Open case <ArrowRight size={13} /></Link></Button>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <div>
+                  <div className="fm-label">{d.verdict.verdict === "approve" ? "Released" : "Held"}</div>
+                  <div className={cn("font-mono text-[30px] font-medium leading-none tracking-[-0.04em]", d.verdict.verdict === "approve" ? "text-fm-verified" : "text-fm-hold")}>
+                    {formatINR(d.verdict.verdict === "approve" ? c.invoice_total_paise ?? c.total_paise : d.verdict.held_paise)}
+                  </div>
+                </div>
+                <Button asChild variant="primary" size="sm"><Link to={`/cases/${poId}`}>Open case <ArrowRight size={13} /></Link></Button>
+              </div>
             </div>
+          )}
+          <div className="rounded-fm border border-fm-border bg-fm-sunken">
+            <div className="flex items-center justify-between border-b border-fm-border px-3 py-1.5">
+              <span className="fm-label">job_events</span>
+              <span className="font-mono text-[10.5px] text-fm-faint">SSE · {events.length} stored · T+{elapsed.toFixed(1)}s</span>
+            </div>
+            <ol ref={logRef} className="fm-scroll h-[132px] overflow-auto px-3 py-2 font-mono text-[11px] leading-[1.7]" aria-live="polite">
+              {events.map((e, i) => (
+                <li key={e.seq} className={cn("flex gap-2", e.event_type.endsWith("_progress") ? "text-fm-faint" : "text-fm-muted", e.event_type === "verdict" && "text-fm-hold")}>
+                  <span className="w-12 shrink-0 tabular-nums text-fm-faint">{((arrivals.current[i] ?? 0) / 1000).toFixed(2)}</span>
+                  <span className="w-[150px] shrink-0 truncate text-fm-text">{e.event_type}</span>
+                  <span className="truncate">{e.message}</span>
+                </li>
+              ))}
+              {!done && <li className="fm-live-dot text-fm-faint">▍</li>}
+            </ol>
           </div>
-        )}
-        {done && onReset && <Button variant="ghost" size="sm" onClick={onReset} className="self-start">Run another delivery</Button>}
+          {error && <p className="text-[12px] text-fm-fraud" role="alert">{error}</p>}
+          {done && onReset && <Button variant="ghost" size="sm" onClick={onReset} className="self-start">Run another delivery</Button>}
+        </div>
       </div>
     </div>
   );

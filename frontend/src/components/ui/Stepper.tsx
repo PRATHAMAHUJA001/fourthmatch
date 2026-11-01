@@ -1,16 +1,16 @@
 import { cn } from "../../lib/cn";
 import { SignalGlyph } from "./Glyph";
 
-export interface Stage { key: string; label: string; detail?: string }
+export interface Stage { key: string; label: string; short?: string; detail?: string }
 
 export const PIPELINE_STAGES: Stage[] = [
-  { key: "uploading", label: "Upload", detail: "SHA-256 · Files API" },
-  { key: "understanding", label: "Understand video", detail: "muse-spark-1.3" },
-  { key: "tracking", label: "Track objects", detail: "sam-3.1" },
-  { key: "damage_check", label: "Check damage", detail: "muse-spark-1.3" },
-  { key: "reconciling", label: "Reconcile", detail: "Python · 4-way match" },
-  { key: "applying_policy", label: "Apply policy", detail: "Decision agent" },
-  { key: "verdict", label: "Verdict", detail: "Python recompute" },
+  { key: "uploading", short: "Upload", label: "Upload", detail: "SHA-256 · Files API" },
+  { key: "understanding", short: "Understand", label: "Understand video", detail: "muse-spark-1.3" },
+  { key: "tracking", short: "Track", label: "Track objects", detail: "sam-3.1" },
+  { key: "damage_check", short: "Damage", label: "Check damage", detail: "muse-spark-1.3" },
+  { key: "reconciling", short: "Reconcile", label: "Reconcile", detail: "Python · 4-way match" },
+  { key: "applying_policy", short: "Policy", label: "Apply policy", detail: "Decision agent" },
+  { key: "verdict", short: "Verdict", label: "Verdict", detail: "Python recompute" },
 ];
 
 export type StageState = "pending" | "active" | "done" | "failed";
