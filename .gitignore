@@ -12,3 +12,5 @@ data/*.db
 samples/*.mp4
 .DS_Store
 storage/
+data/*.db-shm
+data/*.db-wal
