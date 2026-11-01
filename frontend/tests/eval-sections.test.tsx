@@ -16,9 +16,9 @@ const empty: EvalResults = {
 };
 
 describe("Eval sections", () => {
-  it("labels eval images SYNTHETIC and shows an empty state when none exist", () => {
+  it("labels eval images Synthetic and shows an empty state when none exist", () => {
     render(<ImageEvalPanel results={empty} />);
-    expect(screen.getByText("SYNTHETIC")).toBeInTheDocument();
+    expect(screen.getByText("Synthetic")).toBeInTheDocument();
     expect(screen.getByText("No eval images yet")).toBeInTheDocument();
   });
   it("scores only confirmed images and shows a dash for a missing SAM count", () => {

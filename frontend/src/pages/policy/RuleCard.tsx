@@ -45,39 +45,39 @@ export const RuleCard = forwardRef<HTMLLIElement, Props>(function RuleCard({ rul
       ref={ref}
       onMouseEnter={() => onHover(rule.source_clause)}
       onMouseLeave={() => onHover(null)}
-      className={cn("border-b border-fm-border px-3 py-2.5 transition-colors duration-[var(--fm-motion)] last:border-0", active && "bg-fm-hold-bg")}
+      className={cn("rounded-[14px] px-4 py-4 transition-colors duration-200", active ? "bg-fm-hold-bg" : "hover:bg-fm-raised/70")}
     >
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="font-mono text-[12px] font-medium">{rule.rule_id ?? `rule-${rule.id}`}</span>
-        <Tag tone="hold">§{rule.source_clause}</Tag>
-        {rule.goods_category && <Tag>{rule.goods_category}</Tag>}
-        <span className={cn("fm-label ml-auto !text-[10.5px]", status.cls)}>{status.text}</span>
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+        <span className="font-mono text-[13px] font-medium">{rule.rule_id ?? `rule-${rule.id}`}</span>
+        <span className="text-[13px] font-semibold text-fm-muted">§{rule.source_clause}</span>
+        {rule.goods_category && <Tag>{rule.goods_category.replaceAll("_", " ")}</Tag>}
+        <span className={cn("ml-auto text-[12px] font-semibold", status.cls)}>{status.text}</span>
       </div>
 
-      <div className="mt-1.5 flex flex-wrap items-center gap-2">
-        <code className={cn("rounded-fm-sm border border-fm-border bg-fm-sunken px-1.5 py-0.5 font-mono text-[12px]", !cond && "italic text-fm-faint")}>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <code className={cn("rounded-[10px] bg-fm-raised px-2.5 py-1 font-mono text-[12.5px]", active && "bg-fm-panel", !cond && "italic text-fm-faint")}>
           {cond ?? "no executable condition"}
         </code>
         <span className="text-fm-faint" aria-hidden>→</span>
         <StatusBadge signal={action.signal} label={action.label} size="sm" />
         {rule.signoff_role && (
-          <span className="text-[11.5px] text-fm-muted">
-            sign-off <span className="font-mono text-fm-text">{rule.signoff_role}</span>
+          <span className="text-[12px] text-fm-muted">
+            Sign-off: <span className="text-fm-text">{rule.signoff_role.replaceAll("_", " ")}</span>
           </span>
         )}
       </div>
 
       {rule.ambiguity && (
-        <div className="mt-2 flex gap-2 rounded-fm-sm border border-fm-hold-line bg-fm-hold-bg px-2 py-1.5 text-[12px] leading-snug text-fm-text">
-          <AlertTriangle size={13} className="mt-px shrink-0 text-fm-hold" aria-hidden />
-          <span><span className="font-semibold text-fm-hold">Ambiguity.</span> {rule.ambiguity}</span>
+        <div className="mt-3 flex gap-2 rounded-[12px] bg-fm-hold-bg px-3 py-2.5 text-[13px] leading-snug text-fm-text">
+          <AlertTriangle size={14} className="mt-px shrink-0 text-fm-hold" aria-hidden />
+          <span><span className="font-semibold text-fm-hold">Ambiguous. </span>{rule.ambiguity}</span>
         </div>
       )}
 
       {rule.status === "pending_approval" && (
-        <div className="mt-2 flex gap-1.5">
-          <Button size="xs" variant="verified" disabled={busy} onClick={() => onApprove(rule.id)}><Check size={12} aria-hidden />Approve</Button>
-          <Button size="xs" variant="danger" disabled={busy} onClick={() => onReject(rule.id)}><X size={12} aria-hidden />Reject</Button>
+        <div className="mt-3 flex gap-2">
+          <Button size="sm" variant="verified" disabled={busy} onClick={() => onApprove(rule.id)}><Check size={13} aria-hidden />Approve</Button>
+          <Button size="sm" variant="danger" disabled={busy} onClick={() => onReject(rule.id)}><X size={13} aria-hidden />Reject</Button>
         </div>
       )}
     </li>

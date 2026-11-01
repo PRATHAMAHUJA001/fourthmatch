@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { SignalGlyph } from "./Glyph";
 
@@ -26,25 +27,82 @@ export function stagesFor(hasRemark: boolean): Stage[] {
 
 export type StageState = "pending" | "active" | "done" | "failed";
 
-/** Pipeline stepper. `states` maps stage key to state; `timing` maps key to ms. */
-export function Stepper({ stages = PIPELINE_STAGES, states, timing, orientation = "vertical", className }: {
+/** Index the progress line reaches: the active (or failed) stage, else the last finished one,
+ *  else -1 when nothing has started. Pure; unit-tested. */
+export function progressIndex(stages: Stage[], states: Record<string, StageState>): number {
+  let active = -1, done = -1;
+  stages.forEach((s, i) => {
+    const st = states[s.key];
+    if (st === "active" || st === "failed") active = i;
+    if (st === "done") done = i;
+  });
+  return active >= 0 ? active : done;
+}
+
+const secs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+
+function Dot({ st }: { st: StageState }) {
+  return (
+    <span
+      className={cn(
+        "relative z-10 flex h-[22px] w-[22px] items-center justify-center rounded-full transition-colors duration-300",
+        st === "done" && "bg-fm-text text-fm-canvas",
+        st === "active" && "bg-fm-panel shadow-[inset_0_0_0_2px_var(--fm-accent)]",
+        st === "failed" && "bg-fm-panel text-fm-fraud",
+        st === "pending" && "bg-fm-panel shadow-[inset_0_0_0_1.5px_var(--fm-border-strong)]",
+      )}
+      aria-hidden
+    >
+      {st === "done" && <Check size={12} strokeWidth={3} />}
+      {st === "active" && <span className="fm-live-dot h-2 w-2 rounded-full bg-fm-accent" />}
+      {st === "failed" && <SignalGlyph signal="fraud" size={14} />}
+    </span>
+  );
+}
+
+/** Pipeline stepper. `states` maps stage key to state; `timing` maps key to measured ms.
+ *  Durations appear only for stages that actually ran. */
+export function Stepper({ stages = PIPELINE_STAGES, states, timing, orientation = "horizontal", className }: {
   stages?: Stage[]; states: Record<string, StageState>; timing?: Record<string, number>; orientation?: "vertical" | "horizontal"; className?: string;
 }) {
   if (orientation === "horizontal") {
+    const n = stages.length;
+    const at = progressIndex(stages, states);
+    const frac = n > 1 ? Math.max(0, at) / (n - 1) : 0;
+    const half = 100 / (2 * n);
+    const current = at >= 0 ? stages[at] : null;
+    const curState = current ? states[current.key] : undefined;
     return (
-      <ol className={cn("flex items-center gap-1", className)} aria-label="Pipeline progress">
-        {stages.map((s, i) => {
-          const st = states[s.key] ?? "pending";
-          return (
-            <li key={s.key} className="flex min-w-0 flex-1 flex-col gap-1.5" aria-current={st === "active" ? "step" : undefined}>
-              <span className={cn("h-1 rounded-full", st === "done" && "bg-fm-verified-fill", st === "active" && "fm-live-dot bg-fm-accent", st === "failed" && "bg-fm-fraud-fill", st === "pending" && "bg-fm-hover")} />
-              <span className={cn("truncate text-[12px] font-medium tracking-[-0.005em]", st === "pending" ? "text-fm-faint" : st === "active" ? "text-fm-accent-text" : "text-fm-muted")}>
-                <span className="mr-1 font-mono text-fm-faint">{i + 1}</span>{s.label}
-              </span>
-            </li>
-          );
-        })}
-      </ol>
+      <div className={cn("relative", className)} data-progress={at}>
+        <div className="pointer-events-none absolute top-[10px] h-[2px]" style={{ left: `${half}%`, right: `${half}%` }} aria-hidden>
+          <div className="absolute inset-0 rounded-full bg-fm-hover" />
+          <div className="absolute inset-0 origin-left rounded-full bg-fm-text transition-transform duration-500 ease-[var(--fm-ease)] motion-reduce:transition-none" style={{ transform: `scaleX(${frac})` }} data-testid="stepper-progress" />
+        </div>
+        <ol className="relative grid" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }} aria-label="Pipeline progress">
+          {stages.map((s) => {
+            const st = states[s.key] ?? "pending";
+            const ms = timing?.[s.key];
+            return (
+              <li key={s.key} className="flex min-w-0 flex-col items-center text-center" aria-current={st === "active" ? "step" : undefined} data-state={st}>
+                <Dot st={st} />
+                <span className={cn("mt-3 w-full truncate px-1 text-[13px] font-semibold tracking-[-0.01em] max-md:sr-only", st === "pending" ? "text-fm-faint" : st === "active" ? "text-fm-accent-text" : st === "failed" ? "text-fm-fraud" : "text-fm-text")}>
+                  {s.label}
+                </span>
+                <span className="w-full truncate px-1 text-[12px] text-fm-faint max-md:hidden">{s.detail}</span>
+                <span className="mt-0.5 h-[16px] font-mono text-[12px] tabular-nums text-fm-muted max-md:hidden">
+                  {ms != null ? secs(ms) : st === "active" ? "…" : st === "failed" ? "failed" : ""}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+        <p className="mt-3 flex items-baseline justify-between gap-3 text-[14px] md:hidden" aria-hidden>
+          <span className={cn("truncate font-semibold", curState === "active" ? "text-fm-accent-text" : curState === "failed" ? "text-fm-fraud" : "text-fm-text")}>
+            {current ? current.label : "Queued"}
+          </span>
+          <span className="shrink-0 text-[12px] text-fm-muted">{current ? `${at + 1} of ${n}` : `0 of ${n}`}</span>
+        </p>
+      </div>
     );
   }
   return (
@@ -53,19 +111,16 @@ export function Stepper({ stages = PIPELINE_STAGES, states, timing, orientation 
         const st = states[s.key] ?? "pending";
         const last = i === stages.length - 1;
         return (
-          <li key={s.key} className="relative flex gap-3 pb-4 last:pb-0" aria-current={st === "active" ? "step" : undefined}>
-            {!last && <span className={cn("absolute left-[7px] top-[18px] bottom-0 w-px", st === "done" ? "bg-fm-verified-line" : "bg-fm-border")} aria-hidden />}
-            <span className={cn("relative z-10 mt-[2px] flex h-[15px] w-[15px] items-center justify-center",
-              st === "done" && "text-fm-verified", st === "active" && "text-fm-accent", st === "failed" && "text-fm-fraud", st === "pending" && "text-fm-faint")}>
-              {st === "done" ? <SignalGlyph signal="verified" size={13} /> : st === "active" ? <SignalGlyph signal="live" size={15} /> : st === "failed" ? <SignalGlyph signal="fraud" size={13} /> : <SignalGlyph signal="neutral" size={13} />}
-            </span>
+          <li key={s.key} className="relative flex gap-3 pb-5 last:pb-0" aria-current={st === "active" ? "step" : undefined}>
+            {!last && <span className={cn("absolute left-[10px] top-[24px] bottom-0 w-[2px] rounded-full", st === "done" ? "bg-fm-text" : "bg-fm-hover")} aria-hidden />}
+            <Dot st={st} />
             <div className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
               <div className="min-w-0">
-                <div className={cn("text-[14px] font-medium tracking-[-0.01em]", st === "pending" && "text-fm-faint", st === "active" && "text-fm-accent-text")}>{s.label}</div>
-                {s.detail && <div className="truncate font-mono text-[11.5px] text-fm-faint">{s.detail}</div>}
+                <div className={cn("text-[14px] font-semibold tracking-[-0.01em]", st === "pending" && "text-fm-faint", st === "active" && "text-fm-accent-text", st === "failed" && "text-fm-fraud")}>{s.label}</div>
+                {s.detail && <div className="truncate text-[12px] text-fm-faint">{s.detail}</div>}
               </div>
               <span className="shrink-0 font-mono text-[12px] tabular-nums text-fm-muted">
-                {timing?.[s.key] != null ? `${(timing[s.key] / 1000).toFixed(1)}s` : st === "active" ? "…" : ""}
+                {timing?.[s.key] != null ? secs(timing[s.key]) : st === "active" ? "…" : ""}
               </span>
             </div>
           </li>

@@ -60,9 +60,9 @@ const STEP_STATES: Record<string, StageState> = {
 };
 const STEP_FAILED: Record<string, StageState> = { ...STEP_STATES, tracking: "failed", understanding: "done" };
 
-function Section({ index, title, children, className }: { index: string; title: string; children: ReactNode; className?: string }) {
+function Section({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
   return (
-    <Panel index={index} title={title} className={className}>
+    <Panel title={title} className={className}>
       {children}
     </Panel>
   );
@@ -85,9 +85,9 @@ export function Styleguide() {
       </p>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <Section index="01" title="Colour tokens" className="xl:col-span-2"><ColourTokens /></Section>
+        <Section title="Colour tokens" className="xl:col-span-2"><ColourTokens /></Section>
 
-        <Section index="02" title="Typography">
+        <Section title="Typography">
           <Row label="Display · .fm-title"><span className="text-[40px] font-bold leading-[1.05] tracking-[-0.03em]">Paper says 14.</span></Row>
           <Row label="Headline · .fm-headline"><span className="fm-headline">Hold payment until the dock agrees</span></Row>
           <Row label="Body · .fm-body"><span className="fm-body max-w-md">The vision count is 12 against a GRN of 14. Policy clause 4.2 applies, so the shortfall is held.</span></Row>
@@ -102,7 +102,7 @@ export function Styleguide() {
           </Row>
         </Section>
 
-        <Section index="03" title="Signals">
+        <Section title="Signals">
           <Row label="Glyph shapes">
             <div className="grid w-full grid-cols-2 gap-x-6 gap-y-2.5 sm:grid-cols-3">
               {SIGNALS.map(({ s, name, note }) => (
@@ -126,7 +126,7 @@ export function Styleguide() {
           <p className="mt-4 text-[14px] text-fm-muted">Shape + label, never colour alone. Each state keeps its meaning in greyscale, on a projector and for colour-blind viewers.</p>
         </Section>
 
-        <Section index="04" title="Money & quantities">
+        <Section title="Money & quantities">
           <Row label="Money · zero"><Money paise={0} /><Cap>0 paise, faint</Cap></Row>
           <Row label="Money · small"><Money paise={99900} /><Cap>99900 paise</Cap></Row>
           <Row label="Money · lakh grouping"><Money paise={124500000} /><Cap>124500000 paise → ₹12,45,000</Cap></Row>
@@ -139,7 +139,7 @@ export function Styleguide() {
           </Row>
         </Section>
 
-        <Section index="05" title="Buttons">
+        <Section title="Buttons">
           {(["sm", "md", "lg", "xl"] as const).map((size) => (
             <Row key={size} label={`Pill · ${size}`}>
               {(["accent", "primary", "secondary", "ghost", "link"] as const).map((v) => <Button key={v} variant={v} size={size}>{v}</Button>)}
@@ -154,7 +154,7 @@ export function Styleguide() {
           </Row>
         </Section>
 
-        <Section index="06" title="Tags & keys">
+        <Section title="Tags & keys">
           <Row label="Tag tones">
             {(["neutral", "hold", "verified", "fraud", "review", "info", "solid"] as const).map((t) => <Tag key={t} tone={t}>{t}</Tag>)}
           </Row>
@@ -163,12 +163,12 @@ export function Styleguide() {
           <Row label="Brand"><BrandMark size={22} /><Wordmark /></Row>
         </Section>
 
-        <Section index="07" title="LiveCounter">
-          <Row label="Odometer"><LiveCounter value={count} digits={2} className="text-[56px] tracking-[-0.04em] text-fm-hold" label="Boxes counted" /><Button variant="hold" onClick={() => setCount((c) => (c >= 99 ? 0 : c + 1))}>Count one more</Button></Row>
-          <p className="mt-4 text-[14px] text-fm-muted">Each digit rolls on its own. Used for the vision cell while tracks accumulate, so a judge can watch the count settle on a number.</p>
+        <Section title="LiveCounter">
+          <Row label="Live count"><LiveCounter value={count} className="text-[56px] text-fm-hold" label="Boxes counted" /><Button variant="hold" onClick={() => setCount((c) => (c >= 99 ? 0 : c + 1))}>Count one more</Button></Row>
+          <p className="mt-4 text-[14px] text-fm-muted">Each new integer slides into place, one step per confirmed SAM track. Never interpolated: the counter only shows values that were observed.</p>
         </Section>
 
-        <Section index="08" title="KPI strip" className="xl:col-span-2">
+        <Section title="KPI strip" className="xl:col-span-2">
           <KpiStrip className="md:grid-cols-4">
             <KpiTile label="Held today" tone="hold" value="₹18,60,500" hint="3 deliveries" spark={[2, 4, 3, 6, 5, 9, 8]} />
             <KpiTile label="Verified" tone="verified" value="9" unit="/ 12" delta="+2 vs yesterday" />
@@ -177,7 +177,7 @@ export function Styleguide() {
           </KpiStrip>
         </Section>
 
-        <Section index="09" title="Four-Match" className="xl:col-span-2">
+        <Section title="Four-Match" className="xl:col-span-2">
           <div className="grid gap-5">
             <div>
               <div className="fm-label mb-3">Mismatch · vision disagrees</div>
@@ -196,10 +196,10 @@ export function Styleguide() {
           </div>
         </Section>
 
-        <Section index="10" title="Stepper">
+        <Section title="Stepper">
           <div className="grid gap-5 sm:grid-cols-2">
-            <div><div className="fm-label mb-2">Vertical · running</div><Stepper states={STEP_STATES} timing={{ uploading: 1200, understanding: 8400 }} /></div>
-            <div><div className="fm-label mb-2">Vertical · failed</div><Stepper states={STEP_FAILED} timing={{ uploading: 900 }} /></div>
+            <div><div className="fm-label mb-2">Vertical · running</div><Stepper orientation="vertical" states={STEP_STATES} timing={{ uploading: 1200, understanding: 8400 }} /></div>
+            <div><div className="fm-label mb-2">Vertical · failed</div><Stepper orientation="vertical" states={STEP_FAILED} timing={{ uploading: 900 }} /></div>
           </div>
           <div className="mt-6 border-t border-fm-border pt-5">
             <div className="fm-label mb-2">Horizontal</div>
@@ -207,14 +207,14 @@ export function Styleguide() {
           </div>
         </Section>
 
-        <Section index="11" title="DataTable">
+        <Section title="DataTable">
           <p className="mb-3 text-[14px] text-fm-muted">Sortable headers, mono right-aligned numbers, keyboard navigation off here (one table per page may own j / k).</p>
-          <div className="-mx-5 -mb-5 border-t border-fm-border">
+          <div className="-mx-6 -mb-6 border-t border-fm-border max-sm:-mx-5 max-sm:-mb-5">
             <DataTable<Sample> columns={SAMPLE_COLS} data={SAMPLE} label="Sample table" />
           </div>
         </Section>
 
-        <Section index="12" title="Empty, error, skeleton" className="xl:col-span-2">
+        <Section title="Empty, error, skeleton" className="xl:col-span-2">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-fm-sm bg-fm-raised"><EmptyState title="No deliveries yet" description="Upload dock video against a purchase order to start." /></div>
             <div className="rounded-fm-sm bg-fm-raised"><ErrorState message="The decision service did not answer in time." action={<Button size="sm">Retry</Button>} /></div>

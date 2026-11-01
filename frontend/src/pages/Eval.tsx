@@ -5,7 +5,6 @@ import { ErrorState, Skeleton } from "../components/ui/EmptyState";
 import { KpiStrip, KpiTile } from "../components/ui/KpiTile";
 import { PageHeader, Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { Tag } from "../components/ui/Tag";
 import { api } from "../lib/api";
 import { IS_MOCK } from "../lib/demo";
 import { VERDICT_LABEL, type EvalCountRow, type EvalRead } from "../types/api";
@@ -32,7 +31,7 @@ const metricCols: ColumnDef<Metric, unknown>[] = [
 const countCols: ColumnDef<EvalCountRow, unknown>[] = [
   { accessorKey: "scenario", header: "Scenario", cell: (i) => <span className="font-mono">{i.getValue<string>()}</span> },
   { accessorKey: "category", header: "Category", cell: (i) => <span className="text-fm-muted">{i.getValue<string>().replaceAll("_", " ")}</span> },
-  { accessorKey: "noun_phrase", header: "SAM noun phrase", cell: (i) => <span className="font-mono text-fm-info">“{i.getValue<string>()}”</span> },
+  { accessorKey: "noun_phrase", header: "SAM noun phrase", cell: (i) => <span>“{i.getValue<string>()}”</span> },
   { accessorKey: "true_count", header: "True", meta: { align: "right" }, cell: (i) => <span className={num}>{i.getValue<number>()}</span> },
   { accessorKey: "observed_count", header: "Observed", meta: { align: "right" }, cell: (i) => <span className={num}>{i.getValue<number>()}</span> },
   { accessorKey: "max_visible", header: "Max visible", meta: { align: "right" }, cell: (i) => <span className={`${num} text-fm-muted`}>{i.getValue<number>()}</span> },
@@ -45,7 +44,7 @@ const countCols: ColumnDef<EvalCountRow, unknown>[] = [
 ];
 
 const latencyCols: ColumnDef<Latency, unknown>[] = [
-  { accessorKey: "model", header: "Model", cell: (i) => <Tag>{i.getValue<string>()}</Tag> },
+  { accessorKey: "model", header: "Model", cell: (i) => <span className="font-mono text-[13px]">{i.getValue<string>()}</span> },
   { accessorKey: "role", header: "Role", cell: (i) => <span className="text-fm-muted">{i.getValue<string>()}</span> },
   { accessorKey: "calls", header: "Calls", meta: { align: "right" }, cell: (i) => <span className={num}>{i.getValue<number>()}</span> },
   { accessorKey: "p50_ms", header: "p50", meta: { align: "right" }, cell: (i) => ms(i.getValue<number | null>()) },
@@ -56,9 +55,9 @@ export function Eval() {
   const q = useQuery({ queryKey: ["eval"], queryFn: api.eval });
   const header = (
     <PageHeader
-      eyebrow={<>Evaluation · ground truth <span className="font-mono normal-case tracking-normal">data/ground_truth.json</span></>}
-      title="How often is the agent right?"
-      meta={<span>Counts come only from SAM 3.1 tracks merged in Python; the model never counts.</span>}
+      eyebrow="Evaluation against ground truth"
+      title="How often is it right?"
+      meta={<span>Counts come only from SAM 3.1 tracks merged in Python. The model never counts.</span>}
     />
   );
 
@@ -67,8 +66,8 @@ export function Eval() {
     return (
       <div>
         {header}
-        <Skeleton className="mb-3 h-[88px] w-full" />
-        <div className="grid gap-3 lg:grid-cols-2"><Skeleton className="h-[260px]" /><Skeleton className="h-[260px]" /></div>
+        <Skeleton className="mb-6 h-[148px] w-full rounded-fm" />
+        <div className="grid gap-6 lg:grid-cols-2"><Skeleton className="h-[280px] rounded-fm" /><Skeleton className="h-[280px] rounded-fm" /></div>
       </div>
     );
   }
@@ -84,46 +83,46 @@ export function Eval() {
   const noLatency = d.latency.every((l) => l.p50_ms === null && l.p95_ms === null);
 
   return (
-    <div className="fm-rise">
+    <div>
       {header}
-      <KpiStrip className="mb-3 md:grid-cols-5">
-        <KpiTile label="Verdict accuracy" tone="verified" value={IS_MOCK ? "—" : pct(d.verdict_accuracy)} unit={IS_MOCK ? undefined : "%"} hint={IS_MOCK ? "measured on the live agent run" : "served verdict vs ground truth"} />
+      <KpiStrip className="mb-6 grid-cols-2 lg:grid-cols-5 max-lg:divide-x max-md:[&>*:nth-child(odd)]:border-l-0">
+        <KpiTile label="Verdict accuracy" tone={IS_MOCK ? "neutral" : "verified"} value={IS_MOCK ? "—" : pct(d.verdict_accuracy)} unit={IS_MOCK ? undefined : "%"} hint={IS_MOCK ? "Measured on the live agent run" : "Served verdict vs ground truth"} />
         <KpiTile label="Video count accuracy" tone="verified" value={pct(d.count_accuracy)} unit="%" hint="SAM tracks vs manifest" />
         <KpiTile label="Image count accuracy" value={pctOrDash(imgSummary?.accuracy)} unit={imgSummary?.accuracy == null ? undefined : "%"} hint={imgHint} />
-        <KpiTile label="Cases evaluated" value={d.cases_total} hint="synthetic scenarios" />
-        <KpiTile label="Video lines PASS" tone={pass === d.counts.length ? "verified" : "hold"} value={<>{pass}<span className="text-fm-faint"> / {d.counts.length}</span></>} hint="count within manifest" />
+        <KpiTile label="Cases evaluated" value={d.cases_total} hint="Synthetic scenarios" />
+        <KpiTile label="Video lines passing" tone={pass === d.counts.length ? "verified" : "hold"} value={<>{pass}<span className="text-fm-faint"> / {d.counts.length}</span></>} hint="Count within manifest" />
       </KpiStrip>
       {IS_MOCK && (
-        <p className="mb-3 rounded-fm border border-dashed border-fm-review-line bg-fm-review-bg px-3 py-2 text-[12px] text-fm-muted">
-          <span className="fm-label mr-2 !text-fm-review">Demo replay</span>
-          Count rows are the real SAM 3.1 run in <span className="font-mono">data/eval_counts.json</span>. Verdicts are replayed from ground truth until the decision agent runs live, so verdict accuracy here is not yet a measurement.
+        <p className="mb-6 rounded-fm bg-fm-panel px-6 py-4 text-[14px] leading-relaxed text-fm-muted">
+          <span className="font-semibold text-fm-text">Demo replay. </span>
+          Count rows are the real SAM 3.1 run in <span className="font-mono text-[13px]">data/eval_counts.json</span>. Verdicts are replayed from ground truth until the decision agent runs live, so verdict accuracy here is not yet a measurement.
         </p>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-        <Panel index="01" title="Verdict metrics" padded={false}>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        <Panel title="Verdict metrics" subtitle="Per label, served verdicts" padded={false} bodyClassName="px-2 pb-2">
           <DataTable<Metric> columns={metricCols} data={d.verdict_metrics} label="Verdict metrics" />
-          <p className="border-t border-fm-border px-3 py-2 font-mono text-[11.5px] text-fm-muted">
-            Macro precision {macro?.macro_precision == null ? "—" : macro.macro_precision.toFixed(2)} · recall {macro?.macro_recall == null ? "—" : macro.macro_recall.toFixed(2)} · F1 {macro?.macro_f1 == null ? "—" : macro.macro_f1.toFixed(2)}
-            {macro ? "" : " (served verdicts not measured in the eval report)"}
+          <p className="border-t border-fm-border px-4 pt-3 text-[13px] text-fm-muted">
+            Macro precision <span className="font-mono">{macro?.macro_precision == null ? "—" : macro.macro_precision.toFixed(2)}</span>, recall <span className="font-mono">{macro?.macro_recall == null ? "—" : macro.macro_recall.toFixed(2)}</span>, F1 <span className="font-mono">{macro?.macro_f1 == null ? "—" : macro.macro_f1.toFixed(2)}</span>
+            {macro ? "." : " (served verdicts not measured in the eval report)."}
           </p>
-          <p className="border-t border-fm-border px-3 py-2 text-[11.5px] text-fm-muted">
-            Precision = correct holds of this kind / all predicted. Recall = caught / all in ground truth. A label with zero support shows “—” because the ratio is undefined, not zero.
+          <p className="px-4 pb-3 pt-2 text-[12px] text-fm-faint">
+            Precision is correct holds of this kind over all predicted; recall is caught over all in ground truth. A label with zero support shows “—” because the ratio is undefined, not zero.
           </p>
         </Panel>
-        <Panel index="02" title="Confusion matrix"><ConfusionMatrix data={d.confusion} /></Panel>
+        <Panel title="Confusion matrix" subtitle="Rows are ground truth, columns the agent"><ConfusionMatrix data={d.confusion} /></Panel>
       </div>
 
-      <Panel index="03" title="Count accuracy per video" subtitle="true vs observed" padded={false} className="mt-3">
+      <Panel title="Count accuracy per video" subtitle="True count vs SAM-observed count" padded={false} className="mt-6" bodyClassName="px-2 pb-2">
         <CountBars rows={d.counts} />
         <DataTable<EvalCountRow> columns={countCols} data={d.counts} label="Count accuracy per video" />
       </Panel>
 
       <ImageEvalPanel results={res} />
 
-      <Panel index="05" title="Model latency" subtitle="p50 / p95 over live calls" padded={false} className="mt-3">
+      <Panel title="Model latency" subtitle="p50 / p95 over live calls" padded={false} className="mt-6" bodyClassName="px-2 pb-2">
         <DataTable<Latency> columns={latencyCols} data={d.latency} label="Model latency" />
-        {noLatency && <p className="border-t border-fm-border px-3 py-2 text-[11.5px] text-fm-muted">Latency fills in from the model_calls table when the backend runs live.</p>}
+        {noLatency && <p className="border-t border-fm-border px-4 py-3 text-[13px] text-fm-muted">Latency fills in from the model_calls table when the backend runs live.</p>}
       </Panel>
 
       <CostPanel results={res} />

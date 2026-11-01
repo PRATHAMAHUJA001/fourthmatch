@@ -4,7 +4,9 @@
  *  Under prefers-reduced-motion the chapters render as plain stacked sections in their final state. */
 import { Lock } from "lucide-react";
 import { useRef, type CSSProperties, type ReactNode } from "react";
+import { DemoSealNote } from "../../components/evidence/EvidenceSeal";
 import { StatusBadge } from "../../components/ui/StatusBadge";
+import { IS_MOCK } from "../../lib/demo";
 import { SignalGlyph } from "../../components/ui/Glyph";
 import { cn } from "../../lib/cn";
 import { formatINR, formatPct, shortHash } from "../../lib/format";
@@ -66,9 +68,11 @@ function PaperChapter({ detail, line }: StoryProps) {
 
 function CameraChapter({ line, t, frame, detail }: StoryProps & { t: number }) {
   const observed = line.observed_count ?? 0;
-  const k = easeOut(range(t, 0.08, 0.62));
-  const count = Math.round(observed * k);
   const tracks = line.perception?.track_ids ?? [];
+  // The figure only steps through real integers: one per SAM track ID lighting up. With no
+  // track list to reveal, it shows the measured count directly.
+  const lit = Math.round(tracks.length * easeOut(range(t, 0.08, 0.62)));
+  const count = tracks.length ? lit : observed;
   return (
     <div className="relative h-full w-full overflow-hidden bg-black text-white">
       <img
@@ -165,8 +169,8 @@ function MatchChapter({ line, t, detail }: StoryProps & { t: number }) {
 }
 
 function VerdictChapter({ detail, line, t }: StoryProps & { t: number }) {
-  const held = detail.held_paise;
-  const shown = Math.round((held / 100) * easeOut(range(t, 0.06, 0.5))) * 100;
+  // Money is never tweened: the computed figure fades and settles in, nothing in between.
+  const appear = easeOut(range(t, 0.04, 0.32));
   const rules = line.cited_rules;
   const short = line.observed_count !== null ? line.invoiced_qty - line.observed_count : null;
   return (
@@ -184,7 +188,13 @@ function VerdictChapter({ detail, line, t }: StoryProps & { t: number }) {
           <span className="font-mono text-[12px] text-fm-faint">{detail.po_number}</span>
         </div>
         <div className="mt-8 flex items-baseline gap-3">
-          <span className="fm-figure text-[clamp(56px,6.4vw,96px)] leading-none text-fm-hold">{formatINR(shown)}</span>
+          <span
+            className="fm-figure origin-left text-[clamp(56px,6.4vw,96px)] leading-none text-fm-hold will-change-transform"
+            style={{ opacity: appear, transform: `scale(${0.94 + 0.06 * appear})` }}
+            data-testid="story-held"
+          >
+            {formatINR(detail.held_paise)}
+          </span>
           <span className="text-[17px] font-semibold text-fm-muted">held</span>
         </div>
         <ul className="mt-8 flex flex-col gap-5 border-t border-fm-border pt-6">
@@ -195,13 +205,15 @@ function VerdictChapter({ detail, line, t }: StoryProps & { t: number }) {
             </li>
           ))}
         </ul>
-        {detail.evidence_pack && (
+        {detail.evidence_pack && (IS_MOCK ? (
+          <DemoSealNote className="mt-6 border-t border-fm-border pt-5" />
+        ) : (
           <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-fm-border pt-5 text-[13px] text-fm-muted">
             <Lock size={14} strokeWidth={2} aria-hidden />
             Evidence pack sealed
             <span className="whitespace-nowrap font-mono text-fm-text">sha256 {shortHash(detail.evidence_pack.sha256, 10)}</span>
           </p>
-        )}
+        ))}
       </div>
     </div>
   );

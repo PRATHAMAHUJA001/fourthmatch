@@ -14,20 +14,20 @@ interface Props {
   names?: Record<string, string>;
 }
 
-/** Flat tooltip panel shared by every chart: raised surface, strong hairline, mono values. */
+/** Floating tooltip shared by every chart: white layer with the float shadow, mono values. */
 export function ChartTooltip({ active, payload, label, title, kind = "count", names }: Props) {
   if (!active || !payload || payload.length === 0) return null;
   return (
-    <div className="min-w-[132px] rounded-fm-sm border border-fm-border-strong bg-fm-raised px-2.5 py-2 text-[11.5px]">
-      <div className="fm-label mb-1.5 !text-fm-text">{title ? title(label, payload) : label}</div>
-      <ul className="flex flex-col gap-1">
+    <div className="min-w-[160px] rounded-[14px] bg-fm-panel px-3.5 py-3 text-[13px] shadow-fm-float">
+      <div className="mb-2 text-[13px] font-semibold text-fm-text">{title ? title(label, payload) : label}</div>
+      <ul className="flex flex-col gap-1.5">
         {payload.map((p) => {
           const key = String(p.dataKey ?? p.name);
           const v = typeof p.value === "number" ? p.value : Number(p.value);
           return (
             <li key={key} className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-1.5 text-fm-muted">
-                <span className="h-[2px] w-2.5" style={{ background: p.color }} aria-hidden />
+                <span className="h-2 w-2 rounded-full" style={{ background: p.color }} aria-hidden />
                 {names?.[key] ?? p.name}
               </span>
               <span className="font-mono tabular-nums text-fm-text">{kind === "money" ? formatINR(v) : v}</span>

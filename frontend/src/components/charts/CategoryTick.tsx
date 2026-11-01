@@ -4,7 +4,7 @@ import { chartTheme } from "../../tokens/tokens";
 export function CategoryTick({ x, y, payload }: { x?: number; y?: number; payload?: { value: string } }) {
   const t = chartTheme();
   return (
-    <text x={(x ?? 0) - 4} y={y} dy={3.5} textAnchor="end" fill={t.tick} fontSize={10.5} fontFamily="var(--fm-font-mono)">
+    <text x={(x ?? 0) - 10} y={y} dy={4} textAnchor="end" fill={t.text} fontSize={13} fontFamily="var(--fm-font-sans)" letterSpacing="-0.01em">
       {payload?.value}
     </text>
   );

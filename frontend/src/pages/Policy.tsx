@@ -59,37 +59,35 @@ export function Policy() {
   }
 
   return (
-    <div className="mx-auto max-w-[1280px]">
+    <div>
       <PageHeader
-        eyebrow={policy ? `Policy · ${policy.document_no}` : "Policy"}
-        title={policy?.title ?? <Skeleton className="h-6 w-80" />}
+        eyebrow={policy ? `Policy ${policy.document_no}` : "Policy"}
+        title={policy?.title ?? <Skeleton className="h-12 w-96 max-w-full" />}
         meta={policy && (
           <>
-            <span>Version <span className="font-mono text-fm-text">{policy.version}</span></span>
-            <span>Effective <span className="font-mono text-fm-text">{formatDate(policy.effective_date)} {policy.effective_date.slice(0, 4)}</span></span>
-            <span><span className="font-mono text-fm-text">{policy.clauses.length}</span> clauses</span>
+            <span>Version {policy.version}, effective {formatDate(policy.effective_date)} {policy.effective_date.slice(0, 4)}</span>
+            <span>{policy.clauses.length} clauses</span>
             <span>
-              <span className="font-mono text-fm-verified">{approved}</span> rules approved
-              {" / "}
-              <span className={cn("font-mono", pending > 0 ? "text-fm-hold" : "text-fm-text")}>{pending}</span> pending
+              <span className="text-fm-verified">{approved} rules approved</span>
+              {pending > 0 && <>, <span className="text-fm-hold">{pending} pending</span></>}
             </span>
           </>
         )}
       />
 
-      <div className="mb-4">
-        {policy ? <WhatIf policy={policy} caseCount={casesQ.data?.length ?? null} /> : <Skeleton className="h-56 w-full" />}
+      <div className="mb-6">
+        {policy ? <WhatIf policy={policy} caseCount={casesQ.data?.length ?? null} /> : <Skeleton className="h-72 w-full rounded-fm" />}
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[7fr_5fr]">
-        <Panel title="Policy document" subtitle={policy ? `${policy.document_no} · v${policy.version}` : undefined} padded={false}>
+      <div className="grid items-start gap-6 lg:grid-cols-[7fr_5fr]">
+        <Panel title="The document" subtitle="Hover a clause to find the rule compiled from it." padded={false}>
           {!policy ? (
-            <SkeletonRows rows={8} className="p-3" />
+            <SkeletonRows rows={8} className="p-6" />
           ) : (
-            <div className="px-3 py-2">
+            <div className="px-4 pb-6 pt-2 max-sm:px-2">
               {sections.map((s) => (
                 <Fragment key={s.name}>
-                  <h3 className="fm-label mt-4 border-b border-fm-border pb-1 first:mt-1">{s.name}</h3>
+                  <h3 className="mx-3 mb-1 mt-8 text-[21px] font-semibold tracking-[-0.02em] first:mt-4">{s.name}</h3>
                   {s.clauses.map((c) => {
                     const has = ruledClauses.has(c.clause_id);
                     const on = highlighted === c.clause_id;
@@ -101,13 +99,15 @@ export function Policy() {
                         onMouseEnter={() => setHover({ clause: c.clause_id, from: "clause" })}
                         onMouseLeave={() => setHover(null)}
                         className={cn(
-                          "relative grid grid-cols-[56px_1fr] gap-x-2 border-b border-fm-border py-2 pl-2 pr-2 transition-colors duration-[var(--fm-motion)] last:border-0",
-                          on && "bg-fm-hold-bg",
+                          "grid scroll-mt-24 grid-cols-[52px_1fr] gap-x-3 rounded-[14px] px-3 py-3 transition-colors duration-200 max-sm:grid-cols-[44px_1fr]",
+                          on ? "bg-fm-hold-bg" : has && "hover:bg-fm-raised/70",
                         )}
                       >
-                        {has && <span className="absolute inset-y-1 left-0 w-[2px] bg-fm-hold" aria-hidden />}
-                        <span className={cn("pt-px font-mono text-[12px]", has ? "text-fm-hold" : "text-fm-faint")}>§{c.clause_id}</span>
-                        <p className="max-w-[68ch] text-[13.5px] leading-[1.55]">{c.text}</p>
+                        <span className={cn("pt-px text-[15px] font-semibold tabular-nums", has ? "text-fm-text" : "text-fm-faint")}>
+                          {c.clause_id}
+                          {has && <span className="ml-1 inline-block h-1.5 w-1.5 -translate-y-0.5 rounded-full bg-fm-hold-fill align-middle" title="A rule is compiled from this clause" aria-label="has a compiled rule" />}
+                        </span>
+                        <p className={cn("max-w-[68ch] text-[15px] leading-[1.6]", has ? "text-fm-text" : "text-fm-muted")}>{c.text}</p>
                       </div>
                     );
                   })}
@@ -119,17 +119,17 @@ export function Policy() {
 
         <Panel
           title="Compiled rules"
-          subtitle={rulesQ.data ? `${rules.length} rules` : undefined}
+          subtitle={rulesQ.data ? `${rules.length} rules, each approved by a person before it can fire` : undefined}
           padded={false}
-          className="lg:sticky lg:top-[76px] lg:max-h-[calc(100vh-92px)]"
-          bodyClassName="fm-scroll overflow-y-auto"
+          className="lg:sticky lg:top-[calc(var(--fm-nav-h)+24px)] lg:max-h-[calc(100vh-var(--fm-nav-h)-48px)]"
+          bodyClassName="fm-scroll overflow-y-auto px-2 pb-2 pt-2"
         >
           {rulesQ.isError ? (
             <ErrorState message={rulesQ.error instanceof Error ? rulesQ.error.message : "Could not load rules."} />
           ) : !rulesQ.data ? (
-            <SkeletonRows rows={5} className="p-3" />
+            <SkeletonRows rows={5} className="p-4" />
           ) : (
-            <ul>
+            <ul className="flex flex-col gap-0.5">
               {rules.map((r) => (
                 <RuleCard
                   key={r.id}

@@ -50,3 +50,17 @@ describe("EvidenceSeal", () => {
     expect(await screen.findByText("Could not verify")).toBeInTheDocument();
   });
 });
+
+describe("EvidenceSeal in the demo build", () => {
+  it("never shows the dataset's hash as sealed and does not call verify", async () => {
+    let called = false;
+    server.use(http.get("/api/evidence/:hash/verify", () => { called = true; return HttpResponse.json({}); }));
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={qc}><EvidenceSeal pack={pack} demo /></QueryClientProvider>);
+    expect(screen.getByTestId("demo-seal-note")).toHaveTextContent(/sealed .* on the live server/);
+    expect(screen.queryByText("ab12cd34ef56")).toBeNull();
+    expect(screen.queryByText("Verified untouched")).toBeNull();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(called).toBe(false);
+  });
+});
