@@ -15,6 +15,7 @@ from datetime import date
 from pydantic import BaseModel, Field
 
 from app.domain.enums import Verdict
+from app.domain.schemas.decision_agent import DecisionRead, PerceptionRead
 
 
 class CitedRule(BaseModel):
@@ -50,6 +51,7 @@ class CaseLineRead(BaseModel):
     at_risk_paise: int = 0
     signoff_roles: list[str] = Field(default_factory=list)
     cited_rules: list[CitedRule] = Field(default_factory=list)
+    perception: PerceptionRead | None = None  # SAM-backed detail (video lines only)
 
 
 class CaseSummary(BaseModel):
@@ -68,6 +70,10 @@ class CaseSummary(BaseModel):
     policy_version: str | None = None
     lines_evaluated: int = 0
     lines_total: int = 0
+    discrepancy_types: list[str] = Field(default_factory=list)  # derived from computed facts
+    clauses: list[str] = Field(default_factory=list)  # cited policy clauses
+    evidence_source: str = "none"  # "video" | "document" | "none"
+    decided_at: str | None = None  # ISO timestamp of the latest stored agent decision
 
 
 class CaseDetail(CaseSummary):
@@ -77,3 +83,6 @@ class CaseDetail(CaseSummary):
     triggered_rule_ids: list[str] = Field(default_factory=list)
     signoff_roles: list[str] = Field(default_factory=list)
     lines: list[CaseLineRead] = Field(default_factory=list)
+    video_url: str | None = None
+    decision: DecisionRead | None = None  # latest stored agent decision (see CASES.md §1)
+    invoice_total_paise: int | None = None

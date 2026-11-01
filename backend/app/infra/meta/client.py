@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from app.core.errors import UpstreamModelError, ValidationError
 from app.core.logging import get_logger
 from app.domain.schemas.config import ModelConfig
+from app.domain.schemas.decision_agent import ToolCall, ToolTurn
 from app.infra.cache import Sha256Cache
 from app.infra.db.models.jobs import ModelCall
 
@@ -283,6 +284,75 @@ class MetaModelClient:
             output_schema=output_schema, session=session,
             reasoning_effort=reasoning_effort, cache_key=cache_key,
         )
+
+    async def call_tool_turn(
+        self,
+        *,
+        purpose: str,
+        model: str,
+        instructions: str,
+        input_items: list[dict[str, Any]],
+        tools: list[dict[str, Any]],
+        session: Session | None = None,
+        reasoning_effort: str | None = "high",
+    ) -> ToolTurn:
+        """One turn of the tool-calling loop, stateless replay (MODEL_NOTES §3).
+
+        The caller replays prior ``output_items`` plus ``function_call_output``
+        items in ``input_items``. include=reasoning.encrypted_content is always
+        sent and previous_response_id never is (verified 400 otherwise).
+        Retry with jitter, never on 4xx; one model_calls row per turn.
+        """
+        if model not in self._allowed_models():
+            raise ValidationError(
+                f"model {model!r} did not come from ModelConfig", code="model_output_invalid"
+            )
+        last_error: Exception | None = None
+        for attempt in range(1, self._max_attempts + 1):
+            started = time.perf_counter()
+            try:
+                kwargs: dict[str, Any] = {
+                    "model": model,
+                    "instructions": instructions,
+                    "input": input_items,
+                    "tools": tools,
+                    "include": ["reasoning.encrypted_content"],
+                }
+                if reasoning_effort:
+                    kwargs["reasoning"] = {"effort": reasoning_effort}
+                resp = await self._client.responses.create(**kwargs)
+                latency_ms = int((time.perf_counter() - started) * 1000)
+                items = list(resp.output)
+                turn = ToolTurn(
+                    output_items=[item.model_dump() for item in items],
+                    calls=[
+                        ToolCall(name=item.name, arguments=item.arguments, call_id=item.call_id)
+                        for item in items
+                        if getattr(item, "type", None) == "function_call"
+                    ],
+                    output_text=getattr(resp, "output_text", "") or "",
+                )
+                self._write_call(session, purpose=purpose, model=model, latency_ms=latency_ms,
+                                 usage=getattr(resp, "usage", None), status="ok", cache_hit=False)
+                logger.info("model call ok", extra={"extra_data": {
+                    "model": model, "latency_ms": latency_ms, "purpose": purpose,
+                    "input_tokens": getattr(getattr(resp, "usage", None), "input_tokens", None),
+                    "output_tokens": getattr(getattr(resp, "usage", None), "output_tokens", None),
+                    "cache_hit": False}})
+                return turn
+            except APIStatusError as exc:
+                last_error = exc
+                if 400 <= exc.status_code < 500:
+                    break  # never retry 4xx
+                if attempt < self._max_attempts:
+                    await asyncio.sleep((2 ** (attempt - 1)) * 0.5 * (0.5 + random.random()))
+            except Exception as exc:  # connection / 5xx style failures: retry with jitter
+                last_error = exc
+                if attempt < self._max_attempts:
+                    await asyncio.sleep((2 ** (attempt - 1)) * 0.5 * (0.5 + random.random()))
+        self._write_call(session, purpose=purpose, model=model, latency_ms=None, usage=None,
+                         status="error", cache_hit=False, error=str(last_error))
+        raise UpstreamModelError(f"model call failed ({purpose}): {last_error}", code="model_upstream")
 
 
 async def call_model(

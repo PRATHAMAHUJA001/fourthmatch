@@ -30,6 +30,21 @@ Why not stored `Decision` rows:
 - Recomputing means editing + approving a policy clause changes case
   verdicts immediately, with no stale-decision invalidation problem.
 
+**Update (decision agent, Day 3):** `Decision` rows are now written by the
+payment-decision agent (`backend/app/services/decision_agent.py`), but the
+invariant above is unchanged: the served `verdict`, `held_paise` and
+`at_risk_paise` on `CaseSummary`/`CaseDetail` stay the live Python recompute
+through `decide_delivery`, so the Policy what-if and Cases can never
+disagree. The latest stored agent decision is attached separately as
+`CaseDetail.decision` (`DecisionRead`: verdict, `amount_held_paise`, summary,
+action, model, tool `trace`, plus `source` = `agent | fallback`,
+`fallback_reasons` and `stale`). `stale = true` means the stored verdict or
+amount no longer equals the current recompute (e.g. a policy change after the
+decision); the agent's own result is guarded to equal the recompute at write
+time, and a decision that cannot be verified is replaced by the deterministic
+Python decision (`source = "fallback"`). `decided_at` is the stored decision's
+timestamp.
+
 Semantics that must hold:
 
 | Situation | Verdict served |

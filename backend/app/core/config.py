@@ -66,6 +66,7 @@ class Settings(BaseSettings):
         },
         validation_alias=AliasChoices("CATEGORY_GENERIC_NOUNS", "category_generic_nouns"),
     )
+    max_agent_turns: int = Field(default=40, ge=1, validation_alias=AliasChoices("MAX_AGENT_TURNS", "max_agent_turns"))
     storage_root: Path = Field(
         default=REPO_ROOT / "storage",
         validation_alias=AliasChoices("STORAGE_ROOT", "storage_root"),

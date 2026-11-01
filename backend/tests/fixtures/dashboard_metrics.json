@@ -1,0 +1,44 @@
+{
+  "confusion_pairs": [
+    ["approve", "approve"],
+    ["partial_pay", "partial_pay"],
+    ["partial_pay", "partial_pay"],
+    ["partial_pay", "hold"],
+    ["hold", "hold"],
+    ["hold", "partial_pay"],
+    ["hold", "hold"],
+    ["approve", "human_review"]
+  ],
+  "expected_matrix": [
+    [1, 0, 0, 1],
+    [0, 2, 1, 0],
+    [0, 1, 2, 0],
+    [0, 0, 0, 0]
+  ],
+  "expected_metrics": {
+    "approve": {"precision": 1.0, "recall": 0.5, "support": 2},
+    "partial_pay": {"precision": 0.6666666666666666, "recall": 0.6666666666666666, "support": 3},
+    "hold": {"precision": 0.6666666666666666, "recall": 0.6666666666666666, "support": 3},
+    "human_review": {"precision": 0.0, "recall": null, "f1": null, "support": 0}
+  },
+  "percentile_values": [10, 20, 30, 40, 50],
+  "model_calls": [
+    {"model": "m-a", "purpose": "understanding", "latency_ms": 100, "cache_hit": false},
+    {"model": "m-a", "purpose": "understanding", "latency_ms": 200, "cache_hit": false},
+    {"model": "m-a", "purpose": "understanding", "latency_ms": 300, "cache_hit": false},
+    {"model": "m-a", "purpose": "understanding", "latency_ms": 2, "cache_hit": true},
+    {"model": "m-b", "purpose": "policy_compile", "latency_ms": null, "cache_hit": false},
+    {"model": "m-b", "purpose": "policy_compile", "latency_ms": 7, "cache_hit": true}
+  ],
+  "trend": {
+    "today": "2026-11-01",
+    "events": [
+      ["2026-11-01", true],
+      ["2026-11-01", false],
+      ["2026-10-30", true],
+      ["2026-10-03", false],
+      ["2026-10-02", true],
+      ["2026-11-02", true]
+    ]
+  }
+}

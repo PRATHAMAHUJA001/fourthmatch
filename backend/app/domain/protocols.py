@@ -7,6 +7,8 @@ from typing import Any, Protocol, TypeVar, runtime_checkable
 
 from pydantic import BaseModel
 
+from app.domain.schemas.decision_agent import DecisionRecord, ToolTurn
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -79,9 +81,30 @@ class CaseRepository(Protocol):
 
     def list_approved_rules(self) -> list[Any]: ...
 
+    def get_delivery(self, delivery_id: int) -> Any | None: ...
+
+    def get_latest_decision(self, po_id: int) -> Any | None: ...
+
+    def list_tracks(self, sam_run_id: int) -> list[Any]: ...
+
     def is_duplicate_invoice(
         self, *, vendor_id: int, invoice_number: str, exclude_invoice_id: int
     ) -> bool: ...
+
+
+@runtime_checkable
+class DecisionRepository(Protocol):
+    """Writes for the decision agent: the decisions row and its job events."""
+
+    def save_decision(self, record: DecisionRecord) -> int: ...
+
+    def append_event(
+        self, job_id: str, event_type: str, message: str, payload: dict[str, Any] | None = None
+    ) -> None: ...
+
+    def create_decision_job(self, *, delivery_id: int, po_id: int) -> str: ...
+
+    def finish_job(self, job_id: str, *, error_code: str | None = None, message: str | None = None) -> None: ...
 
 
 @runtime_checkable
@@ -108,6 +131,18 @@ class ModelClient(Protocol):
         output_schema: type[T],
         reasoning_effort: str | None = None,
     ) -> T: ...
+
+    async def call_tool_turn(
+        self,
+        *,
+        purpose: str,
+        model: str,
+        instructions: str,
+        input_items: list[dict[str, Any]],
+        tools: list[dict[str, Any]],
+        session: Any | None = None,
+        reasoning_effort: str | None = None,
+    ) -> ToolTurn: ...
 
     async def call_image_model(
         self,

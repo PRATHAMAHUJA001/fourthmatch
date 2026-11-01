@@ -9,8 +9,8 @@ from __future__ import annotations
 from sqlalchemy.orm import Session, joinedload
 
 from app.domain.enums import RuleStatus
-from app.infra.db.models.decision import Rule
-from app.infra.db.models.perception import PerceptionResult
+from app.infra.db.models.decision import Decision, Rule
+from app.infra.db.models.perception import PerceptionResult, Track
 from app.infra.db.models.purchasing import (
     Delivery,
     Grn,
@@ -96,6 +96,25 @@ class SqlCaseRepository:
             self._session.query(Rule)
             .filter(Rule.status == RuleStatus.APPROVED.value, Rule.rule_id.isnot(None))
             .order_by(Rule.id)
+            .all()
+        )
+
+    def get_delivery(self, delivery_id: int) -> Delivery | None:
+        return self._session.get(Delivery, delivery_id)
+
+    def get_latest_decision(self, po_id: int) -> Decision | None:
+        return (
+            self._session.query(Decision)
+            .filter(Decision.po_id == po_id)
+            .order_by(Decision.id.desc())
+            .first()
+        )
+
+    def list_tracks(self, sam_run_id: int) -> list[Track]:
+        return (
+            self._session.query(Track)
+            .filter(Track.sam_run_id == sam_run_id)
+            .order_by(Track.id)
             .all()
         )
 

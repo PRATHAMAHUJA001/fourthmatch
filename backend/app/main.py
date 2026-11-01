@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
-from app.api.routers import cases, deliveries, health, policies, purchase_orders
+from app.api.routers import cases, dashboard, deliveries, evidence, health, policies, purchase_orders
 from app.core.config import Settings, get_settings
 from app.core.errors import AppError
 from app.core.logging import configure_logging, get_request_id, set_request_id
@@ -55,6 +55,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(cases.router, prefix="/api")
     app.include_router(deliveries.router, prefix="/api")
     app.include_router(policies.router, prefix="/api")
+    app.include_router(dashboard.router, prefix="/api")
+    app.include_router(evidence.router, prefix="/api")
     return app
 
 

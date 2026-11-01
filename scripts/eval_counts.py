@@ -31,7 +31,7 @@ async def main() -> int:
     settings = get_settings()
     factory = make_session_factory(make_engine())
     service = DeliveryService(factory, LocalFileStore(settings.storage_root))
-    pipeline = PerceptionPipeline(settings, factory)
+    pipeline = PerceptionPipeline(settings, factory, run_decision=False)
 
     rows: list[dict] = []
     print(f"{'scenario':<14} {'line':<16} {'true':>4} {'obs':>4} {'phrase':>6} {'generic':>7} "

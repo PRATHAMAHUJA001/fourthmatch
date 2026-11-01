@@ -7,14 +7,17 @@ from __future__ import annotations
 
 import asyncio
 import json
+import mimetypes
 from collections.abc import AsyncIterator, Awaitable, Callable
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Query, UploadFile
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
-from app.api.deps import get_delivery_service, get_pipeline_runner
+from app.api.deps import get_decision_agent, get_delivery_service, get_pipeline_runner
 from app.domain.enums import JobStatus
+from app.domain.schemas.decision_agent import DecisionRead
 from app.domain.schemas.jobs import DeliveryCreated
+from app.services.decision_agent import DecisionAgent
 from app.services.deliveries import DeliveryService
 
 router = APIRouter(tags=["deliveries"])
@@ -67,3 +70,23 @@ async def stream_events(
             await asyncio.sleep(0.5)
 
     return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@router.get("/deliveries/{delivery_id}/video")
+def get_video(
+    delivery_id: int,
+    service: DeliveryService = Depends(get_delivery_service),
+) -> FileResponse:
+    """Stream the stored video (Starlette FileResponse honours Range requests)."""
+    path = service.video_file(delivery_id=delivery_id)
+    media_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+    return FileResponse(path, media_type=media_type)
+
+
+@router.post("/deliveries/{delivery_id}/decide", response_model=DecisionRead)
+async def decide_delivery(
+    delivery_id: int,
+    agent: DecisionAgent = Depends(get_decision_agent),
+) -> DecisionRead:
+    """(Re)run the payment-decision agent for an existing delivery."""
+    return await agent.run_standalone(delivery_id)

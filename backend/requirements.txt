@@ -26,3 +26,5 @@ pytest==8.3.5
 ruff==0.12.9
 mypy==1.17.1
 python-multipart
+reportlab==5.1.0
+charset-normalizer==3.5.2
