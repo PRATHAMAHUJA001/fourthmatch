@@ -13,6 +13,17 @@ export const PIPELINE_STAGES: Stage[] = [
   { key: "verdict", short: "Verdict", label: "Verdict", detail: "Python recompute" },
 ];
 
+/** Optional stage: only shown when the delivery carries a storekeeper voice remark. */
+export const REMARK_STAGE: Stage = {
+  key: "transcribing_remark", short: "Remark", label: "Transcribe remark", detail: "muse-voice-transcribe-1.0",
+};
+
+/** Pipeline stages for a job: inserts the remark stage after upload when the job has one. */
+export function stagesFor(hasRemark: boolean): Stage[] {
+  if (!hasRemark) return PIPELINE_STAGES;
+  return [PIPELINE_STAGES[0], REMARK_STAGE, ...PIPELINE_STAGES.slice(1)];
+}
+
 export type StageState = "pending" | "active" | "done" | "failed";
 
 /** Pipeline stepper. `states` maps stage key to state; `timing` maps key to ms. */

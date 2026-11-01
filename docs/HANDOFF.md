@@ -24,7 +24,7 @@ Last updated: 2026-11-01 (end of build day 5 items; day 6 not started). Read thi
 | 4 | Dashboard UI (all pages, hero case screen) | Done, polished; demo mode complete |
 | 5 | Evidence pack PDF+JSON, SHA-256 verify, debit note | Done, including the case page (`CaseDetail.evidence_pack` via `latest_pack_for_po`; button opens `/api/deliveries/{id}/evidence-pack`) |
 | 5 | Dashboard read endpoints (kpis, analytics, eval, policy) | Done |
-| 5 | Voice remark (muse-voice-transcribe-1.0) | Done: `infra/meta/asr.py`, `domain/remark.py`, `transcribing_remark` stage, remark panel + record/upload in the New delivery dialog. Frontend stepper does not show the `transcribing_remark` stage yet |
+| 5 | Voice remark (muse-voice-transcribe-1.0) | Done: `infra/meta/asr.py`, `domain/remark.py`, `transcribing_remark` stage, remark panel + record/upload in the New delivery dialog (shown in the stepper only when the upload carried a remark; a failed transcription marks that stage failed and the pipeline continues) |
 | 5 | Muse Image synthetic eval set | Scripts done (`gen_eval_images.py`, `confirm_eval_images.py`); **not run**: `data/eval_results.json` has 0 images |
 | 5 | `scripts/run_eval.py` (full eval) | Done; last run has video counts and damage 5/5, everything else null (see `not_measured` in the file) |
 | 5 | Deploy | Done as **AWS Lightsail files, no Docker**: `deploy/` (setup.sh, Caddy, systemd), `DEPLOY.md`, DEMO_MODE passcode + rate limit, SPA served by the API. Not deployed yet; replaces the old GCP/Dockerfile plan |
@@ -119,7 +119,7 @@ score.
    and PNGs, `data/demo/snapshot.json`). Then update the README Evaluation table: replace every "pending" row
    with the number from `eval_results.json`, and remove the matching Limitations line.
 3. **Run the live pipeline once end to end** with a new video and a voice remark (frontend `npm run dev` plus the
-   backend) and fix any shape mismatch page by page. Add the `transcribing_remark` stage to the frontend stepper.
+   backend) and fix any shape mismatch page by page.
 4. **Deploy** per `DEPLOY.md` (Lightsail, `deploy/setup.sh`), set `MODEL_API_KEY` in `/etc/fourthmatch.env`,
    verify with the curl checks in section 4 of that file, and put the URL and passcode into the README and the
    submission notes. DEPLOY.md still says the frontend must send the passcode header; the frontend now asks for the

@@ -26,4 +26,27 @@ describe("pipeline event derivation", () => {
     const d = derive([ev(1, "tracking"), ev(2, "failed")], [0, 5]);
     expect(d.states.tracking).toBe("failed");
   });
+  it("hides the remark stage when the upload had no remark", () => {
+    const d = derive([ev(1, "queued", { has_remark: false }), ev(2, "uploading")], [0, 5]);
+    expect(d.stages.map((s) => s.key)).not.toContain("transcribing_remark");
+  });
+  it("shows the remark stage after upload when the upload carried one", () => {
+    const d = derive([
+      ev(1, "queued", { has_remark: true }), ev(2, "uploading"), ev(3, "uploading_finished"),
+      ev(4, "transcribing_remark"), ev(5, "transcribing_remark_finished"), ev(6, "understanding"),
+    ], [0, 1, 2, 3, 7, 8]);
+    expect(d.stages.map((s) => s.key).slice(0, 3)).toEqual(["uploading", "transcribing_remark", "understanding"]);
+    expect(d.states.transcribing_remark).toBe("done");
+    expect(d.timing.transcribing_remark).toBe(4);
+    expect(d.states.understanding).toBe("active");
+  });
+  it("keeps a failed remark stage failed while the pipeline carries on to done", () => {
+    const d = derive([
+      ev(1, "queued", { has_remark: true }), ev(2, "transcribing_remark"), ev(3, "transcribing_remark_failed"),
+      ev(4, "understanding"), ev(5, "done"),
+    ], [0, 1, 2, 3, 4]);
+    expect(d.states.transcribing_remark).toBe("failed");
+    expect(d.states.understanding).toBe("done");
+    expect(d.failed).toBe(false);
+  });
 });
