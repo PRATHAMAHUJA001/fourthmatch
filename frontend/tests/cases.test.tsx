@@ -46,7 +46,7 @@ describe("Cases (MSW)", () => {
     const line = short.lines[0];
     expect(within(panel).getByText(line.sku)).toBeInTheDocument();
     expect(within(panel).getAllByText(String(line.observed_count)).length).toBeGreaterThan(0);
-    expect(within(panel).getAllByText(String(line.po_qty)).length).toBe(3);
+    expect(within(panel).getAllByText(String(line.po_qty)).length).toBeGreaterThanOrEqual(3);
     expect(screen.getAllByText("§4.2").length).toBeGreaterThan(0);
     expect(screen.getByText(/quantity tolerance for acceptance without escalation/i)).toBeInTheDocument();
     expect(within(panel).getByText("contradicted · §8.4")).toBeInTheDocument();

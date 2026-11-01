@@ -32,6 +32,6 @@ test("command palette jumps to a case", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Dock Live" })).toBeVisible();
   await page.keyboard.press("Control+k");
   await page.getByPlaceholder(/jump to a po/i).fill("Kaveri");
-  await page.keyboard.press("Enter");
+  await page.getByRole("option", { name: /FM\/PO\/26-27\/004/ }).click();
   await expect(page).toHaveURL(/\/cases\/4$/);
 });

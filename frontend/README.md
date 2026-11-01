@@ -1,32 +1,21 @@
-# React + TypeScript + Vite
+# FourthMatch frontend ("Dock Control")
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 18 + TypeScript (strict) + Vite + Tailwind v4 + Radix + TanStack Query/Table + Recharts + MSW.
+Design rules: [DESIGN.md](DESIGN.md). Live spec sheet: `/styleguide`.
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev:mock     # frontend-only demo: MSW serves every endpoint from repo data files
+npm run dev          # against the FastAPI backend on :8000 (proxied /api)
+npm run build:demo   # static demo build (MSW + scenario videos), e.g. for a public link
+npm test             # vitest
+npx playwright test  # e2e: every route at 1440 and 390 px, replay, command palette
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Demo mode builds its data from `data/ground_truth.json`, `data/eval_counts.json` (the real SAM run)
+and `data/policy/receiving_policy.md`, and copies `samples/scenarios/*.mp4` into `public/demo/`
+(gitignored). Verdicts in demo mode are replayed from ground truth until the decision agent runs
+live; the Eval page says so. Tool latencies show "—" until they come from the `model_calls` table.
+
+Keys: `/` or `⌘K` command palette · `g 1-5` pages · `j / k / Enter` tables · `n` new delivery · `t` theme.
+Routes: `/` pitch · `/dock` · `/cases` · `/cases/:poId` · `/policy` · `/analytics` · `/eval` · `/styleguide`.

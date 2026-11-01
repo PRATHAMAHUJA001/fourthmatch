@@ -139,9 +139,12 @@ export function DockLive() {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col items-end gap-3">
+              <BigClock />
+              <div className="flex gap-2">
               <Button variant="secondary" onClick={() => void startReplay(4)}><Play size={13} /> Replay mixed load</Button>
               <Button variant="accent" onClick={() => setDialog(true)}><Plus size={14} /> New delivery</Button>
+              </div>
             </div>
           </div>
         )}
@@ -182,4 +185,17 @@ function useNKey(fn: () => void) {
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [fn]);
+}
+
+function BigClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
+  const [hm, sec] = [now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }), now.toLocaleTimeString("en-IN", { second: "2-digit", timeZone: "Asia/Kolkata" }).padStart(2, "0")];
+  return (
+    <div className="text-right max-md:hidden" aria-label="Dock time">
+      <span className="font-mono text-[52px] font-medium leading-none tracking-[-0.06em] tabular-nums">{hm}</span>
+      <span className="ml-1 font-mono text-[18px] tabular-nums text-fm-faint">{sec}</span>
+      <div className="fm-label mt-1">IST · dock clock</div>
+    </div>
+  );
 }
