@@ -11,6 +11,7 @@ from app.core.config import Settings, get_settings
 from app.core.errors import UpstreamModelError
 from app.infra.cache import Sha256Cache
 from app.infra.db.repositories.cases import SqlCaseRepository
+from app.infra.db.repositories.evidence import SqlEvidenceRepository
 from app.infra.db.repositories.policies import SqlRuleRepository
 from app.infra.db.repositories.purchase_orders import SqlPurchaseOrderRepository
 from app.infra.db.repositories.simulation import SqlSimulationRepository
@@ -20,6 +21,7 @@ from app.infra.storage import LocalFileStore
 from app.services.cases import CaseService
 from app.services.decision_agent import DecisionAgent
 from app.services.deliveries import DeliveryService
+from app.services.evidence import latest_pack_for_po
 from app.services.perception import PerceptionPipeline
 from app.services.policy_compiler import PolicyCompilerService
 from app.services.purchase_orders import PurchaseOrderService
@@ -44,7 +46,11 @@ def get_po_service(session: Session = Depends(get_db_session)) -> PurchaseOrderS
 
 
 def get_case_service(session: Session = Depends(get_db_session)) -> CaseService:
-    return CaseService(SqlCaseRepository(session))
+    evidence_repo = SqlEvidenceRepository(session)
+    return CaseService(
+        SqlCaseRepository(session),
+        pack_lookup=lambda po_id: latest_pack_for_po(evidence_repo, po_id),
+    )
 
 
 def get_delivery_service(settings: Settings = Depends(get_app_settings)) -> DeliveryService:
