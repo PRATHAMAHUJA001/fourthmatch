@@ -60,3 +60,10 @@ export function shortHash(h: string, n = 8): string {
 export function titleCase(s: string): string {
   return s.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
+
+/** "box" → "boxes", "sack" → "sacks"; singular for exactly one. */
+export function plural(unit: string, n: number): string {
+  if (n === 1 || unit === "units") return unit;
+  if (/(x|s|ch|sh)$/.test(unit)) return `${unit}es`;
+  return `${unit}s`;
+}

@@ -29,19 +29,19 @@ test("replay: pipeline runs to a verdict and links to the case", async ({ page }
 
 test("command palette jumps to a case", async ({ page }) => {
   await page.goto("/dock");
-  await expect(page.getByRole("heading", { name: "Dock Live" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Receiving dock" })).toBeVisible();
   await page.keyboard.press("Control+k");
   await page.getByPlaceholder(/jump to a po/i).fill("Kaveri");
   await page.getByRole("option", { name: /FM\/PO\/26-27\/004/ }).click();
   await expect(page).toHaveURL(/\/cases\/4$/);
 });
 
-test("receiving queue: cards view persists and opens a case", async ({ page }) => {
+test("receiving queue: grid view persists and opens a case", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/dock");
-  await page.getByRole("button", { name: /cards/i }).click();
+  await page.getByRole("button", { name: /grid/i }).click();
   await page.reload();
-  await expect(page.getByRole("button", { name: /cards/i })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("button", { name: /grid/i })).toHaveAttribute("aria-pressed", "true");
   await page.getByLabel("Receiving queue").getByRole("link").first().click();
   await expect(page).toHaveURL(/\/cases\/\d+$/);
 });

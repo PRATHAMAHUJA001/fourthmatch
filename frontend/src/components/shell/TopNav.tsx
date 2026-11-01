@@ -29,7 +29,17 @@ function useNavScroll(threshold: number) {
     measure();
     window.addEventListener("scroll", on, { passive: true });
     window.addEventListener("resize", on);
-    return () => { window.removeEventListener("scroll", on); window.removeEventListener("resize", on); cancelAnimationFrame(raf); };
+    // Scroll-driven sections toggle [data-nav-dark] during React renders that land after the
+    // scroll frame was measured (the sticky story's camera chapter). Re-measure whenever the
+    // attribute changes, and once scrolling settles (iOS momentum), so the bar never stays dark
+    // over a white section.
+    const mo = typeof MutationObserver !== "undefined" ? new MutationObserver(on) : null;
+    mo?.observe(document.body, { attributes: true, attributeFilter: ["data-nav-dark"], subtree: true, childList: true });
+    window.addEventListener("scrollend", on);
+    return () => {
+      window.removeEventListener("scroll", on); window.removeEventListener("resize", on); window.removeEventListener("scrollend", on);
+      mo?.disconnect(); cancelAnimationFrame(raf);
+    };
   }, [threshold]);
   return state;
 }

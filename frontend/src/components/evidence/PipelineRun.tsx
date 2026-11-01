@@ -1,18 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, useJobEvents } from "../../lib/api";
 import { cn } from "../../lib/cn";
-import { formatINR } from "../../lib/format";
+import { formatINR, plural } from "../../lib/format";
+import { SCENARIO_FRAMES } from "../../lib/media";
 import type { JobEventRead, Verdict } from "../../types/api";
 import { Button } from "../ui/Button";
 import { FourMatchStrip } from "../ui/FourMatch";
 import { StatusBadge } from "../ui/StatusBadge";
 import { LiveCounter } from "../ui/LiveCounter";
 import { LoadDiagram } from "../ui/LoadDiagram";
-import { RouteProgress } from "../ui/RouteProgress";
-import { type Stage, type StageState, stagesFor } from "../ui/Stepper";
+import { type Stage, type StageState, Stepper, stagesFor } from "../ui/Stepper";
 import { EvidenceVideo } from "./EvidenceVideo";
 
 function baseOf(t: string) {
@@ -69,7 +69,9 @@ export function derive(events: JobEventRead[], arrivals: number[]) {
   return { stages, states, timing, tracks, perLine, verdict: verdict as { verdict: Verdict; held_paise: number } | null, failed };
 }
 
-/** Live pipeline view: dock video with scanline, stepper, live counter, event log, verdict. */
+/** Live pipeline view: the dock video, the count ticking from stored tracking_progress events,
+ *  an elegant stepper, the four sources resolving and the verdict arriving. Everything shown is
+ *  read from job_events (SSE streams only what is stored) or the case API. */
 export function PipelineRun({ deliveryId, poId, onReset }: { deliveryId: number; poId: number; onReset?: () => void }) {
   const { events, done, error } = useJobEvents(deliveryId);
   const arrivals = useRef<number[]>([]);
@@ -78,13 +80,13 @@ export function PipelineRun({ deliveryId, poId, onReset }: { deliveryId: number;
   const caseQ = useQuery({ queryKey: ["case", poId], queryFn: () => api.case(poId) });
   const logRef = useRef<HTMLOListElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { rootRef.current?.parentElement?.parentElement?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [deliveryId]);
+  useEffect(() => { rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [deliveryId]);
 
   useEffect(() => { t0.current = performance.now(); arrivals.current = []; }, [deliveryId]);
   if (arrivals.current.length < events.length) {
     for (let i = arrivals.current.length; i < events.length; i++) arrivals.current.push(performance.now() - t0.current);
   }
-  useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [events.length]);
+  useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" }); }, [events.length]);
   useEffect(() => {
     if (done) return;
     const t = setInterval(() => force((x) => x + 1), 100);
@@ -98,25 +100,6 @@ export function PipelineRun({ deliveryId, poId, onReset }: { deliveryId: number;
   const reconciled = d.states.reconciling === "done" || d.states.reconciling === "active" || done;
   const phrase = (events.find((e) => e.event_type === "understanding_finished")?.payload as { phrases?: string[] } | undefined)?.phrases?.join(" + ");
 
-  const strips = c ? (
-    <div className="flex flex-col gap-2.5">
-      {c.lines.map((l) => (
-        <FourMatchStrip
-          key={l.po_line_id}
-          values={{
-            po: l.po_qty, grn: l.grn_qty, invoice: l.invoiced_qty,
-            vision: d.states.tracking ? (reconciled ? l.observed_count : d.perLine.get(l.po_line_id) ?? 0) : null,
-          }}
-          unit={l.unit}
-          live={tracking}
-          visionPending={!d.states.tracking}
-          variancePct={reconciled ? l.variance_pct : null}
-          sub={{ po: l.sku, grn: "signed", invoice: "billed", vision: tracking ? "counting…" : reconciled ? "SAM tracks" : "waiting" }}
-        />
-      ))}
-    </div>
-  ) : null;
-
   const videoLines = (c?.lines ?? []).filter((l) => l.evidence_source === "video" && l.observed_count !== null);
   const invoicedTotal = videoLines.reduce((sum, l) => sum + l.invoiced_qty, 0);
   const units = new Set(videoLines.map((l) => l.unit));
@@ -126,121 +109,138 @@ export function PipelineRun({ deliveryId, poId, onReset }: { deliveryId: number;
     reconciled ? l.observed_count ?? 0 : d.perLine.get(l.po_line_id) ?? 0;
   const seenTotal = videoLines.reduce((sum, l) => sum + seenOf(l), 0);
   const activeStage = d.stages.find((s) => d.states[s.key] === "active");
+  const status = d.failed ? "Failed" : decided && done ? "Decided" : activeStage?.label ?? (events.length ? "Starting" : "Queued");
+  const poster = c?.scenario_id ? SCENARIO_FRAMES[c.scenario_id] : undefined;
 
-  const hero = (
-    <section className="fm-amber-block flex min-w-0 flex-col rounded-fm" aria-label="Active delivery">
-      <div className="flex items-start justify-between gap-3 px-5 pt-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 font-cond text-[11px] font-semibold uppercase tracking-[0.1em] opacity-75">
-            {!done && <span className="fm-live-dot h-1.5 w-1.5 rounded-full bg-current" aria-hidden />}
-            {done ? "Delivery checked" : "Active delivery"} · Bay 01
-          </div>
-          <h2 className="mt-1.5 truncate font-mono text-[30px] max-sm:text-[22px] font-medium leading-none tracking-[-0.04em]">{c?.po_number ?? "···"}</h2>
-          <p className="mt-1.5 truncate text-[15px] font-semibold tracking-[-0.01em]">{c?.vendor_name ?? "Loading delivery…"}</p>
-        </div>
-        <span className="shrink-0 rounded-fm-sm border border-black/25 px-1.5 py-1 font-mono text-[10.5px] font-medium uppercase leading-none tracking-[0.04em]">
-          {decided ? "Decided" : activeStage?.short ?? "Queued"}
+  const verdict = d.verdict && c ? (
+    <div className="fm-appear flex flex-col" aria-live="polite">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <StatusBadge verdict={d.verdict.verdict} size="lg" />
+        {(c.clauses ?? []).length > 0 && <span className="text-[13px] text-fm-muted">Clause {(c.clauses ?? []).join(", ")}</span>}
+      </div>
+      <div className="mt-4 flex items-baseline gap-3">
+        <span className={cn("fm-figure text-[56px] leading-none max-sm:text-[44px]", d.verdict.verdict === "approve" ? "text-fm-verified" : "text-fm-hold")}>
+          {formatINR(d.verdict.verdict === "approve" ? c.invoice_total_paise ?? c.total_paise : d.verdict.held_paise)}
         </span>
+        <span className="text-[17px] font-semibold text-fm-muted">{d.verdict.verdict === "approve" ? "released" : "held"}</span>
       </div>
-      <div className="flex flex-1 flex-col justify-center px-5 pb-2 pt-3">
-        {videoLines.length > 0 ? (
-          <div className={cn("grid gap-x-4 gap-y-1", videoLines.length > 1 && "sm:grid-cols-2")}>
-            {videoLines.map((l) => (
-              <div key={l.po_line_id} className="min-w-0">
-                {videoLines.length > 1 && <div className="mb-0.5 truncate font-mono text-[10.5px] opacity-70">{l.sku}</div>}
-                <LoadDiagram
-                  tone="ink" solid pending={!decided}
-                  invoiced={l.invoiced_qty} observed={seenOf(l)} damaged={reconciled ? l.damage_count : 0} unit={l.unit}
-                  className={videoLines.length > 1 ? "max-h-[96px]" : undefined}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex h-[120px] items-center text-[12.5px] opacity-70">{c ? "No dock video for this delivery." : "Loading delivery…"}</div>
-        )}
+      <div className="mt-5 flex flex-wrap gap-2">
+        <Button asChild variant="accent" size="lg"><Link to={`/cases/${poId}`}>Open case <ArrowRight size={15} /></Link></Button>
+        {done && onReset && <Button variant="ghost" size="lg" onClick={onReset}><RotateCcw size={14} /> Run another</Button>}
       </div>
-      <dl className="mt-auto grid grid-cols-3 border-t border-black/15">
-        {[
-          { k: "Invoiced", v: <span>{invoicedTotal}<span className="ml-1 font-sans text-[12px] font-normal opacity-65">{unitLabel}</span></span> },
-          { k: "Seen on video", v: <span className="inline-flex items-baseline"><LiveCounter value={seenTotal} digits={Math.max(2, String(invoicedTotal).length)} label="Seen on video" className="text-[28px]" /><span className="ml-1 font-sans text-[12px] opacity-65">{!decided && tracking ? "live" : unitLabel}</span></span> },
-          { k: "Held", v: decided ? formatINR(d.verdict!.held_paise) : <span className="opacity-40">—</span> },
-        ].map((x, i) => (
-          <div key={x.k} className={cn("min-w-0 px-5 py-3", i > 0 && "border-l border-black/15")}>
-            <dt className="font-cond text-[11px] font-semibold uppercase tracking-[0.1em] opacity-70">{x.k}</dt>
-            <dd className="mt-1 truncate font-mono text-[28px] font-medium leading-none tracking-[-0.04em] tabular-nums">{x.v}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
-  );
-
-  const video = c?.video_url ? (
-    <EvidenceVideo
-      src={c.video_url}
-      phrase={phrase ?? null}
-      count={d.states.tracking ? d.tracks : null}
-      countLabel={tracking ? "Tracking" : "Unique tracks"}
-      scanning={tracking || d.states.understanding === "active" || d.states.damage_check === "active"}
-      camera={`DOCK-01 · ${c.po_number}`}
-    />
-  ) : (
-    <div className="fm-dotgrid flex aspect-video items-center justify-center rounded-fm border border-fm-border bg-fm-sunken text-[12px] text-fm-muted">Loading footage…</div>
-  );
+    </div>
+  ) : null;
 
   return (
-    <div ref={rootRef} className="flex scroll-mt-4 flex-col gap-3">
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        {hero}
-        <div className="min-w-0">{video}</div>
-      </div>
-
-      <div className="rounded-fm border border-fm-border bg-fm-panel px-3 pb-2 pt-2.5">
-        <div className="mb-1 flex items-center justify-between">
-          <span className="fm-label">Pipeline</span>
-          <span className="font-mono text-[11px] tabular-nums text-fm-muted">T+{elapsed.toFixed(1)}s</span>
+    <div ref={rootRef} className="flex scroll-mt-[calc(var(--fm-nav-h)+24px)] flex-col gap-6" data-testid="pipeline-run">
+      {/* ——— run header ——— */}
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <p className="text-[17px] font-semibold tracking-[-0.014em] text-fm-muted">{c?.vendor_name ?? "Loading delivery…"}</p>
+          <h2 className="mt-1 truncate text-[40px] font-bold leading-none tracking-[-0.034em] tabular-nums max-sm:text-[28px]">{c?.po_number ?? "\u00a0"}</h2>
         </div>
-        <RouteProgress stages={d.stages} states={d.states} timing={d.timing} />
+        <div className="flex items-center gap-4">
+          <span className={cn("inline-flex h-9 items-center gap-2 rounded-full px-4 text-[14px] font-semibold",
+            d.failed ? "bg-fm-fraud-bg text-fm-fraud" : decided && done ? "bg-fm-raised text-fm-text" : "bg-fm-info-bg text-fm-accent-text")}>
+            {!done && !d.failed && <span className="fm-live-dot h-2 w-2 rounded-full bg-current" aria-hidden />}
+            {status}
+          </span>
+          <span className="font-mono text-[14px] tabular-nums text-fm-muted" aria-label="Elapsed">{elapsed.toFixed(1)}s</span>
+        </div>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
-        <div className="flex min-w-0 flex-col gap-3">{strips}</div>
-        <div className="flex min-w-0 flex-col gap-3">
-          {d.verdict && c && (
-            <div className={cn("fm-rise rounded-fm border p-3.5", d.verdict.verdict === "approve" ? "border-fm-verified-line bg-fm-verified-bg" : "border-fm-hold bg-fm-hold-bg")}>
-              <div className="flex items-center justify-between gap-2">
-                <StatusBadge verdict={d.verdict.verdict} size="lg" />
-                <span className="font-mono text-[11px] text-fm-muted">{(c.clauses ?? []).map((x) => `§${x}`).join(" · ")}</span>
+      {/* ——— footage + live count ——— */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        {c?.video_url ? (
+          <EvidenceVideo
+            src={c.video_url}
+            poster={poster}
+            phrase={phrase ?? null}
+            count={d.states.tracking ? d.tracks : null}
+            countLabel={tracking ? "Tracking" : "Unique tracks"}
+            scanning={tracking || d.states.understanding === "active" || d.states.damage_check === "active"}
+            camera={`Bay 01 · ${c.po_number}`}
+          />
+        ) : (
+          <div className="flex aspect-video items-center justify-center rounded-fm-xl bg-fm-panel text-[15px] text-fm-muted">{c ? "No dock video for this delivery." : "Loading footage…"}</div>
+        )}
+        <section className="flex min-w-0 flex-col rounded-fm-xl bg-fm-panel p-8 max-sm:p-6" aria-label="Seen on video">
+          {videoLines.length > 0 ? (
+            <>
+              <p className="text-[15px] font-semibold text-fm-muted">Seen on video</p>
+              <div className="mt-3 flex items-baseline gap-3">
+                <LiveCounter value={seenTotal} label="Seen on video" className={cn("text-[96px] leading-[0.9] max-sm:text-[72px]", reconciled && seenTotal < invoicedTotal && "text-fm-hold")} />
+                <span className="text-[19px] font-medium text-fm-muted">of {invoicedTotal} {plural(unitLabel, invoicedTotal)} invoiced</span>
               </div>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <div>
-                  <div className="fm-label">{d.verdict.verdict === "approve" ? "Released" : "Held"}</div>
-                  <div className={cn("font-mono text-[30px] font-medium leading-none tracking-[-0.04em]", d.verdict.verdict === "approve" ? "text-fm-verified" : "text-fm-hold")}>
-                    {formatINR(d.verdict.verdict === "approve" ? c.invoice_total_paise ?? c.total_paise : d.verdict.held_paise)}
+              <p className="mt-2 text-[13px] text-fm-faint">{tracking ? "One step per track SAM confirms." : reconciled ? "Unique tracks, merged and counted in Python." : d.states.tracking ? "" : "Waiting for sam-3.1."}</p>
+              <div className={cn("mt-5 grid gap-4", videoLines.length > 1 && "grid-cols-2", verdict && "max-w-[78%] max-lg:max-w-none")}>
+                {videoLines.map((l) => (
+                  <div key={l.po_line_id} className="min-w-0">
+                    {videoLines.length > 1 && <div className="mb-1 truncate font-mono text-[12px] text-fm-muted">{l.sku}</div>}
+                    <LoadDiagram solid pending={!decided} invoiced={l.invoiced_qty} observed={seenOf(l)} damaged={reconciled ? l.damage_count : 0} unit={l.unit} />
                   </div>
-                </div>
-                <Button asChild variant="primary" size="sm"><Link to={`/cases/${poId}`}>Open case <ArrowRight size={13} /></Link></Button>
+                ))}
               </div>
-            </div>
+            </>
+          ) : (
+            <p className="text-[15px] text-fm-muted">{c ? "Documents only. The GRN is the receiving evidence." : "Loading delivery…"}</p>
           )}
-          <div className="rounded-fm border border-fm-border bg-fm-sunken">
-            <div className="flex items-center justify-between border-b border-fm-border px-3 py-1.5">
-              <span className="fm-label">job_events</span>
-              <span className="font-mono text-[10.5px] text-fm-faint">SSE · {events.length} stored · T+{elapsed.toFixed(1)}s</span>
-            </div>
-            <ol ref={logRef} className="fm-scroll h-[132px] overflow-auto px-3 py-2 font-mono text-[11px] leading-[1.7]" aria-live="polite">
-              {events.map((e, i) => (
-                <li key={e.seq} className={cn("flex gap-2", e.event_type.endsWith("_progress") ? "text-fm-faint" : "text-fm-muted", e.event_type === "verdict" && "text-fm-hold")}>
-                  <span className="w-12 shrink-0 tabular-nums text-fm-faint">{((arrivals.current[i] ?? 0) / 1000).toFixed(2)}</span>
-                  <span className="w-[150px] shrink-0 truncate text-fm-text">{e.event_type}</span>
-                  <span className="truncate">{e.message}</span>
-                </li>
-              ))}
-              {!done && <li className="fm-live-dot text-fm-faint">▍</li>}
-            </ol>
+          <div className="mt-auto pt-6">
+            {verdict ? <div className="border-t border-fm-border pt-6">{verdict}</div> : (
+              <p className="border-t border-fm-border pt-5 text-[14px] text-fm-faint">{d.failed ? "The run stopped before a decision." : "The decision agent rules once all four sources are in."}</p>
+            )}
           </div>
-          {error && <p className="text-[12px] text-fm-fraud" role="alert">{error}</p>}
-          {done && onReset && <Button variant="ghost" size="sm" onClick={onReset} className="self-start">Run another delivery</Button>}
+        </section>
+      </div>
+
+      {/* ——— stepper ——— */}
+      <section className="rounded-fm-xl bg-fm-panel px-8 pb-6 pt-8 max-sm:px-5 max-sm:pt-6" aria-label="Pipeline">
+        <Stepper stages={d.stages} states={d.states} timing={d.timing} />
+      </section>
+
+      {/* ——— four sources + verdict / log ——— */}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+        <section className="flex min-w-0 flex-col gap-6 rounded-fm-xl bg-fm-panel p-8 max-sm:p-5" aria-label="Four-way match">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h3 className="text-[19px] font-semibold tracking-[-0.022em]">The fourth match</h3>
+            <span className="text-[13px] text-fm-muted">{reconciled ? "Reconciled in Python" : tracking ? "Vision is counting" : "Vision pending"}</span>
+          </div>
+          {c?.lines.map((l) => (
+            <div key={l.po_line_id}>
+              {c.lines.length > 1 && <p className="mb-2 font-mono text-[12px] text-fm-muted">{l.sku}</p>}
+              <FourMatchStrip
+                values={{
+                  po: l.po_qty, grn: l.grn_qty, invoice: l.invoiced_qty,
+                  vision: d.states.tracking ? (reconciled ? l.observed_count : d.perLine.get(l.po_line_id) ?? 0) : null,
+                }}
+                unit={l.unit}
+                live={tracking}
+                visionPending={!d.states.tracking}
+                variancePct={reconciled ? l.variance_pct : null}
+                sub={{ po: <span className="font-mono">{l.sku}</span>, grn: "Signed", invoice: "Billed", vision: tracking ? "Counting…" : reconciled ? "SAM tracks" : "Waiting" }}
+              />
+            </div>
+          ))}
+        </section>
+        <div className="flex min-w-0 flex-col gap-6">
+          <section className="flex min-h-0 flex-1 flex-col rounded-fm-xl bg-fm-panel p-8 max-sm:p-5" aria-label="Event log">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 className="text-[19px] font-semibold tracking-[-0.022em]">Event log</h3>
+              <span className="text-[13px] text-fm-muted">{events.length} stored · streamed over SSE</span>
+            </div>
+            <ol ref={logRef} className={"fm-scroll mt-4 max-h-[260px] overflow-auto text-[13px] leading-[1.5]"} aria-live="off">
+              {events.map((e, i) => {
+                const progress = e.event_type.endsWith("_progress");
+                return (
+                  <li key={e.seq} className={cn("fm-rise flex gap-3 py-1", progress ? "text-fm-faint" : "text-fm-text", e.event_type === "verdict" && "font-semibold")}>
+                    <span className="w-11 shrink-0 text-right font-mono text-[12px] tabular-nums text-fm-faint">{((arrivals.current[i] ?? 0) / 1000).toFixed(1)}s</span>
+                    <span className="min-w-0">{e.message}</span>
+                  </li>
+                );
+              })}
+            </ol>
+            {error && <p className="mt-3 text-[13px] text-fm-fraud" role="alert">{error}</p>}
+          </section>
         </div>
       </div>
     </div>

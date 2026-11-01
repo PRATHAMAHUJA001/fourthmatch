@@ -37,32 +37,32 @@ export function PasscodeDialog() {
   return (
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) finish(null); }}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[60] bg-black/55" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-[60] w-[min(400px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-fm border border-fm-border-strong bg-fm-panel">
-          <div className="flex items-center justify-between border-b border-fm-border px-4 py-3">
-            <Dialog.Title className="flex items-center gap-2 text-[14px] font-semibold"><KeyRound size={14} /> Demo passcode</Dialog.Title>
-            <Dialog.Close className="rounded-fm-sm p-1 text-fm-muted hover:bg-fm-raised hover:text-fm-text" aria-label="Close"><X size={15} /></Dialog.Close>
+        <Dialog.Overlay className="fm-overlay fixed inset-0 z-[60] bg-black/35 backdrop-blur-[6px]" />
+        <Dialog.Content className="fm-pop fixed left-1/2 top-1/2 z-[60] w-[min(420px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 rounded-fm-xl bg-fm-panel p-8 shadow-fm-float max-sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-fm-raised text-fm-text"><KeyRound size={20} /></span>
+            <Dialog.Close className="flex h-9 w-9 items-center justify-center rounded-full bg-fm-raised text-fm-muted hover:bg-fm-hover hover:text-fm-text" aria-label="Close"><X size={16} /></Dialog.Close>
           </div>
+          <Dialog.Title className="mt-5 text-[24px] font-bold tracking-[-0.026em]">Demo passcode</Dialog.Title>
           <form onSubmit={(e) => { e.preventDefault(); if (value.trim()) finish(value.trim()); }}>
-            <div className="flex flex-col gap-2 p-4">
-              <Dialog.Description className="text-[12.5px] text-fm-muted">
-                This public demo only accepts changes with a passcode. Browsing the recorded cases needs none.
-              </Dialog.Description>
-              {reason && <p className="text-[12px] text-fm-fraud" role="alert">{reason}</p>}
-              <label className="fm-label" htmlFor="demo-passcode">Passcode</label>
-              <input
-                id="demo-passcode"
-                type="password"
-                autoComplete="off"
-                autoFocus
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="h-9 rounded-fm-sm border border-fm-border-strong bg-fm-sunken px-2 font-mono text-[13px] outline-none focus:border-fm-hold"
-              />
-            </div>
-            <div className="flex justify-end gap-2 border-t border-fm-border px-4 py-3">
-              <Button type="button" variant="ghost" size="sm" onClick={() => finish(null)}>Cancel</Button>
-              <Button type="submit" variant="accent" size="sm" disabled={!value.trim()}>Continue</Button>
+            <Dialog.Description className="mt-2 text-[15px] leading-snug text-fm-muted">
+              This public demo only accepts changes with a passcode. Browsing the recorded cases needs none.
+            </Dialog.Description>
+            {reason && <p className="mt-3 text-[14px] text-fm-fraud" role="alert">{reason}</p>}
+            <label className="sr-only" htmlFor="demo-passcode">Passcode</label>
+            <input
+              id="demo-passcode"
+              type="password"
+              autoComplete="off"
+              autoFocus
+              placeholder="Passcode"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="fm-field mt-6 h-12 w-full px-4 text-[17px]"
+            />
+            <div className="mt-6 flex justify-end gap-2">
+              <Button type="button" variant="ghost" size="lg" onClick={() => finish(null)}>Cancel</Button>
+              <Button type="submit" variant="accent" size="lg" disabled={!value.trim()}>Continue</Button>
             </div>
           </form>
         </Dialog.Content>

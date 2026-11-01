@@ -4,14 +4,6 @@ export function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
-export const chartColors = {
-  hold: () => cssVar("--fm-hold-fill") || "#FF9F0A",
-  verified: () => cssVar("--fm-verified-fill") || "#30D158",
-  fraud: () => cssVar("--fm-fraud-fill") || "#FF453A",
-  review: () => cssVar("--fm-review-fill") || "#8E8E93",
-  grid: () => cssVar("--fm-border") || "rgba(0,0,0,.08)",
-  text: () => cssVar("--fm-muted") || "#6E6E73",
-};
 
 /** Shared Recharts styling, resolved at render so light/dark both work. */
 export function chartTheme() {

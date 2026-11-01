@@ -1,10 +1,10 @@
 import { chartTheme } from "../../tokens/tokens";
 
-/** Mono 10.5px tick style, no axis line, no tick marks. */
+/** Quiet axis: 11px Inter ticks in the faint tone, no axis line, no tick marks. */
 export function axisProps() {
   const t = chartTheme();
   return {
-    tick: { fill: t.tick, fontSize: 10.5, fontFamily: "var(--fm-font-mono)" },
+    tick: { fill: t.faint, fontSize: 11, fontFamily: "var(--fm-font-sans)" },
     axisLine: false as const,
     tickLine: false as const,
   };

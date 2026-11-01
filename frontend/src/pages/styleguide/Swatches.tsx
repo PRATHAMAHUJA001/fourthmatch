@@ -37,7 +37,7 @@ function Swatch({ name }: { name: string }) {
       <span className="h-9 w-9 shrink-0 rounded-full shadow-[inset_0_0_0_1px_var(--fm-border)]" style={{ background: `var(${name})` }} aria-hidden />
       <div className="min-w-0 leading-tight">
         <div className="truncate font-mono text-[11px] text-fm-text">{name}</div>
-        <div ref={ref} className="font-mono text-[10.5px] uppercase text-fm-muted" />
+        <div ref={ref} className="font-mono text-[11px] text-fm-muted" />
       </div>
     </div>
   );

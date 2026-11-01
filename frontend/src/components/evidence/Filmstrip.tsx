@@ -37,7 +37,7 @@ export function Filmstrip({ src, frames = 6, onSelect, className }: { src: strin
   }, [src, frames]);
 
   return (
-    <div className={cn("grid gap-1.5", className)} style={{ gridTemplateColumns: `repeat(${frames}, minmax(0, 1fr))` }}>
+    <div className={cn("grid grid-cols-3 gap-2 sm:grid-cols-6", className)}>
       {Array.from({ length: frames }, (_, i) => {
         const s = shots[i];
         return (
@@ -46,13 +46,16 @@ export function Filmstrip({ src, frames = 6, onSelect, className }: { src: strin
             type="button"
             disabled={!s}
             onClick={() => { if (s) { setActive(i); onSelect?.(s.t); } }}
-            className={cn("group relative aspect-video overflow-hidden rounded-[3px] border bg-fm-sunken transition-colors", active === i ? "border-fm-hold" : "border-fm-border hover:border-fm-border-strong")}
-            aria-label={s ? `Jump to frame at ${s.t.toFixed(1)} seconds` : "Loading frame"}
+            className={cn(
+              "group relative aspect-video overflow-hidden rounded-[12px] bg-fm-raised transition-[box-shadow,opacity] duration-200",
+              active === i ? "shadow-[0_0_0_2px_var(--fm-panel),0_0_0_4px_var(--fm-accent)]" : "hover:opacity-90",
+            )}
+            aria-label={s ? `Jump to ${s.t.toFixed(1)} seconds` : "Loading frame"}
           >
-            {s ? <img src={s.url} alt="" className="h-full w-full object-cover" /> : <span className="fm-skeleton absolute inset-0" />}
+            {s ? <img src={s.url} alt="" className="h-full w-full object-cover" /> : <span className="fm-skeleton absolute inset-0 rounded-none" />}
             {s && (
-              <span className="absolute bottom-0 left-0 bg-black/65 px-1 font-mono text-[9.5px] text-white/85">
-                F{String(Math.floor(s.t * 24)).padStart(4, "0")}
+              <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/50 px-1.5 py-0.5 font-mono text-[10.5px] text-white backdrop-blur-sm">
+                {s.t.toFixed(1)}s
               </span>
             )}
           </button>

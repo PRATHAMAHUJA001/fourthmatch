@@ -72,7 +72,9 @@ Theme: light is the default. `t` or the nav toggle switches; the choice persists
 - `useScrollProgress(ref)`: rAF-throttled 0..1 progress through a tall section. Drives the
   sticky story (`pages/landing/Story.tsx`) and the SAM wipe.
 - `useScrollFrame(fn)`: per-frame scroll callback for direct style writes (hero parallax).
-- `useCountUp` (LiveCounter) for figures. Easing `--fm-ease` = cubic-bezier(0.22, 1, 0.36, 1),
+- No count-ups. Money is never tweened: the computed figure appears with `.fm-appear` (fade + settle).
+  Live object counts (`LiveCounter`) step only through integers the pipeline actually observed
+  (one per stored `tracking_progress` event / SAM track), each sliding in with `.fm-tick`. Easing `--fm-ease` = cubic-bezier(0.22, 1, 0.36, 1),
   durations 200–600ms.
 - `prefers-reduced-motion`: reveals render visible, parallax and wipes are off, the story renders
   as stacked static sections with final values, the hero loop does not autoplay.
@@ -84,9 +86,13 @@ Theme: light is the default. `t` or the nav toggle switches; the choice persists
 
 ## Components (src/components/ui)
 Button (variant accent|primary|secondary|ghost|link|hold|verified|danger, size xs|sm|md|lg|xl|icon,
-asChild; all pills), Panel, PageHeader, KpiStrip, KpiTile, Spark, StatusBadge, SignalGlyph, Money,
-Qty, Tag(tone), Kbd, DataTable, Stepper, FourMatchStrip, FourMatchMini, LiveCounter, EmptyState,
-ErrorState, Skeleton, SkeletonRows. Brand: BrandMark, Wordmark (shell/BrandMark).
+asChild; all pills), Panel (title inside the padding, no header divider), PageHeader, KpiStrip, KpiTile
+(figure first, then label), Spark, StatusBadge, SignalGlyph, Money, Qty, Tag(tone), Kbd, DataTable
+(`rowHeight="auto"` for rich rows), Stepper (horizontal by default; `progressIndex`), FourMatchStrip
+(four large tiles, `surface` raised|panel), FourMatchMini, LiveCounter, DeliveryThumb (real frame or
+"Paper" tile), LoadDiagram, EmptyState, ErrorState, Skeleton, SkeletonRows. Segmented controls and the
+queue view toggle use `.fm-thumb` (white thumb on a grey track); inputs use `.fm-field`. Dialogs use
+`.fm-overlay` + `.fm-sheet` (centred sheet, bottom sheet on phones) or `.fm-pop`. Brand: BrandMark, Wordmark (shell/BrandMark).
 Chart colours: read CSS vars via `chartTheme()` / `cssVar()` in src/tokens/tokens.ts.
 
 ## Every page
@@ -94,6 +100,13 @@ Loading skeleton, error state and empty state. Data via TanStack Query + `api` (
 types in src/types/api.ts. Copy: short, declarative, specific, sentence case. No filler.
 
 ## Media pipeline (public/media)
+Scenario frames are mapped in `src/lib/media.ts` (`SCENARIO_FRAMES`, `frameFor`) and used as video posters,
+queue thumbnails and the PO picker; never as evidence on their own.
 Frames: `ffmpeg -ss <t> -i public/demo/<scn>.mp4 -frames:v 1 -c:v libwebp -quality 80`.
 Hero loop: 7 s of scn2_short, 1280px, no audio, H.264 (crf 22, faststart) + VP9 WebM (crf 31),
 poster WebP. SAM still: `samples/cartoon.jpg` and `samples/out/carton_overlay.png` → WebP.
+
+## Demo build
+`IS_MOCK` (src/lib/demo.ts, `VITE_MOCK=1`) serves every endpoint from MSW. The mock dataset has no
+real evidence-pack files, so no hash is ever shown as sealed in that build: `EvidenceSeal` and the
+landing verdict show `DemoSealNote` ("Demo build — evidence packs are sealed … on the live server").

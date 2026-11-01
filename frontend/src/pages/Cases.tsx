@@ -10,7 +10,9 @@ import { KpiStrip, KpiTile } from "../components/ui/KpiTile";
 import { Money } from "../components/ui/Money";
 import { PageHeader, Panel } from "../components/ui/Panel";
 import { StatusBadge } from "../components/ui/StatusBadge";
-import { Kbd, Tag } from "../components/ui/Tag";
+import { Kbd } from "../components/ui/Tag";
+import { Button } from "../components/ui/Button";
+import { DeliveryThumb } from "../components/ui/DeliveryThumb";
 import { api } from "../lib/api";
 import { formatINR, formatTs } from "../lib/format";
 import type { CaseSummary, Verdict } from "../types/api";
@@ -38,66 +40,64 @@ const columns: ColumnDef<CaseSummary, unknown>[] = [
   {
     id: "po",
     accessorFn: (c) => c.po_number,
-    header: "PO",
+    header: "Delivery",
     cell: ({ row }) => (
-      <div className="flex flex-col leading-tight">
-        <span className="font-mono text-[12.5px] font-medium">{row.original.po_number}</span>
-        {row.original.scenario_id && <span className="font-mono text-[10.5px] text-fm-faint">{row.original.scenario_id}</span>}
+      <div className="flex items-center gap-4 py-2">
+        <DeliveryThumb c={row.original} className="h-11 w-[72px] rounded-[10px]" />
+        <div className="min-w-0 leading-tight">
+          <div className="max-w-[240px] truncate text-[15px] font-semibold max-md:max-w-[220px] tracking-[-0.012em]">{row.original.vendor_name}</div>
+          <div className="mt-1 flex items-center gap-2 text-[13px] text-fm-muted">
+            <span className="font-mono text-[12.5px]">{row.original.po_number}</span>
+            <span className="text-fm-faint max-md:hidden">{isVideo(row.original) ? "Video" : isDocs(row.original) ? "Documents" : "—"}</span>
+          </div>
+          <div className="mt-1.5 flex items-center gap-2 md:hidden">
+            <StatusBadge verdict={row.original.verdict} size="sm" />
+            {row.original.held_paise > 0 && <Money paise={row.original.held_paise} className="text-[13px] font-medium text-fm-hold" />}
+          </div>
+        </div>
       </div>
     ),
-  },
-  { id: "vendor", accessorFn: (c) => c.vendor_name, header: "Vendor", cell: ({ row }) => <span className="block max-w-[200px] truncate">{row.original.vendor_name}</span> },
-  {
-    id: "evidence",
-    accessorFn: (c) => c.evidence_source ?? "none",
-    header: "Evidence",
-    cell: ({ row }) =>
-      isVideo(row.original) ? <Tag tone="info">VIDEO</Tag> : isDocs(row.original) ? <Tag>DOCS</Tag> : <span className="font-mono text-fm-faint">—</span>,
   },
   {
     id: "discrepancy",
     accessorFn: (c) => (c.discrepancy_types ?? []).map(discrepancyText).join(", "),
     header: "Discrepancy",
+    meta: { className: "max-md:hidden" },
     cell: ({ row }) => {
       const t = row.original.discrepancy_types ?? [];
+      const cl = row.original.clauses ?? [];
       if (t.length === 0) return <span className="text-fm-faint">None</span>;
       return (
-        <span className="block max-w-[260px] truncate text-fm-text" title={t.map(discrepancyText).join(", ")}>
-          {discrepancyText(t[0])}
-          {t.length > 1 && <span className="ml-1.5 font-mono text-[10.5px] text-fm-faint">+{t.length - 1}</span>}
-        </span>
+        <div className="min-w-0 leading-tight">
+          <div className="max-w-[260px] truncate text-[14px]" title={t.map(discrepancyText).join(", ")}>
+            {discrepancyText(t[0])}
+            {t.length > 1 && <span className="ml-1.5 text-[12px] text-fm-faint">+{t.length - 1} more</span>}
+          </div>
+          {cl.length > 0 && <div className="mt-1 text-[12px] text-fm-muted">Clause {cl.join(", ")}</div>}
+        </div>
       );
     },
-  },
-  {
-    id: "clauses",
-    accessorFn: (c) => (c.clauses ?? []).join(" "),
-    header: "Clauses",
-    enableSorting: false,
-    cell: ({ row }) => (
-      <div className="flex gap-1">
-        {(row.original.clauses ?? []).map((cl) => <Tag key={cl} tone="hold">§{cl}</Tag>)}
-      </div>
-    ),
   },
   {
     id: "verdict",
     accessorFn: (c) => c.verdict ?? "",
     header: "Verdict",
+    meta: { className: "max-md:hidden" },
     cell: ({ row }) => <StatusBadge verdict={row.original.verdict} />,
   },
   {
     id: "held",
     accessorFn: (c) => c.held_paise,
     header: "Held",
-    meta: { align: "right" },
+    meta: { align: "right", className: "max-md:hidden" },
     cell: ({ row }) => <Money paise={row.original.held_paise} className={row.original.held_paise > 0 ? "font-medium text-fm-hold" : undefined} />,
   },
   {
     id: "decided",
     accessorFn: (c) => c.decided_at ?? "",
     header: "Decided",
-    cell: ({ row }) => (row.original.decided_at ? <span className="font-mono text-[11.5px] text-fm-muted">{formatTs(row.original.decided_at)}</span> : <span className="font-mono text-fm-faint">—</span>),
+    meta: { align: "right", className: "max-lg:hidden" },
+    cell: ({ row }) => (row.original.decided_at ? <span className="text-[13px] tabular-nums text-fm-muted">{formatTs(row.original.decided_at)}</span> : <span className="text-fm-faint">—</span>),
   },
 ];
 
@@ -153,64 +153,60 @@ export function Cases() {
   const filtersActive = verdict !== "all" || source !== "all" || q !== "";
 
   return (
-    <div className="mx-auto max-w-[1280px]">
+    <div>
       <PageHeader
         eyebrow="Ledger"
         title="Cases"
-        meta={isLoading ? <Skeleton className="h-3.5 w-48" /> : (
-          <>
-            <span><span className="font-mono tabular-nums text-fm-text">{rows.length}</span> payment decisions</span>
-            <span><span className="font-mono tabular-nums text-fm-hold">{kpi.heldCases}</span> on hold or partial</span>
-            <span><span className="font-mono tabular-nums text-fm-text">{filtered.length}</span> shown</span>
-          </>
+        meta={isLoading ? <Skeleton className="h-4 w-64" /> : (
+          <span>{rows.length} payment decisions, {kpi.heldCases} on hold or partial.</span>
         )}
       />
 
-      <KpiStrip className="mb-4 md:grid-cols-4">
-        <KpiTile label="Total held" tone="hold" value={isLoading ? "—" : formatINR(kpi.held)} hint="payment withheld across cases" />
-        <KpiTile label="On hold or partial" value={isLoading ? "—" : kpi.heldCases} unit={`of ${rows.length}`} hint="payment not released in full" />
-        <KpiTile label="Verified" tone="verified" value={isLoading ? "—" : kpi.verified} unit={`of ${rows.length}`} hint="documents and dock agree" />
-        <KpiTile label="Video / documents only" value={isLoading ? "—" : `${kpi.video} / ${kpi.docs}`} hint="evidence source per case" />
+      <KpiStrip className="mb-10 grid-cols-2 md:grid-cols-4 max-md:divide-x [&>*:nth-child(3)]:max-md:border-l-0 max-sm:mb-8">
+        <KpiTile label="Total held" tone="hold" value={isLoading ? "—" : formatINR(kpi.held)} hint="Withheld across cases" />
+        <KpiTile label="On hold or partial" value={isLoading ? "—" : kpi.heldCases} unit={`of ${rows.length}`} hint="Not released in full" />
+        <KpiTile label="Verified" tone="verified" value={isLoading ? "—" : kpi.verified} unit={`of ${rows.length}`} hint="Documents and dock agree" />
+        <KpiTile label="Video / paper only" value={isLoading ? "—" : `${kpi.video} / ${kpi.docs}`} hint="Evidence source per case" />
       </KpiStrip>
 
-      <Panel padded={false} bodyClassName="flex flex-col">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-fm-border px-3 py-2">
-          <Segmented
-            label="Verdict"
-            value={verdict}
-            onChange={(v) => setParam("verdict", v, "all")}
-            options={[
-              { value: "all", label: "All", count: counts.all },
-              ...VERDICT_KEYS.map((v) => ({ value: v, label: VERDICT_LABEL[v], count: counts[v] })),
-            ]}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <Segmented
+          label="Verdict"
+          value={verdict}
+          onChange={(v) => setParam("verdict", v, "all")}
+          options={[
+            { value: "all", label: "All", count: counts.all },
+            ...VERDICT_KEYS.map((v) => ({ value: v, label: VERDICT_LABEL[v], count: counts[v] })),
+          ]}
+        />
+        <Segmented
+          label="Evidence source"
+          value={source}
+          onChange={(v) => setParam("source", v, "all")}
+          options={[
+            { value: "all", label: "Any evidence" },
+            { value: "video", label: "Video", count: kpi.video },
+            { value: "document", label: "Documents", count: kpi.docs },
+          ]}
+        />
+        <label className="relative ml-auto flex w-full items-center sm:w-72">
+          <Search size={15} className="pointer-events-none absolute left-3.5 text-fm-faint" aria-hidden />
+          <span className="sr-only">Filter by PO, vendor or clause</span>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setParam("q", e.target.value, "")}
+            placeholder="PO, vendor, clause"
+            className="fm-field h-10 w-full rounded-full bg-fm-panel pl-10 pr-4 text-[14px]"
           />
-          <Segmented
-            label="Evidence source"
-            value={source}
-            onChange={(v) => setParam("source", v, "all")}
-            options={[
-              { value: "all", label: "All" },
-              { value: "video", label: "Video", count: kpi.video },
-              { value: "document", label: "Documents", count: kpi.docs },
-            ]}
-          />
-          <label className="relative ml-auto flex w-full items-center sm:w-64">
-            <Search size={13} className="pointer-events-none absolute left-2 text-fm-faint" aria-hidden />
-            <span className="sr-only">Filter by PO, vendor or clause</span>
-            <input
-              type="search"
-              value={q}
-              onChange={(e) => setParam("q", e.target.value, "")}
-              placeholder="PO, vendor, clause"
-              className="h-7 w-full rounded-fm-sm border border-fm-border-strong bg-fm-sunken pl-7 pr-2 text-[12.5px] text-fm-text placeholder:text-fm-faint focus:border-fm-hold focus:outline-none"
-            />
-          </label>
-        </div>
+        </label>
+      </div>
 
+      <Panel padded={false} bodyClassName="flex flex-col px-2 pt-1">
         {isLoading ? (
-          <SkeletonRows rows={7} className="p-3" />
+          <SkeletonRows rows={7} className="p-4" />
         ) : isError ? (
-          <ErrorState message={error instanceof Error ? error.message : "Could not load cases."} action={<button type="button" className="text-[12px] text-fm-hold underline" onClick={() => void refetch()}>Retry</button>} />
+          <ErrorState message={error instanceof Error ? error.message : "Could not load cases."} action={<Button size="md" variant="secondary" onClick={() => void refetch()}>Retry</Button>} />
         ) : rows.length === 0 ? (
           <EmptyState title="No cases yet" description="Cases appear once a delivery has been checked against its PO." />
         ) : (
@@ -219,16 +215,17 @@ export function Cases() {
             columns={columns}
             data={filtered}
             keyboard
+            rowHeight="auto"
             initialSorting={[{ id: "held", desc: true }]}
             emptyMessage={filtersActive ? "No cases match these filters." : "No cases"}
             onRowClick={(c) => navigate(`/cases/${c.po_id}`)}
           />
         )}
 
-        <div className="flex items-center gap-1.5 border-t border-fm-border px-3 py-1.5 text-[11.5px] text-fm-faint">
-          <Kbd>j</Kbd> / <Kbd>k</Kbd> to move <span aria-hidden>·</span> <Kbd>Enter</Kbd> to open
+        <div className="flex items-center gap-1.5 border-t border-fm-border px-4 py-3 text-[12px] text-fm-faint">
+          <Kbd>j</Kbd><Kbd>k</Kbd> to move, <Kbd>Enter</Kbd> to open
           {filtersActive && (
-            <button type="button" className="ml-auto text-fm-muted hover:text-fm-text" onClick={() => setParams({}, { replace: true })}>
+            <button type="button" className="ml-auto text-[13px] text-fm-accent-text hover:underline underline-offset-4" onClick={() => setParams({}, { replace: true })}>
               Clear filters
             </button>
           )}

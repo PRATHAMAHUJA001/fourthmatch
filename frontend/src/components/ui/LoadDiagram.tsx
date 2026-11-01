@@ -8,8 +8,6 @@ interface Props {
   observed: number;
   damaged?: number;
   unit?: string;
-  /** "ink" draws in dark ink for use on the amber block. */
-  tone?: "default" | "ink";
   className?: string;
   label?: string;
   /** Seen slots are drawn solid ink instead of outlined. */
@@ -22,7 +20,7 @@ const W = 600;
 const H = 200;
 const TX = 8, TY = 14, TW = 432, TH = 128; // trailer box
 
-export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", tone = "default", className, label, solid = false, pending = false }: Props) {
+export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", className, label, solid = false, pending = false }: Props) {
   const n = Math.max(1, Math.min(invoiced, 120));
   const rows = n <= 6 ? 1 : n <= 16 ? 2 : n <= 45 ? 3 : 4;
   const cols = Math.ceil(n / rows);
@@ -30,10 +28,10 @@ export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", to
   const gap = n > 40 ? 3 : 6;
   const cw = (TW - pad * 2 - gap * (cols - 1)) / cols;
   const ch = Math.min((TH - pad * 2 - gap * (rows - 1)) / rows, cw * 0.78);
-  const ink = tone === "ink" ? "var(--fm-ink-fixed, #16171a)" : "var(--fm-text)";
-  const faint = tone === "ink" ? "rgba(22,23,26,0.45)" : "var(--fm-faint)";
-  const miss = tone === "ink" ? "var(--fm-ink-fixed, #16171a)" : "var(--fm-hold)";
-  const notch = tone === "ink" ? "var(--fm-amber-fixed, #ffb224)" : "var(--fm-panel)";
+  const ink = "var(--fm-text)";
+  const faint = "var(--fm-faint)";
+  const miss = "var(--fm-hold)";
+  const notch = "var(--fm-diagram-bg, var(--fm-panel))";
   const seen = Math.min(observed, n);
   const missing = Math.max(0, invoiced - observed);
   const cells = Array.from({ length: n }, (_, i) => {
@@ -55,8 +53,8 @@ export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", to
         </pattern>
       </defs>
       {/* trailer */}
-      <rect x={TX} y={TY} width={TW} height={TH} fill="none" stroke={ink} strokeWidth="1.6" rx="2" />
-      <line x1={TX} y1={TY + TH + 8} x2={TX + TW + 6} y2={TY + TH + 8} stroke={ink} strokeWidth="1.6" />
+      <rect x={TX} y={TY} width={TW} height={TH} fill="none" stroke={ink} strokeWidth="1.4" rx="2" />
+      <line x1={TX} y1={TY + TH + 8} x2={TX + TW + 6} y2={TY + TH + 8} stroke={ink} strokeWidth="1.4" />
       <line x1={TX + 30} y1={TY + TH} x2={TX + 30} y2={TY + TH + 8} stroke={ink} strokeWidth="1.2" />
       {/* landing leg */}
       <line x1={TX + 200} y1={TY + TH + 8} x2={TX + 200} y2={TY + TH + 30} stroke={ink} strokeWidth="1.4" />
@@ -64,7 +62,7 @@ export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", to
       {/* cab */}
       <path
         d={`M${TX + TW + 12} ${TY + TH + 8} V${TY + 40} H${TX + TW + 78} L${TX + TW + 112} ${TY + 78} H${TX + TW + 140} V${TY + TH + 8} Z`}
-        fill="none" stroke={ink} strokeWidth="1.6" strokeLinejoin="round"
+        fill="none" stroke={ink} strokeWidth="1.4" strokeLinejoin="round"
       />
       <path d={`M${TX + TW + 82} ${TY + 50} L${TX + TW + 104} ${TY + 78} H${TX + TW + 82} Z`} fill="none" stroke={ink} strokeWidth="1.2" />
       {Array.from({ length: 4 }, (_, k) => (
@@ -74,7 +72,7 @@ export function LoadDiagram({ invoiced, observed, damaged = 0, unit = "unit", to
       {/* wheels */}
       {[TX + 40, TX + 82, TX + 124, TX + TW + 36, TX + TW + 112].map((cx) => (
         <g key={cx}>
-          <circle cx={cx} cy={TY + TH + 22} r="15" fill={tone === "ink" ? "transparent" : "var(--fm-panel)"} stroke={ink} strokeWidth="1.6" />
+          <circle cx={cx} cy={TY + TH + 22} r="15" fill="var(--fm-diagram-bg, var(--fm-panel))" stroke={ink} strokeWidth="1.4" />
           <circle cx={cx} cy={TY + TH + 22} r="6" fill="none" stroke={ink} strokeWidth="1.2" />
         </g>
       ))}
