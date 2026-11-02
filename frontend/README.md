@@ -1,7 +1,7 @@
 # FourthMatch frontend
 
 React 18 + TypeScript (strict) + Vite + Tailwind v4 + Radix + TanStack Query/Table + Recharts + MSW.
-Design rules: [DESIGN.md](DESIGN.md). Live spec sheet: `/styleguide`.
+Live design spec sheet: `/styleguide`.
 
 ```bash
 npm install

@@ -1,7 +1,5 @@
 """Cases read model: every PO decided live, with its cited clauses.
 
-Design, rationale, and file/test traceability: docs/CASES.md.
-
 Verdicts are recomputed on read through domain.decision from APPROVED
 compiled rules only (the newest policy version that has any) -- stored
 Decision rows are never trusted here, matching the simulator's stance.

@@ -48,7 +48,7 @@ def _write_outputs(labels: list[EvalImageLabel]) -> None:
 
 
 def _to_png(raw: bytes) -> bytes:
-    """The API may send WEBP bytes (MODEL_NOTES §7): always store a genuine PNG."""
+    """The API may send WEBP bytes: always store a genuine PNG."""
     img = Image.open(io.BytesIO(raw))
     img.load()
     buf = io.BytesIO()

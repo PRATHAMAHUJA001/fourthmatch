@@ -132,7 +132,7 @@ class ToolCall(BaseModel):
 
 
 class ToolTurn(BaseModel):
-    """One model turn of the tool-calling loop (MODEL_NOTES §3)."""
+    """One model turn of the tool-calling loop."""
 
     output_items: list[dict[str, Any]] = Field(default_factory=list)  # replayed verbatim
     calls: list[ToolCall] = Field(default_factory=list)

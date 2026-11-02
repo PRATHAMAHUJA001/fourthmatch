@@ -12,7 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class AsrTurn(BaseModel):
-    """One diarized turn (MODEL_NOTES §6). Extra fields from the API are ignored."""
+    """One diarized turn. Extra fields from the API are ignored."""
 
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 

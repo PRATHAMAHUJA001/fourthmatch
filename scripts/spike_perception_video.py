@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Spike: verify Spark (PERCEPTION_MODEL) video + image-crop request shapes.
 
-Not in MODEL_NOTES yet -- this script verifies, live:
+This script verifies, live:
  1. Files API upload of a 2fps proxy, reuse file_id for Spark input_video
     with strict structured JSON (Stage B shape).
  2. Bogus/expired file_id error shape (for the re-upload-on-404 path).

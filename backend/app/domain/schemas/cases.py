@@ -1,7 +1,5 @@
 """Case read contracts: PO vs GRN vs invoice vs SAM, with the verdict.
 
-Design, rationale, and file/test traceability: docs/CASES.md.
-
 A case is one purchase order decided live through domain.decision from
 approved compiled rules. ``verdict is None`` means no line had observed
 evidence (neither perception nor GRN) -- it is never a fabricated approve.
@@ -86,7 +84,7 @@ class CaseDetail(CaseSummary):
     signoff_roles: list[str] = Field(default_factory=list)
     lines: list[CaseLineRead] = Field(default_factory=list)
     video_url: str | None = None
-    decision: DecisionRead | None = None  # latest stored agent decision (see CASES.md §1)
+    decision: DecisionRead | None = None  # latest stored agent decision
     invoice_total_paise: int | None = None
     evidence_pack: EvidencePackRead | None = None  # latest pack for the PO; None if never built
     remark: RemarkRead | None = None  # storekeeper voice remark: context, never evidence

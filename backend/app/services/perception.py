@@ -1,6 +1,6 @@
 """Perception pipeline: Stages A-E for one delivery job.
 
-State machine (ARCHITECTURE §3): queued -> uploading -> understanding ->
+State machine: queued -> uploading -> understanding ->
 tracking -> damage_check -> done | failed. Every stage writes a job_event on
 start and finish, job row + event in the same transaction. SSE streams only
 those stored rows. One pipeline at a time (asyncio.Semaphore(1)); SQLite WAL
@@ -477,7 +477,7 @@ class PerceptionPipeline:
             except AppError as exc:
                 if exc.code != "model_file_expired":
                     raise
-                # Cached file_id expired (MODEL_NOTES §8): re-upload once, retry once.
+                # Cached file_id expired: re-upload once, retry once.
                 self._sam.invalidate_file(video_bytes)
                 new_file_id, _ = await self._sam.upload_cached(video_bytes, "video.mp4")
                 return await self._model.call_video_model(

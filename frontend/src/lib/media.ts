@@ -1,4 +1,4 @@
-/** Frames extracted from the scenario videos (see DESIGN.md, media pipeline). Keyed by scenario id.
+/** Frames extracted from the scenario videos. Keyed by scenario id.
  *  Real footage only; used as posters and thumbnails, never as evidence on their own. */
 export const SCENARIO_FRAMES: Record<string, string> = {
   scn1_clean: "/media/scn1_clean_f2.webp",

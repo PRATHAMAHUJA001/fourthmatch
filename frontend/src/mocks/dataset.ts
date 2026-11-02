@@ -199,7 +199,7 @@ function buildCase(c: GtCase, idx: number): CaseDetail {
 }
 
 /* ——— Storekeeper voice remark (demo) ———
- * Transcript of samples/remark.wav (docs/MODEL_NOTES.md §6). The claims are what a person reads
+ * Transcript of samples/remark.wav. The claims are what a person reads
  * out of that sentence; the check is computed here from the case's own perception data with the
  * same rules as backend/app/domain/remark.py. Nothing about the video is invented. */
 const REMARK_SCENARIO = "scn3_damage";

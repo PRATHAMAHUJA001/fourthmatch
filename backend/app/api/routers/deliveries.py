@@ -1,7 +1,7 @@
 """Deliveries API: upload creates delivery+job; SSE streams stored job_events.
 
 No SQL, no model calls here -- pipeline runs as a background task and SSE
-only replays rows the pipeline persisted (ARCHITECTURE §3).
+only replays rows the pipeline persisted.
 """
 from __future__ import annotations
 

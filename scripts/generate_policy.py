@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Generate data/policy/receiving_policy.md — one-off, NOT part of seeding.
 
-Every clause's prose is rewritten by BULK_MODEL (Meta Responses API, shapes
-from docs/MODEL_NOTES.md §2 via app.infra.meta.client.MetaModelClient, model
+Every clause's prose is rewritten by BULK_MODEL (Meta Responses API via
+app.infra.meta.client.MetaModelClient, model
 ID from core/config only). Structure, clause numbers and every number come
 from backend/app/seed/policy_template.py and never from the model.
 

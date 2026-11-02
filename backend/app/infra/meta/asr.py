@@ -1,4 +1,4 @@
-"""Voice-model ASR over plain HTTP (MODEL_NOTES §6). Never the OpenAI SDK.
+"""Voice-model ASR over plain HTTP. Never the OpenAI SDK.
 
 POST {meta_base_url}/asr/transcribe, multipart with exactly two parts:
 `request` (JSON settings) and `audio` (WAV bytes). Retry with jitter on

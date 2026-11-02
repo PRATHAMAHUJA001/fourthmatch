@@ -1,4 +1,4 @@
-"""SAM 3.1 wrapper. Shapes ONLY from docs/MODEL_NOTES.md §4/§5/§8.
+"""SAM 3.1 wrapper. Request shapes verified live against the Meta Model API.
 
 - Files API upload once per video hash, file_id cached (storage/cache/files).
   A file-related 400/404 on a cached id invalidates it and re-uploads once.
@@ -268,7 +268,7 @@ class SamSegmenter:
         phrase: str,
         session: Session | None = None,
     ) -> ImageSegmentation:
-        """SAM on one still (MODEL_NOTES §4): short noun phrase + input_image data URL.
+        """SAM on one still: short noun phrase + input_image data URL.
 
         Raw events are cached by (image sha256, phrase, seg model) under
         storage/cache/sam and re-parsed offline with the official parser, so

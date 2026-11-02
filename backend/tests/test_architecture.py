@@ -42,18 +42,6 @@ def _imports(path: Path) -> set[str]:
     return out
 
 
-def test_architecture_doc_checklist() -> None:
-    doc = (ROOT / "docs" / "ARCHITECTURE.md").read_text()
-    for needle in [
-        "domain/` imports nothing",
-        "`jobs` and `job_events` tables exist",
-        "`sam_runs` and `tracks` are separate tables",
-        "`perception_results` has `max_visible`, `evidence_quality` and `reasons`",
-        "Every model ID comes from config, none hardcoded",
-    ]:
-        assert needle in doc
-
-
 def test_domain_imports_nothing_forbidden() -> None:
     forbidden_roots = {"sqlalchemy", "fastapi", "app.infra", "infra"}
     for path in (APP / "domain").rglob("*.py"):

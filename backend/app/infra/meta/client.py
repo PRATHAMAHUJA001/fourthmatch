@@ -1,7 +1,7 @@
 """One shared Meta client wrapper.
 
-Request shapes copied ONLY from docs/MODEL_NOTES.md: §2/§3 text + strict
-json_schema in text.format, §8 video (input_video file_id) and image crops
+Request shapes verified live against the Meta Model API: text + strict
+json_schema in text.format, video (input_video file_id) and image crops
 (input_image data URLs). Responses API only, never chat.completions.
 Every model ID arrives via ModelConfig (core/config.py) — none hardcoded here.
 Every call: retry with jitter (no retry on 4xx, except a file-related
@@ -202,7 +202,7 @@ class MetaModelClient:
             except APIStatusError as exc:
                 last_error = exc
                 if 400 <= exc.status_code < 500:
-                    # Expired/invalid cached file_id (400/404, MODEL_NOTES §8):
+                    # Expired/invalid cached file_id (400/404):
                     # caller re-uploads once. Every other 4xx: no retry.
                     if exc.status_code in (400, 404) and "file" in str(exc).lower():
                         self._write_call(session, purpose=purpose, model=model, latency_ms=last_latency_ms,
@@ -253,7 +253,7 @@ class MetaModelClient:
         reasoning_effort: str | None = None,
         cache_key: str | None = None,
     ) -> T:
-        """Stage B shape (MODEL_NOTES §8): input_video by Files API file_id."""
+        """Stage B shape: input_video by Files API file_id."""
         input_payload = [{"type": "message", "role": "user", "content": [
             {"type": "input_text", "text": user_text},
             {"type": "input_video", "file_id": file_id},
@@ -277,7 +277,7 @@ class MetaModelClient:
         reasoning_effort: str | None = None,
         cache_key: str | None = None,
     ) -> T:
-        """Stage D shape (MODEL_NOTES §8): labelled input_image crops, one call."""
+        """Stage D shape: labelled input_image crops, one call."""
         content: list[dict[str, Any]] = [{"type": "input_text", "text": user_text}]
         content += [{"type": "input_image", "image_url": url} for url in image_data_urls]
         input_payload = [{"type": "message", "role": "user", "content": content}]
@@ -295,7 +295,7 @@ class MetaModelClient:
         prompt: str,
         session: Session | None = None,
     ) -> bytes:
-        """Synthetic test scenes only (MODEL_NOTES §7): images.generate, n=1.
+        """Synthetic test scenes only: images.generate, n=1.
 
         Returns the raw image bytes exactly as the API sent them (the default
         b64_json payload is WEBP on this key, so callers sniff/transcode).
@@ -351,7 +351,7 @@ class MetaModelClient:
         session: Session | None = None,
         reasoning_effort: str | None = "high",
     ) -> ToolTurn:
-        """One turn of the tool-calling loop, stateless replay (MODEL_NOTES §3).
+        """One turn of the tool-calling loop, stateless replay.
 
         The caller replays prior ``output_items`` plus ``function_call_output``
         items in ``input_items``. include=reasoning.encrypted_content is always
@@ -416,5 +416,5 @@ async def call_model(
     session: Session | None = None,
     **kwargs: Any,
 ) -> BaseModel:
-    """Functional wrapper around MetaModelClient.call_model (see ARCHITECTURE §6)."""
+    """Functional wrapper around MetaModelClient.call_model."""
     return await client.call_model(session=session, **kwargs)

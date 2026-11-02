@@ -14,7 +14,7 @@ Meta Global AI Hackathon entry, built solo between Oct 30 and Nov 4, 2026. All d
 |---|---|
 | Live demo | `<LIVE_DEMO_URL>` (placeholder, filled in after deploy; see [DEPLOY.md](DEPLOY.md)). Seeded cases replay without a login. Live uploads need a passcode, supplied to judges in the submission notes. |
 | Demo video | `<DEMO_VIDEO_URL>` (placeholder) |
-| Docs | [Architecture](docs/ARCHITECTURE.md) · [Model API notes](docs/MODEL_NOTES.md) · [Cases](docs/CASES.md) · [Evaluation findings](docs/EVAL.md) · [Deploy](DEPLOY.md) · [Handoff](docs/HANDOFF.md) |
+| Docs | [Deploy](DEPLOY.md) |
 
 ![FourthMatch landing page](docs/screenshots/landing.png)
 
@@ -141,7 +141,7 @@ code enforces; file paths point at where.
 | 2 | **The LLM never does arithmetic.** Variance, held amount, value at risk and rupee totals are Python (`domain/decision.py`, `domain/money.py`). The agent receives them from tools, and the guard rejects any `amount_held_paise` that differs from the Python recompute (`domain/agent_logic.py`). | An invoice dispute needs a number that is right, not plausible. | The agent can only narrate and select; it cannot find a better number than the code. That is intended. |
 | 3 | **Spark picks the noun phrase, SAM segments.** `services/perception.py` stage B asks Spark for one short visual phrase per PO line ("cardboard box") and forbids counts; SAM 3.1 is prompted with that phrase. A generic-noun second run catches a phrase that is too narrow (`apply_phrase_coverage`). | It uses each model for what it is built for. SAM 3.1 takes a short noun phrase as its prompt; a vision-language model is good at reading a scene and PO line and choosing that phrase. | Two model hops per line and a second SAM run for coverage, in exchange for not hand-tuning prompts per product. Phrase choice is cached so tuning cannot silently change it. |
 | 4 | **Evidence quality is decided in Python with reason codes; weak evidence goes to `human_review`, never approve.** `count_line` returns `reliable` or `insufficient` with codes such as `short_track_ratio_high`, `merge_ratio_high`, `count_below_max_visible`, `phrase_coverage`, `no_tracks`. An insufficient line forces `human_review` in `decide_delivery`, and the agent guard overrides an `approve` on such a case. | The costly error here is paying on a video the system could not read. Thresholds live in config, so the reasons are inspectable and tunable. | More cases go to a person. We prefer that to a false approve. |
-| 5 | **Policy is compiled into rules, gated by human approval, against a field catalog.** `services/policy_compiler.py` turns each numbered clause into rules saved as `PENDING_APPROVAL`; `domain/rules.py` `FIELD_CATALOG` is the only set of fields a rule may reference. A clause that needs anything else is flagged `ambiguity`, not guessed, and invalid rules get one validator-feedback retry. | Finance owns the policy, not the model. A compiled rule is a reviewable artifact with its verbatim source text and clause number. | An approval step before anything is enforced. `docs/EVAL.md` records what the compiler gets wrong (10/12 cases vs 12/12 with reference rules) rather than hiding it. |
+| 5 | **Policy is compiled into rules, gated by human approval, against a field catalog.** `services/policy_compiler.py` turns each numbered clause into rules saved as `PENDING_APPROVAL`; `domain/rules.py` `FIELD_CATALOG` is the only set of fields a rule may reference. A clause that needs anything else is flagged `ambiguity`, not guessed, and invalid rules get one validator-feedback retry. | Finance owns the policy, not the model. A compiled rule is a reviewable artifact with its verbatim source text and clause number. | An approval step before anything is enforced. The evaluation records what the compiler gets wrong (10/12 cases vs 12/12 with reference rules) rather than hiding it. |
 | 6 | **Every ID a model cites is validated in Python.** Damage verdicts must cite a track and frame that were in the input; remark claims must name a real PO category; the agent's `track:<id>`, `frame:<n>`, `rule_id`, `po_line_id` are checked against the case facts. | A hallucinated ID in an evidence pack is worse than no citation. One bad ID rejects the output. | Occasional rejections and retries. They show up in `model_calls` and as fallback reasons. |
 | 7 | **The agent uses deterministic tools; a fallback exists; the served verdict is the Python recompute.** The agent calls `get_case`, `compute_variance`, `get_rules`, `evaluate_rule`, `draft_debit_note`, then `record_decision`. Guards require coverage (every line and applicable rule was evaluated). Two rejected attempts, a turn cap or any model error store a deterministic decision with `source = "fallback"`. Case pages always serve `decide_delivery` output; the stored agent decision is attached with a `stale` flag. | The agent adds explanation and an auditable trace, not authority. The Cases screen and the policy what-if simulator can never disagree, and a model outage cannot block a payment decision. | The agent is not the decider of record. If it and the code disagree, the code wins and the disagreement is visible. |
 | 8 | **Files API uploads and raw SAM output are cached by SHA-256.** `infra/cache.py`, `infra/meta/sam.py`; Spark calls cache on (video hash, inputs, model, prompt version). | SAM video runs are the slow, expensive step. Re-running parsing, merging or the eval must never re-call SAM, and cached raw output makes results reproducible. | A prompt-version string must be bumped when a prompt changes, or a stale cache is served. |
@@ -155,7 +155,7 @@ code enforces; file paths point at where.
 | 16 | **One Lightsail VM, no containers.** Caddy -> one uvicorn worker under systemd, which also serves the built SPA (`deploy/`, [DEPLOY.md](DEPLOY.md)). | A demo needs one cheap box (about $5-10/month), not an orchestrator. One process keeps SQLite, the pipeline semaphore and the rate limiter coherent. | No horizontal scale and no zero-downtime deploys. Delete it after judging. |
 | 17 | **`DEMO_MODE` passcode and rate limit protect API credits.** `api/deps_demo.py` and `domain/rate_limit.py`: model-calling and write routes need `X-Demo-Passcode` (constant-time compare; empty server passcode disables live use) and uploads are capped per rolling hour (default 10, then 429). Replay of seeded cases stays open. | A public URL with a paid key behind it needs a gate. | The limiter is in-process, so it only holds with a single worker. |
 | 18 | **Model IDs come only from `.env`.** `core/config.py` is the single place; a test fails if a model-ID literal appears under `backend/app/`, and `MetaModelClient` refuses a model that did not come from `ModelConfig`. | Models change; swapping one is a config edit with no code change. | A misconfigured `.env` fails at startup with the missing variable named. |
-| 19 | **Responses API only, with stateless replay in the agent loop.** Every call uses `client.responses.create`, structured output with `strict` JSON schema, `include=["reasoning.encrypted_content"]` on the tool loop and no `previous_response_id`. | Video input works only on Responses on this API, and `docs/MODEL_NOTES.md` records the shapes that were verified live. | The loop replays prior output items each turn, so context grows with tool calls (capped by `max_agent_turns`). |
+| 19 | **Responses API only, with stateless replay in the agent loop.** Every call uses `client.responses.create`, structured output with `strict` JSON schema, `include=["reasoning.encrypted_content"]` on the tool loop and no `previous_response_id`. | Video input works only on Responses on this API, and every request shape was verified live with `scripts/smoke_models.py`. | The loop replays prior output items each turn, so context grows with tool calls (capped by `max_agent_turns`). |
 
 ## Meta models used
 
@@ -173,8 +173,7 @@ Every model ID is read from `.env`; the IDs below are the values in `.env.exampl
 | `muse-wonder-1.0` | `WONDER_MODEL` | `scripts/smoke_models.py` | Present on the key and checked by the smoke test. It is not called by the application pipeline. |
 
 The model layer was verified live against the Meta Model API with `scripts/smoke_models.py` (7 checks:
-model list, strict JSON, tool loop, SAM image, SAM video, ASR, image generation). Verified request and
-response shapes, and the gotchas we hit, are in [docs/MODEL_NOTES.md](docs/MODEL_NOTES.md).
+model list, strict JSON, tool loop, SAM image, SAM video, ASR, image generation).
 
 ## Evaluation
 
@@ -203,9 +202,9 @@ these scenes; it is not a claim about arbitrary dock footage.
 Policy compilation and the decision function are scored offline over the 12 seeded cases in
 `backend/tests/test_accuracy.py`. With hand-written reference rules the decision function is 12/12
 (verdict and held amount). With rules the model compiled from the committed policy it is 10/12, and the
-two misses trace to one extra rule the model emitted for clause 5.1. `docs/EVAL.md` also records the
-earlier 8/12 result, which came from clause 4.2 never stating a payment consequence: we fixed the policy
-text, not the compiler prompt or the answer key.
+two misses trace to one extra rule the model emitted for clause 5.1. An earlier run scored 8/12 because
+clause 4.2 never stated a payment consequence: we fixed the policy text, not the compiler prompt or the
+answer key.
 
 ![Eval page](docs/screenshots/eval.png)
 
@@ -258,7 +257,7 @@ npm run dev
 
 Mock mode replays the seeded cases from the committed `data/` files, with verdicts replayed from ground
 truth. Live mode needs the real-key steps (compile and approve policy rules, run perception, run the
-decision agent); the order is in [docs/HANDOFF.md](docs/HANDOFF.md). Verify the model layer with
+decision agent), in that order. Verify the model layer with
 `backend/.venv/bin/python scripts/smoke_models.py`.
 
 ## Deploy
@@ -270,7 +269,7 @@ an S3 static fallback are in [DEPLOY.md](DEPLOY.md).
 
 The first commit is dated 2026-10-30. Everything in this repository was written during the event.
 
-- **Model layer:** verified request shapes for every model (`docs/MODEL_NOTES.md`), one `MetaModelClient`
+- **Model layer:** verified request shapes for every model, one `MetaModelClient`
   with retry, strict JSON, and `model_calls` accounting; SAM wrapper over the official parser with a
   SHA-256 cache; ASR client.
 - **Synthetic data:** seeded vendors, POs, GRNs and invoices with 12 cases and a scenario manifest;

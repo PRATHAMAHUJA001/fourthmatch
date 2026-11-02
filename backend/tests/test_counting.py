@@ -1,4 +1,4 @@
-"""Pure counting tests over fixture JSON. No model calls (CLAUDE.md)."""
+"""Pure counting tests over fixture JSON. No model calls."""
 from __future__ import annotations
 
 import json

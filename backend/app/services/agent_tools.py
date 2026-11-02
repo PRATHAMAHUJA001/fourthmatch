@@ -22,7 +22,7 @@ _EVIDENCE_NOTE = (
 
 
 def tool_definitions() -> list[dict[str, Any]]:
-    """Flat tool definitions (MODEL_NOTES §3); tool_choice is left at auto."""
+    """Flat tool definitions; tool_choice is left at auto."""
 
     def fn(name: str, description: str, properties: dict[str, Any], required: list[str],
            strict: bool = True) -> dict[str, Any]:
