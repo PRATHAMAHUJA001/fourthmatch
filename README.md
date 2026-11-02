@@ -175,6 +175,21 @@ Every model ID is read from `.env`; the IDs below are the values in `.env.exampl
 The model layer was verified live against the Meta Model API with `scripts/smoke_models.py` (7 checks:
 model list, strict JSON, tool loop, SAM image, SAM video, ASR, image generation).
 
+## How Meta AI helped build FourthMatch
+
+Meta's models are not only inside the product; we also used them to build it.
+
+- **Design:** Meta AI helped us explore and refine the product design: the case page layout, how a
+  verdict and its evidence should read to a finance user, and the wording of the plain-English explanations.
+- **Code:** Meta AI helped write, review and debug code across the FastAPI backend and the React frontend,
+  including the model client wrappers, the SAM track-merging logic and the Pydantic schemas that validate
+  every model output.
+- **Synthetic data:** `muse-spark-1.3-contributor` wrote the prose of the receiving policy
+  (`scripts/generate_policy.py`; clause numbers and every figure stay fixed in code), and `muse-image-1.0`
+  generated the synthetic dock scenes with known counts for the evaluation set (`scripts/gen_eval_images.py`).
+- **Verification first:** before any pipeline code was written, every request shape was confirmed live
+  against the Meta Model API with `scripts/smoke_models.py`, and the code was built on what actually worked.
+
 ## Evaluation
 
 Numbers below are copied from `data/eval_counts.json` and `data/eval_results.json`, produced by
