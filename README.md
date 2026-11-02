@@ -12,8 +12,7 @@ Meta Global AI Hackathon entry, built solo between Oct 30 and Nov 4, 2026. All d
 
 | | |
 |---|---|
-| Live demo | `<LIVE_DEMO_URL>` (placeholder, filled in after deploy; see [DEPLOY.md](DEPLOY.md)). Seeded cases replay without a login. Live uploads need a passcode, supplied to judges in the submission notes. |
-| Demo video | `<DEMO_VIDEO_URL>` (placeholder) |
+| Demo video | [Watch the 3-minute demo](https://drive.google.com/file/d/1hjwKrbPxWAvOUrlRANbDsHdovghxMpQw/view?usp=sharing) |
 | Docs | [Deploy](DEPLOY.md) |
 
 ![FourthMatch landing page](docs/screenshots/landing.png)
